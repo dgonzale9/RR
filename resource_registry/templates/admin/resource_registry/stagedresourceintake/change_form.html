@@ -1,0 +1,21 @@
+{% extends "admin/change_form.html" %}
+
+{% block object-tools-items %}
+  {{ block.super }}
+  {% if original and has_change_permission %}
+    {% if original.status == "READY_FOR_PUBLICATION" or original.status == "PUBLISHED" %}
+    <li>
+      <a href="{% url 'admin:resource_registry_stagedresourceintake_publish' original.pk %}">
+        Publish to destinations
+      </a>
+    </li>
+    {% endif %}
+  {% endif %}
+  {% if original and can_remove_destinations %}
+    <li>
+      <a href="{% url 'admin:resource_registry_stagedresourceintake_remove_destinations' original.pk %}">
+        Remove destination assignments
+      </a>
+    </li>
+  {% endif %}
+{% endblock %}

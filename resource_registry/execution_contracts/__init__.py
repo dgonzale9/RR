@@ -1,0 +1,113 @@
+"""Expose pure immutable execution request contracts."""
+
+from .contracts import (
+    ExecutionCheckpoint,
+    ExecutionContext,
+    ExecutionInputReference,
+    ExecutionPlan,
+    ExecutionPlanRef,
+    ExecutionRequest,
+    ExecutionRequestRef,
+    ExecutionResult,
+    ExecutionResultStatus,
+    ExecutionStep,
+)
+from .engine_worker import (
+    ExecutionEngine,
+    ExecutionEngineCommand,
+    ExecutionEngineOutcome,
+    ExecutionEngineOutcomeKind,
+    ExecutionWorker,
+    ExecutionWorkerAssignmentDecision,
+    ExecutionWorkerAssignmentStatus,
+    evaluate_execution_worker_assignment,
+)
+from .errors import ExecutionRequestValidationError, ProviderSelectionValidationError
+from .lifecycle import (
+    ExecutionAttemptFence,
+    ExecutionCoordinatorTransition,
+    ExecutionCoordinatorTransitionStatus,
+    ExecutionInstanceRef,
+    ExecutionLifecycleCommand,
+    ExecutionLifecycleSnapshot,
+    ExecutionLifecycleState,
+    coordinate_execution_lifecycle_transition,
+)
+from .output_registration import (
+    ExecutionLineageReference,
+    ExecutionOutputRegistrationDecision,
+    ExecutionOutputRegistrationRequest,
+    ExecutionOutputRegistrationStatus,
+    evaluate_execution_output_registration,
+)
+from .provider_selection import (
+    ProviderSelectionPolicyRef,
+    ProviderSelectionRejectionCategory,
+    RouterProviderCandidate,
+    RouterProviderCandidateSet,
+    RouterProviderSelectionEvidence,
+    build_router_provider_selection_evidence,
+)
+from .routing import ExecutionRouteDecision, route_execution_request
+from .shadow import (
+    ExecutionLegacyRouteEvidence,
+    ExecutionShadowPlan,
+    ExecutionShadowPlanStatus,
+    build_execution_shadow_plan,
+)
+
+__all__ = (
+    "ExecutionAdmissionResult",
+    "ExecutionAdmissionStatus",
+    "ExecutionAttemptFence",
+    "ExecutionCheckpoint",
+    "ExecutionContext",
+    "ExecutionCoordinatorTransition",
+    "ExecutionCoordinatorTransitionStatus",
+    "ExecutionEngine",
+    "ExecutionEngineCommand",
+    "ExecutionEngineOutcome",
+    "ExecutionEngineOutcomeKind",
+    "ExecutionInputReference",
+    "ExecutionInstanceRef",
+    "ExecutionLegacyRouteEvidence",
+    "ExecutionLifecycleCommand",
+    "ExecutionLifecycleSnapshot",
+    "ExecutionLifecycleState",
+    "ExecutionLineageReference",
+    "ExecutionOutputRegistrationDecision",
+    "ExecutionOutputRegistrationRequest",
+    "ExecutionOutputRegistrationStatus",
+    "ExecutionPlan",
+    "ExecutionPlanRef",
+    "ExecutionRequest",
+    "ExecutionRequestRef",
+    "ExecutionRequestValidationError",
+    "ExecutionResult",
+    "ExecutionResultStatus",
+    "ExecutionRouteDecision",
+    "ExecutionShadowPlan",
+    "ExecutionShadowPlanStatus",
+    "ExecutionStep",
+    "ExecutionWorker",
+    "ExecutionWorkerAssignmentDecision",
+    "ExecutionWorkerAssignmentStatus",
+    "ProviderSelectionPolicyRef",
+    "ProviderSelectionRejectionCategory",
+    "ProviderSelectionValidationError",
+    "RouterProviderCandidate",
+    "RouterProviderCandidateSet",
+    "RouterProviderSelectionEvidence",
+    "build_execution_shadow_plan",
+    "build_router_provider_selection_evidence",
+    "coordinate_execution_lifecycle_transition",
+    "evaluate_execution_admission",
+    "evaluate_execution_output_registration",
+    "evaluate_execution_worker_assignment",
+    "route_execution_request",
+)
+from .admission import (
+    ExecutionAdmissionResult,
+    ExecutionAdmissionStatus,
+    evaluate_execution_admission,
+)

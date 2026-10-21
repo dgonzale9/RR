@@ -1,0 +1,153 @@
+# Resource Registry: Query Planner y Query Executor
+
+**Audiencia:** equipo de Data Analysis  
+**Alcance:** consultas sobre una versión de un dataset registrado, desde una petición en el chat hasta el resultado.  
+**Base:** comportamiento observado en el código del repositorio al 14 de octubre de 2026.
+
+## Resumen operativo
+
+Resource Registry ofrece dos funciones distintas:
+
+| Componente | Entrada | Responsabilidad | Salida |
+| --- | --- | --- | --- |
+| **Query Planner** (`resource_registry_plan_query`) | Petición en lenguaje natural, dataset y versión opcional | Reconocer una intención **admitida**, elegir columnas del esquema visible y construir SQL de forma determinista | `query_plan` con intención, SQL, columnas y límite; **no lee filas** |
+| **Query Executor** (`resource_registry_query_dataset`) | SQL, dataset y versión opcional | Autorizar, validar y ejecutar una consulta de lectura sobre el artefacto del dataset | Columnas, filas, `row_count`, `truncated` y versión ejecutada, o un error controlado |
+
+El planner **no es un traductor general de lenguaje natural a SQL**. El executor **no exige** que el SQL provenga del planner: también puede recibir SQL preparado por el asistente o por otro consumidor autorizado. Por ello, planificar y ejecutar son llamadas separadas, y el paso de una a otra depende del flujo del asistente que tenga asignadas esas funciones. [Planner](../resource_registry/services/query_planner.py), [BIF de planificación y consulta](../BotServer/builtin_functions/resource_registry_functions.py), [cliente del asistente](../BotServer/ai_engine_client.py).
+
+## Recorrido desde el brief hasta la respuesta
+
+```mermaid
+flowchart LR
+    A[Brief del usuario] --> B[Asistente y funciones asignadas a la Persona]
+    B --> C[Seleccionar namespace, dataset y versión]
+    C --> D[resource_registry_plan_query]
+    D --> E{¿Plan seguro y soportado?}
+    E -- No --> F[Error o aclaración al usuario]
+    E -- Sí: SQL + metadatos --> G[resource_registry_query_dataset]
+    G --> H{¿Ejecución síncrona admitida?}
+    H -- Sí --> I[Validar SQL y columnas; ejecutar en DuckDB]
+    H -- No --> J[start_query_job → worker → status/result]
+    I --> K[Resultado estructurado]
+    J --> K
+    K --> L[Asistente redacta respuesta al usuario]
+```
+
+1. **Entrada y herramientas disponibles.** El usuario formula un brief en el chat. El cliente del modelo expone las Built-In Functions (BIF) asignadas a la Persona y procesa las llamadas de herramientas que propone el modelo. La admisión del BIF comprueba que la función esté permitida para esa Persona. No existe en estas dos funciones un encadenamiento automático que obligue a llamar al planner antes del executor. [Cliente del asistente](../BotServer/ai_engine_client.py), [cliente OpenAI](../BotServer/ai_engine_clients/openai_client.py).
+2. **Selección del dato.** La llamada debe quedar ligada a un namespace autorizado (`tenant_id`) y un `dataset_id` válido. El contexto de conversación puede reutilizar una selección verificada cuando es única; si hay varias opciones, exige especificar el dataset o la versión. El namespace, el alcance del Workspace, la capacidad del BIF y la lectura del dataset/esquema se comprueban en el servidor. [Selección conversacional](../resource_registry/assistant/dataset_selection_context.py), [admisión de namespace](../resource_registry/bifs/read_only_namespace_admission.py), [fachada de lectura](../resource_registry/read_auth/policy.py).
+3. **Planificación opcional.** `resource_registry_plan_query` obtiene el esquema autorizado de la versión indicada (o del esquema más reciente), descarta columnas no consultables y pasa `user_request` y las columnas tipadas al `QueryPlanner`. Si no reconoce una petición segura devuelve `unsupported_query_request` (400). Si la reconoce devuelve `intent`, `sql`, `columns_used`, `result_columns`, `limit` y `requires_execution: true`. [BIF de planificación](../BotServer/builtin_functions/resource_registry_functions.py), [columnas consultables](../resource_registry/read_auth/query_columns.py).
+4. **Ejecución.** `resource_registry_query_dataset` vuelve a comprobar capacidad, acceso al dataset, forma del SQL y referencias a columnas visibles. Su política de enrutamiento puede exigir un job asíncrono; de lo contrario invoca `DatasetQueryExecutor`. El executor valida de nuevo el SQL, resuelve la versión, el esquema y un artefacto activo, lo materializa mediante caché y consulta una tabla local llamada `dataset` en DuckDB. [BIF de consulta](../BotServer/builtin_functions/resource_registry_functions.py), [executor](../resource_registry/services/dataset_query_executor.py), [enrutamiento](../resource_registry/services/dataset_query_routing_policy.py).
+5. **Salida.** El BIF síncrono convierte cada fila en un objeto con nombres de columna y devuelve JSON con `success`, `status`, `dataset_id`, `version_id`, `columns`, `rows`, `row_count` y `truncated`. El resultado exitoso se intenta registrar como query run. El asistente recibe ese JSON como resultado de herramienta y construye su respuesta conversacional. [BIF de consulta](../BotServer/builtin_functions/resource_registry_functions.py), [cliente OpenAI](../BotServer/ai_engine_clients/openai_client.py).
+
+### Ejemplo de punta a punta
+
+Supongamos un dataset autorizado con `region: VARCHAR` e `ingresos: DOUBLE`. El usuario pide: **«Muéstrame los ingresos totales por región»**. Para usar el planner actual, el asistente tendría que enviar una petición compatible con sus patrones, por ejemplo `Show total ingresos by region`, junto con los identificadores del dataset y su versión. Esta reformulación es una acción posible del asistente; **el planner no traduce español automáticamente**.
+
+El planner produce un plan equivalente a:
+
+```sql
+SELECT "region", SUM("ingresos") AS total_ingresos
+FROM dataset
+GROUP BY "region"
+ORDER BY total_ingresos DESC
+LIMIT 10
+```
+
+Luego el executor puede devolver, por ejemplo:
+
+```json
+{
+  "success": true,
+  "status": 200,
+  "dataset_id": "<uuid del dataset>",
+  "version_id": "<uuid de la versión ejecutada>",
+  "columns": ["region", "total_ingresos"],
+  "rows": [{"region": "Norte", "total_ingresos": 1250.0}],
+  "row_count": 1,
+  "truncated": false
+}
+```
+
+Los valores son ilustrativos. `row_count` cuenta las **filas devueltas por la consulta**, no el número total de registros originales; en una agregación puede ser 1 aunque el dataset contenga muchas filas. [Constructor SQL](../resource_registry/services/query_planner.py), [serialización del BIF](../BotServer/builtin_functions/resource_registry_functions.py).
+
+## Qué puede planificar hoy
+
+El detector usa patrones y palabras clave concretas, mayormente en inglés. Después compara palabras de la petición con nombres y tipos de columna del esquema. Si falta una columna apta, el planner no devuelve plan. Los límites siguientes pertenecen al **planner**, antes del límite general del executor. [Planner](../resource_registry/services/query_planner.py), [inteligencia de columnas](../resource_registry/services/schema_column_intelligence.py).
+
+| Intención | Ejemplo de `user_request` | SQL generado | Límite |
+| --- | --- | --- | ---: |
+| Conteo de filas | `How many rows are in this dataset?` | `COUNT(*)` | 1 |
+| Valores más frecuentes | `Show top campaign names` | Agrupa por dimensión y ordena por `COUNT(*)` | 10 |
+| Suma por dimensión | `Show total revenue by region` | `SUM(métrica)` y `GROUP BY dimensión` | 10 |
+| Promedio por dimensión | `Show average order value by segment` | `AVG(métrica)` y `GROUP BY dimensión` | 10 |
+| Estadísticos de una columna | `Show minimum, maximum and average value for Index` | `MIN`, `MAX`, `AVG` sobre `TRY_CAST(... AS DOUBLE)` | 1 |
+| Vista filtrada simple | `Show customers where country is Costa Rica` | Igualdad sobre una dimensión; selecciona hasta 3 columnas | 20 |
+| Primeras filas | `Show first 15 rows` | Proyección de columnas no sensibles | 15; máximo 50, por defecto 10 |
+| Inventario de assets o templates | Petición cerrada con marca y, para assets, nombres de archivo | Filtros exactos y columnas de salida predefinidas | 10 |
+
+La selección de dimensión y métrica es heurística: usa coincidencia de palabras, tipo declarado y, si existe, perfil de unicidad/nulos. Evita nombres que parecen secretos y descarta identificadores como métricas o dimensiones. Las columnas se citan como identificadores SQL y los valores se escapan como literales. En un filtro simple, el valor se normaliza de forma básica (por ejemplo, `active` pasa a `Active`), por lo que una diferencia de mayúsculas o formato en los datos puede producir cero filas. [Inteligencia de columnas](../resource_registry/services/schema_column_intelligence.py), [planner](../resource_registry/services/query_planner.py).
+
+### Caso frecuente: rango de fechas
+
+Si el agente entrega al planner una petición como `Show rows where fecha between 2026-01-01 and 2026-01-31`, **no obtiene un plan**: el parser de `where` solo construye filtros de igualdad (`is`, `equals` o `=`), y no tiene una intención para rangos. La BIF responde `unsupported_query_request`. Esto también ocurre con una petición equivalente en español. [Detector y parser](../resource_registry/services/query_planner.py), [BIF de planificación](../BotServer/builtin_functions/resource_registry_functions.py).
+
+Si el agente tiene autorización para ejecutar y conoce la columna y su tipo, puede enviar SQL directamente a `resource_registry_query_dataset`. Por ejemplo, para una columna `fecha` de tipo `DATE` o `TIMESTAMP`:
+
+```sql
+SELECT "fecha", "ventas"
+FROM dataset
+WHERE "fecha" >= DATE '2026-01-01'
+  AND "fecha" < DATE '2026-02-01'
+LIMIT 100
+```
+
+El intervalo **incluye el 1 de enero y excluye el 1 de febrero**; así incluye todo el 31 de enero cuando `fecha` contiene hora. El executor permite esta forma después de validar la sentencia y que ambas columnas sean visibles. Si `fecha` está almacenada como texto, hay que revisar su formato y conversión antes de interpretar el rango. El límite de 100 filas controla la salida, no las filas que DuckDB examina para aplicar el filtro; las demás políticas de tamaño, tiempo y autorización siguen vigentes. [Validador y ejecución](../resource_registry/services/dataset_query_executor.py).
+
+## Políticas de autorización y seguridad
+
+| Control | Efecto en la consulta |
+| --- | --- |
+| Herramienta asignada y capacidad | El BIF debe estar admitido para la Persona y permitido por la política de capacidades. `plan_query` y `query_dataset` tienen capacidades distintas; un plan exitoso no concede permiso para ejecutar. [Admisión](../BotServer/ai_engine_client.py), [manifiesto](../resource_registry/bifs/manifest.py), [política](../resource_registry/bifs/capability_policy.py). |
+| Namespace y dataset | El servidor resuelve el namespace autorizado y restringe la lectura al tenant, Workspace y conjuntos de datasets permitidos. Una referencia del modelo por sí sola no otorga acceso. [Admisión](../resource_registry/bifs/read_only_namespace_admission.py), [contexto de autorización](../BotServer/builtin_functions/resource_registry_functions.py), [permisos](../resource_registry/read_auth/permissions.py). |
+| Esquema visible | El planner recibe el esquema filtrado para el usuario. El executor verifica que cada columna del SQL esté en el esquema autorizado; para usuarios no admin, intersecta además el esquema físico con las columnas visibles. Columnas ocultas o con tipo `REDACTED` no son consultables por esa ruta. [Fachada](../resource_registry/read_auth/policy.py), [columnas consultables](../resource_registry/read_auth/query_columns.py), [executor](../resource_registry/services/dataset_query_executor.py). |
+| Forma del SQL | Por defecto se usa el validador `sqlglot`: una sola sentencia `SELECT`, desde la tabla `dataset`, con `LIMIT` entero y sin `SELECT *`, CTE, subconsultas, `JOIN` ni operaciones de conjunto. También se rechazan comentarios y varias sentencias. El modo es configurable (`sqlglot`, `legacy` o `shadow`). [Executor](../resource_registry/services/dataset_query_executor.py), [configuración](../BotPlatform/resource_registry_settings.py). |
+| Resultado y observabilidad | Se serializan/sanean valores del resultado, se registran tiempo, cantidad de filas y códigos de error; los fallos de DuckDB registran una huella del SQL. Este saneamiento **no equivale a anonimización general de datos personales**. [BIF](../BotServer/builtin_functions/resource_registry_functions.py), [executor](../resource_registry/services/dataset_query_executor.py). |
+
+## Límites de ejecución y ruta asíncrona
+
+Los siguientes valores son **predeterminados configurables**, no compromisos de capacidad del producto. [Configuración](../BotPlatform/resource_registry_settings.py), [executor](../resource_registry/services/dataset_query_executor.py), [política de enrutamiento](../resource_registry/services/dataset_query_routing_policy.py).
+
+| Restricción | Valor predeterminado / comportamiento |
+| --- | --- |
+| Filas devueltas | Máximo 100; un `LIMIT` superior se rechaza como `unsafe_sql`. |
+| Tiempo de consulta síncrona | 3 segundos; si se supera, `query_timeout` (408). |
+| Enrutamiento por tamaño | Artefacto mayor de 100 MiB: `async_query_required` (409) con `recommended_bif: resource_registry_start_query_job`. |
+| Límite de artefacto del executor | 500 MiB para la instancia estándar; superar ese límite produce `dataset_too_large_for_sync_query` (413). La ruta de job reutiliza el executor, así que **el job no elimina este límite** en la configuración actual. |
+| Espacio temporal y caché | Exige al menos 1 GiB libre; caché materializada con TTL de 600 segundos y máximo de 2 GiB. |
+| Concurrencia | 10 consultas globales, 2 por tenant y sin límite por usuario por defecto (`0`); el exceso devuelve 429. |
+| Job asíncrono | `start_query_job` devuelve 202 e ID; un worker ejecuta y se consulta con `get_query_job_status` y `get_query_job_result`. Tiempo predeterminado de ejecución: 10 segundos; resultado máximo: 100 filas. |
+
+El enrutador también puede **recomendar** la ruta asíncrona cuando no conoce el tamaño del artefacto o estima alto costo de agregación. El BIF síncrono solo detiene la ejecución cuando la decisión es `async_required`. El job valida SQL y autorización al enviarse, revalida autoridad antes de ejecutar y comprueba acceso al resultado al leerlo. Un lector restringido solo puede consultar sus propios jobs. [Enrutamiento](../resource_registry/services/dataset_query_routing_policy.py), [BIF de jobs](../BotServer/builtin_functions/resource_registry_functions.py), [servicio de ejecución del job](../resource_registry/services/dataset_query_job_execution_service.py).
+
+## Restricciones analíticas y cómo explicarlas al usuario
+
+- **Una versión, una tabla.** El executor trabaja contra la tabla `dataset` de un único dataset; no admite joins ni comparaciones entre datasets en una sola consulta. [Validador SQL](../resource_registry/services/dataset_query_executor.py).
+- **Cobertura limitada del lenguaje natural.** Un brief en español, una condición compleja, un rango de fechas o una fórmula de negocio no tienen interpretación garantizada por el planner. Si no reconoce la forma, devuelve `unsupported_query_request`; el equipo puede reformular la petición o preparar SQL compatible con las mismas políticas del executor. [Detector de intenciones](../resource_registry/services/query_planner.py).
+- **Sin semántica de negocio implícita.** `top_values` ordena por frecuencia de filas, no por una métrica comercial. Suma y promedio usan los valores de columna tal como están; el planner no determina moneda, denominador, deduplicación, tratamiento de nulos ni significado de indicadores. [Constructor SQL](../resource_registry/services/query_planner.py).
+- **Muestras sin orden estable.** El plan de primeras filas y el filtro simple incluyen `LIMIT`, pero no `ORDER BY`; deben tratarse como vistas exploratorias, no como una muestra reproducible. [Constructor SQL](../resource_registry/services/query_planner.py).
+- **Versión explícita recomendada.** Si se omite `version_id`, planificación y ejecución resuelven la versión más reciente en llamadas separadas. Una nueva versión publicada entre ambas llamadas puede cambiar el esquema o los resultados; conviene fijar la versión para informes reproducibles. [BIF de planificación](../BotServer/builtin_functions/resource_registry_functions.py), [executor](../resource_registry/services/dataset_query_executor.py).
+- **Límite de respuesta no es límite del universo analizado.** Una agregación puede leer todas las filas del artefacto y devolver solo 10 grupos. En cambio, `row_count` del resultado describe las filas retornadas. Para conocer el total de registros se debe pedir explícitamente `COUNT(*)`. [Planner](../resource_registry/services/query_planner.py), [runner DuckDB](../resource_registry/services/dataset_query_executor.py).
+
+## Errores que conviene reconocer
+
+| Código | Lectura práctica |
+| --- | --- |
+| `unsupported_query_request` | El planner no puede expresar el brief con sus intenciones seguras. |
+| `unsafe_sql` | La sentencia no cumple la forma permitida o el `LIMIT` supera el máximo. |
+| `invalid_column` | El SQL refiere una columna ausente o no visible para el usuario. |
+| `async_query_required` | El BIF síncrono exige iniciar un query job. |
+| `query_timeout` | Se excedió el tiempo de ejecución configurado. |
+| `dataset_too_large_for_sync_query`, `insufficient_temp_storage`, `dataset_cache_storage_exceeded` | El artefacto o el almacenamiento temporal supera los límites disponibles. |
+| `query_concurrency_limit_exceeded` | Ya se alcanzó el cupo de consultas simultáneas. |
+
+La salida de un plan es una **propuesta de consulta**. La evidencia analítica aparece únicamente después de una ejecución exitosa y debe interpretarse junto con el dataset, la versión, las columnas usadas, el SQL y sus límites. [Planner](../resource_registry/services/query_planner.py), [executor](../resource_registry/services/dataset_query_executor.py).

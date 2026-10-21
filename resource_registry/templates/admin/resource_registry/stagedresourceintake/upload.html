@@ -1,0 +1,46 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <style>
+    #resource-upload-progress { width: min(42rem, 100%); }
+    #resource-upload-status[role="status"] { margin-top: 1rem; }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <div id="resource-registry-upload"
+       data-create-url="{{ create_url }}"
+       data-status-url-pattern="{{ status_url_pattern }}"
+       data-renew-url-pattern="{{ renew_url_pattern }}"
+       data-complete-url-pattern="{{ complete_url_pattern }}"
+       data-cancel-url-pattern="{{ cancel_url_pattern }}">
+    <h1>Upload resource</h1>
+    <p>Upload a CSV, XLSX, JSON, JSONL/NDJSON, or Parquet file securely for inspection.</p>
+    <form id="resource-upload-form">
+      {% csrf_token %}
+      <p>
+        <label for="resource-upload-file">File</label>
+        <!-- Keep the native picker unfiltered: macOS may disable unfamiliar file types.
+             The client and server validate the format before authorizing an upload. -->
+        <input id="resource-upload-file" name="file" type="file" required>
+      </p>
+      <p>
+        <button id="resource-upload-start" type="submit" class="default">Start upload</button>
+        <button id="resource-upload-cancel" type="button" hidden>Cancel upload</button>
+      </p>
+    </form>
+    <progress id="resource-upload-progress" value="0" max="100" hidden>0%</progress>
+    <p id="resource-upload-status" role="status" aria-live="polite"></p>
+    <p id="resource-upload-next-steps" hidden>
+      Next steps: wait for the inspection worker to process the intake. When its status becomes
+      <strong>READY_FOR_PUBLICATION</strong>, open the staged intake and select
+      <strong>Publish to destinations</strong> to choose its Organization or Workspace. For a
+      specific project, team, or piece of work, create or use a dedicated Workspace; use the
+      Organization destination only for data intended to be shared across the organization.
+    </p>
+    <p><a href="{% url 'admin:resource_registry_stagedresourceintake_changelist' %}">Back to staged intakes</a></p>
+  </div>
+  <script type="module" src="{% static 'resource_registry/admin/direct_intake_upload.js' %}"></script>
+{% endblock %}

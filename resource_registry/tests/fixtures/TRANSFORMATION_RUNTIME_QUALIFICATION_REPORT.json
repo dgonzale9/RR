@@ -1,0 +1,54 @@
+{
+  "architecture_version": "transformation-runtime/1.0",
+  "runtime_version": "transformation-runtime/1.0",
+  "registry_checksum": "302a58b190160c4401c2e4b4ce5701057b7e8507bf5c1ff0ad748211303cdfeb",
+  "configuration_checksum": "6031a75bd35dbccb372dc4a72272b27dea958c07c6a24e499a1fd1441bdaa70f",
+  "runtime_checksum": "b1ac0f4d6fe987443cd81aa298536b339644cd694d67ed003f903af3489e5dc6",
+  "provider_versions": [
+    "local_duckdb_tabular@1.0.0"
+  ],
+  "compiler_version": "execution-plan/1.0",
+  "migration_version": "0021_transformationworkspacelease_and_more",
+  "executed_scenarios": [
+    "runtime health transition and identity stability",
+    "production definition-to-lineage pipeline and workspace cleanup",
+    "checkpoint corruption fail-closed behavior",
+    "storage interruption retry and duplicate prevention",
+    "cross-tenant authorization denial",
+    "PostgreSQL multi-worker and multi-tenant concurrency",
+    "durable pipeline registration and lineage",
+    "repeated execution determinism"
+  ],
+  "passed_scenarios": 8,
+  "failed_scenarios": 0,
+  "validation_results": {
+    "focused_qualification_tests": 9,
+    "transformation_regression_tests": 331,
+    "transformation_regression_subtests": 8,
+    "durable_async_regression_tests": 129
+  },
+  "performance_observations_seconds": {
+    "runtime_startup": 0.000585,
+    "compilation": 0.000276,
+    "execution": 0.067743,
+    "output_finalization": 0.127493
+  },
+  "deferred_scenarios": [
+    "physical database process restart",
+    "external object-store network partition",
+    "host-level worker termination",
+    "production-scale performance and soak testing"
+  ],
+  "environment": {
+    "python": "3.11.11",
+    "django": "5.0.7",
+    "database": "PostgreSQL 16.14",
+    "storage": "local filesystem with injected interruption",
+    "provider": "local DuckDB tabular"
+  },
+  "known_limitations": [
+    "Timing is captured as pytest report properties without acceptance thresholds.",
+    "External infrastructure failures require deployment-environment fault injection.",
+    "The report identifies the deterministic qualification profile, not environment-specific runtime state."
+  ]
+}

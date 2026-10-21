@@ -1,0 +1,10 @@
+{% extends "admin/change_list.html" %}
+
+{% block object-tools-items %}
+  {% if can_upload_resource %}
+    <li>
+      <a href="{% url 'admin:resource_registry_stagedresourceintake_upload' %}">Upload resource</a>
+    </li>
+  {% endif %}
+  {{ block.super }}
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+
+  <p><strong>{{ intake.normalized_filename }}</strong> — this archives only the selected destination output.</p>
+  <p>Each destination shows its current job state and the number of active Datasets affected.</p>
+  <p>Azure objects, the intake record, Registry Namespaces, and other destinations are retained.</p>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <input type="submit" value="Remove selected assignments" class="deletelink">
+    <a href="{% url 'admin:resource_registry_stagedresourceintake_change' intake.pk %}">Cancel</a>
+  </form>
+{% endblock %}

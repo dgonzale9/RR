@@ -1,0 +1,292 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Literal
+
+RiskLevel = Literal["LOW", "MEDIUM", "HIGH"]
+
+
+@dataclass(frozen=True)
+class BifCapabilityManifestEntry:
+    """Capability metadata for a Resource Registry built-in function."""
+
+    function_name: str
+    capability_key: str
+    required_permissions: tuple[str, ...] = ()
+    required_scopes: tuple[str, ...] = ()
+    allowed_roles: tuple[str, ...] = ()
+    is_read_only: bool = True
+    risk_level: RiskLevel = "LOW"
+
+
+RESOURCE_REGISTRY_BIF_MANIFEST: dict[str, BifCapabilityManifestEntry] = {
+    "resource_registry_replace_dataset": BifCapabilityManifestEntry(
+        function_name="resource_registry_replace_dataset",
+        capability_key="resource_registry.dataset.replace",
+        required_permissions=("dataset:write",),
+        allowed_roles=("admin", "reader"),
+        is_read_only=False,
+        risk_level="HIGH",
+    ),
+    "resource_registry_get_replacement_status": BifCapabilityManifestEntry(
+        function_name="resource_registry_get_replacement_status",
+        capability_key="resource_registry.dataset.replace.status.read",
+        required_permissions=("dataset:write",),
+        allowed_roles=("admin", "reader"),
+        is_read_only=True,
+        risk_level="MEDIUM",
+    ),
+    "resource_registry_start_transformation_run": BifCapabilityManifestEntry(
+        function_name="resource_registry_start_transformation_run",
+        capability_key="resource_registry.transformation.run.start",
+        required_permissions=(
+            "resource_registry.execute_transformation",
+            "resource_registry.use_transformation_provider",
+        ),
+        required_scopes=("resource_registry.transformation.run.start",),
+        allowed_roles=("admin",),
+        is_read_only=False,
+        risk_level="HIGH",
+    ),
+    "resource_registry_get_transformation_run": BifCapabilityManifestEntry(
+        function_name="resource_registry_get_transformation_run",
+        capability_key="resource_registry.transformation.run.read",
+        required_permissions=("resource_registry.view_transformationrun",),
+        allowed_roles=("restricted_reader", "reader", "admin"),
+        is_read_only=True,
+        risk_level="MEDIUM",
+    ),
+    "resource_registry_list_transformation_runs": BifCapabilityManifestEntry(
+        function_name="resource_registry_list_transformation_runs",
+        capability_key="resource_registry.transformation.run.read",
+        required_permissions=("resource_registry.view_transformationrun",),
+        allowed_roles=("restricted_reader", "reader", "admin"),
+        is_read_only=True,
+        risk_level="MEDIUM",
+    ),
+    "resource_registry_list_transformation_steps": BifCapabilityManifestEntry(
+        function_name="resource_registry_list_transformation_steps",
+        capability_key="resource_registry.transformation.step.read",
+        required_permissions=("resource_registry.view_transformationrun",),
+        allowed_roles=("restricted_reader", "reader", "admin"),
+        is_read_only=True,
+        risk_level="MEDIUM",
+    ),
+    "resource_registry_list_transformation_outputs": BifCapabilityManifestEntry(
+        function_name="resource_registry_list_transformation_outputs",
+        capability_key="resource_registry.transformation.output.read",
+        required_permissions=("resource_registry.view_transformationrun",),
+        allowed_roles=("restricted_reader", "reader", "admin"),
+        is_read_only=True,
+        risk_level="MEDIUM",
+    ),
+    "resource_registry_get_transformation_diagnostics": BifCapabilityManifestEntry(
+        function_name="resource_registry_get_transformation_diagnostics",
+        capability_key="resource_registry.transformation.diagnostics.read",
+        required_permissions=("resource_registry.view_transformation_diagnostics",),
+        allowed_roles=("reader", "admin"),
+        is_read_only=True,
+        risk_level="MEDIUM",
+    ),
+    "resource_registry_list_datasets": BifCapabilityManifestEntry(
+        function_name="resource_registry_list_datasets",
+        capability_key="resource_registry.dataset.list",
+        required_permissions=("dataset:read",),
+        allowed_roles=("restricted_reader", "reader", "admin"),
+        is_read_only=True,
+        risk_level="LOW",
+    ),
+    "resource_registry_get_dataset": BifCapabilityManifestEntry(
+        function_name="resource_registry_get_dataset",
+        capability_key="resource_registry.dataset.read",
+        required_permissions=("dataset:read",),
+        allowed_roles=("restricted_reader", "reader", "admin"),
+        is_read_only=True,
+        risk_level="LOW",
+    ),
+    "resource_registry_get_dataset_context": BifCapabilityManifestEntry(
+        function_name="resource_registry_get_dataset_context",
+        capability_key="resource_registry.dataset.context.read",
+        required_permissions=("dataset_context:read",),
+        allowed_roles=("restricted_reader", "reader", "admin"),
+        is_read_only=True,
+        risk_level="MEDIUM",
+    ),
+    "resource_registry_get_dataset_schema": BifCapabilityManifestEntry(
+        function_name="resource_registry_get_dataset_schema",
+        capability_key="resource_registry.dataset.schema.read",
+        required_permissions=("dataset_schema:read",),
+        allowed_roles=("restricted_reader", "reader", "admin"),
+        is_read_only=True,
+        risk_level="LOW",
+    ),
+    "resource_registry_get_dataset_profile": BifCapabilityManifestEntry(
+        function_name="resource_registry_get_dataset_profile",
+        capability_key="resource_registry.dataset.profile.read",
+        required_permissions=("dataset_profile:read",),
+        allowed_roles=("restricted_reader", "reader", "admin"),
+        is_read_only=True,
+        risk_level="MEDIUM",
+    ),
+    "resource_registry_list_dataset_versions": BifCapabilityManifestEntry(
+        function_name="resource_registry_list_dataset_versions",
+        capability_key="resource_registry.dataset.versions.read",
+        required_permissions=("dataset_version:read",),
+        allowed_roles=("restricted_reader", "reader", "admin"),
+        is_read_only=True,
+        risk_level="LOW",
+    ),
+    "resource_registry_list_external_jobs": BifCapabilityManifestEntry(
+        function_name="resource_registry_list_external_jobs",
+        capability_key="resource_registry.external_jobs.read",
+        required_permissions=("external_job:read",),
+        required_scopes=("resource_registry.external_jobs.read",),
+        allowed_roles=("reader", "admin"),
+        is_read_only=True,
+        risk_level="MEDIUM",
+    ),
+    "resource_registry_query_dataset": BifCapabilityManifestEntry(
+        function_name="resource_registry_query_dataset",
+        capability_key="resource_registry.dataset.query.read",
+        required_permissions=("dataset_query:read",),
+        allowed_roles=("restricted_reader", "reader", "admin"),
+        is_read_only=False,
+        risk_level="HIGH",
+    ),
+    "resource_registry_start_query_job": BifCapabilityManifestEntry(
+        function_name="resource_registry_start_query_job",
+        capability_key="resource_registry.dataset.query.job.start",
+        required_permissions=("dataset_query:read",),
+        allowed_roles=("restricted_reader", "reader", "admin"),
+        is_read_only=False,
+        risk_level="HIGH",
+    ),
+    "resource_registry_create_filtered_dataset": BifCapabilityManifestEntry(
+        function_name="resource_registry_create_filtered_dataset",
+        capability_key="resource_registry.dataset.derived.create",
+        required_permissions=("dataset:write", "dataset_query:read"),
+        allowed_roles=("reader", "admin"),
+        is_read_only=False,
+        risk_level="HIGH",
+    ),
+    "resource_registry_get_query_job_status": BifCapabilityManifestEntry(
+        function_name="resource_registry_get_query_job_status",
+        capability_key="resource_registry.dataset.query.job.read",
+        required_permissions=("dataset_query:read",),
+        allowed_roles=("restricted_reader", "reader", "admin"),
+        is_read_only=True,
+        risk_level="MEDIUM",
+    ),
+    "resource_registry_get_query_job_result": BifCapabilityManifestEntry(
+        function_name="resource_registry_get_query_job_result",
+        capability_key="resource_registry.dataset.query.job.read",
+        required_permissions=("dataset_query:read",),
+        allowed_roles=("restricted_reader", "reader", "admin"),
+        is_read_only=True,
+        risk_level="HIGH",
+    ),
+    "resource_registry_start_intelligence_job": BifCapabilityManifestEntry(
+        function_name="resource_registry_start_intelligence_job",
+        capability_key="resource_registry.dataset.intelligence.job.start",
+        required_permissions=("dataset_intelligence:read",),
+        allowed_roles=("reader", "admin"),
+        is_read_only=False,
+        risk_level="HIGH",
+    ),
+    "resource_registry_get_intelligence_job_status": BifCapabilityManifestEntry(
+        function_name="resource_registry_get_intelligence_job_status",
+        capability_key="resource_registry.dataset.intelligence.job.read",
+        required_permissions=("dataset_intelligence:read",),
+        allowed_roles=("restricted_reader", "reader", "admin"),
+        is_read_only=True,
+        risk_level="MEDIUM",
+    ),
+    "resource_registry_get_intelligence_job_result": BifCapabilityManifestEntry(
+        function_name="resource_registry_get_intelligence_job_result",
+        capability_key="resource_registry.dataset.intelligence.job.read",
+        required_permissions=("dataset_intelligence:read",),
+        allowed_roles=("restricted_reader", "reader", "admin"),
+        is_read_only=True,
+        risk_level="HIGH",
+    ),
+    "resource_registry_plan_query": BifCapabilityManifestEntry(
+        function_name="resource_registry_plan_query",
+        capability_key="resource_registry.dataset.query.plan",
+        required_permissions=("dataset_query:plan",),
+        allowed_roles=("restricted_reader", "reader", "admin"),
+        is_read_only=True,
+        risk_level="MEDIUM",
+    ),
+    "resource_registry_analyze_dataset": BifCapabilityManifestEntry(
+        function_name="resource_registry_analyze_dataset",
+        capability_key="resource_registry.dataset.analysis.read",
+        required_permissions=("dataset_analysis:read",),
+        allowed_roles=("restricted_reader", "reader", "admin"),
+        is_read_only=False,
+        risk_level="HIGH",
+    ),
+    "resource_registry_explore_dataset": BifCapabilityManifestEntry(
+        function_name="resource_registry_explore_dataset",
+        capability_key="resource_registry.dataset.exploration.read",
+        required_permissions=("dataset_exploration:read",),
+        allowed_roles=("restricted_reader", "reader", "admin"),
+        is_read_only=True,
+        risk_level="HIGH",
+    ),
+    "resource_registry_create_chart": BifCapabilityManifestEntry(
+        function_name="resource_registry_create_chart",
+        capability_key="resource_registry.dataset.chart.read",
+        required_permissions=("dataset_chart:read",),
+        allowed_roles=("restricted_reader", "reader", "admin"),
+        is_read_only=False,
+        risk_level="HIGH",
+    ),
+    "resource_registry_plan_export": BifCapabilityManifestEntry(
+        function_name="resource_registry_plan_export",
+        capability_key="resource_registry.dataset.export.plan",
+        required_permissions=("dataset_export:plan",),
+        allowed_roles=("restricted_reader", "reader", "admin"),
+        is_read_only=False,
+        risk_level="MEDIUM",
+    ),
+    "resource_registry_get_query_run": BifCapabilityManifestEntry(
+        function_name="resource_registry_get_query_run",
+        capability_key="resource_registry.dataset.query_run.read",
+        required_permissions=("dataset_query_run:read",),
+        allowed_roles=("restricted_reader", "reader", "admin"),
+        is_read_only=True,
+        risk_level="MEDIUM",
+    ),
+    "resource_registry_get_analysis_artifact": BifCapabilityManifestEntry(
+        function_name="resource_registry_get_analysis_artifact",
+        capability_key="resource_registry.dataset.analysis_artifact.read",
+        required_permissions=("dataset_analysis_artifact:read",),
+        allowed_roles=("restricted_reader", "reader", "admin"),
+        is_read_only=True,
+        risk_level="MEDIUM",
+    ),
+    "resource_registry_get_chart_artifact": BifCapabilityManifestEntry(
+        function_name="resource_registry_get_chart_artifact",
+        capability_key="resource_registry.dataset.chart_artifact.read",
+        required_permissions=("dataset_chart_artifact:read",),
+        allowed_roles=("restricted_reader", "reader", "admin"),
+        is_read_only=True,
+        risk_level="MEDIUM",
+    ),
+    "resource_registry_get_export_plan": BifCapabilityManifestEntry(
+        function_name="resource_registry_get_export_plan",
+        capability_key="resource_registry.dataset.export_plan.read",
+        required_permissions=("dataset_export_plan:read",),
+        allowed_roles=("restricted_reader", "reader", "admin"),
+        is_read_only=True,
+        risk_level="MEDIUM",
+    ),
+    "resource_registry_generate_artifact": BifCapabilityManifestEntry(
+        function_name="resource_registry_generate_artifact",
+        capability_key="resource_registry.dataset.artifact.generate",
+        required_permissions=("dataset_artifact:generate",),
+        allowed_roles=("reader", "admin"),
+        is_read_only=False,
+        risk_level="HIGH",
+    ),
+}

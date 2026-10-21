@@ -1,0 +1,12 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+
+  <p><strong>{{ intake.normalized_filename }}</strong> — {{ intake.status }}</p>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <input type="submit" value="Publish selected destinations" class="default">
+    <a href="{% url 'admin:resource_registry_stagedresourceintake_change' intake.pk %}">Cancel</a>
+  </form>
+{% endblock %}
