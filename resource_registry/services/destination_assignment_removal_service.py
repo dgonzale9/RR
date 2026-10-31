@@ -202,6 +202,13 @@ class DestinationAssignmentRemovalService:
                 completed_output_identifiers = self._validated_output_identifiers(
                     result_payload=job.result_payload_json
                 )
+                maintenance_identifiers = {
+                    (entry["dataset_id"], entry["dataset_version_id"])
+                    for result in publication.dataset_changes.filter(
+                        status="PUBLISHED"
+                    ).values_list("result", flat=True)
+                    for entry in result.get("versions", [])
+                }
                 assignment_identifier_rows = publication.dataset_assignments.values_list(
                     "dataset_id",
                     "dataset_version_id",
@@ -210,7 +217,10 @@ class DestinationAssignmentRemovalService:
                     (str(dataset_id), str(dataset_version_id))
                     for dataset_id, dataset_version_id in assignment_identifier_rows
                 }
-                if set(completed_output_identifiers) != recorded_output_identifiers:
+                if (
+                    set(completed_output_identifiers) | maintenance_identifiers
+                    != recorded_output_identifiers
+                ):
                     raise UploadApplicationError("PUBLICATION_OUTPUT_RECONCILIATION_REQUIRED", 409)
 
             assignment_rows = list(
@@ -470,6 +480,7 @@ class DestinationAssignmentRemovalService:
         Dataset.objects.filter(id=dataset_id, archived_at__isnull=True).update(
             status=DatasetStatus.ARCHIVED,
             archived_at=archived_at,
+            archive_reason="PUBLICATION",
         )
         DatasetArtifact.objects.filter(
             dataset_version__dataset_id=dataset_id,

@@ -132,7 +132,8 @@ def test_expire_intake_deletes_only_its_staging_object() -> None:
     assert service.expire_intakes() == 1
     intake.refresh_from_db()
     assert intake.status == StagedResourceIntakeStatus.EXPIRED
-    assert provider.deleted_keys == (intake.storage_object_key,)
+    assert provider.deleted_keys == ()
+    assert intake.cleanup_required is True
 
 
 def test_complete_intake_queues_inspection_without_creating_datasets() -> None:
@@ -302,8 +303,8 @@ def test_json_validation_failure_is_terminal_without_retry(
     assert second_job.retry_count == 0
 
 
-def test_expiration_worker_retries_staging_cleanup_after_publication() -> None:
-    """Retry failed staging cleanup without changing a published intake's lifecycle."""
+def test_expiration_worker_preserves_published_source_for_retention_policy() -> None:
+    """Leave published sources to reviewed policy cleanup instead of immediate expiry."""
     user = User.objects.create_user(username="published-intake-cleanup", password="password")
     provider = FakeIntakeUploadProvider()
     service = StagedResourceIntakeService(provider=provider)
@@ -325,7 +326,7 @@ def test_expiration_worker_retries_staging_cleanup_after_publication() -> None:
     intake.refresh_from_db()
     assert intake.status == StagedResourceIntakeStatus.PUBLISHED
     assert intake.cleanup_required is False
-    assert provider.deleted_keys == (intake.storage_object_key,)
+    assert provider.deleted_keys == ()
 
 
 def test_published_intake_ignores_its_legacy_staging_deadline() -> None:

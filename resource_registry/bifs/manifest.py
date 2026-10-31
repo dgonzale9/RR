@@ -20,22 +20,6 @@ class BifCapabilityManifestEntry:
 
 
 RESOURCE_REGISTRY_BIF_MANIFEST: dict[str, BifCapabilityManifestEntry] = {
-    "resource_registry_replace_dataset": BifCapabilityManifestEntry(
-        function_name="resource_registry_replace_dataset",
-        capability_key="resource_registry.dataset.replace",
-        required_permissions=("dataset:write",),
-        allowed_roles=("admin", "reader"),
-        is_read_only=False,
-        risk_level="HIGH",
-    ),
-    "resource_registry_get_replacement_status": BifCapabilityManifestEntry(
-        function_name="resource_registry_get_replacement_status",
-        capability_key="resource_registry.dataset.replace.status.read",
-        required_permissions=("dataset:write",),
-        allowed_roles=("admin", "reader"),
-        is_read_only=True,
-        risk_level="MEDIUM",
-    ),
     "resource_registry_start_transformation_run": BifCapabilityManifestEntry(
         function_name="resource_registry_start_transformation_run",
         capability_key="resource_registry.transformation.run.start",

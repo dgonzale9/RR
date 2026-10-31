@@ -48,6 +48,19 @@ _MAX_FILENAME_LENGTH = 255
 _CONTROL_CHARACTER_LIMIT = 32
 
 
+def _get_upload_setting_integer(setting_name: str, default_value: int) -> int:
+    """Read one integer upload setting while preserving test-time overrides.
+
+    Args:
+        setting_name: Django setting name to read.
+        default_value: Safe fallback when the setting is absent.
+
+    Returns:
+        The configured or fallback integer value.
+    """
+    return int(getattr(settings, setting_name, default_value))
+
+
 @dataclass(frozen=True, kw_only=True)
 class UploadAdmission:
     """Carry one current canonical Workspace or Organization upload authorization."""
@@ -302,12 +315,20 @@ class LargeFileUploadService:
         )
         now = timezone.now()
         authorization_ttl_seconds = min(
-            max(int(settings.RESOURCE_REGISTRY_UPLOAD_AUTHORIZATION_TTL_SECONDS), 60),
+            max(
+                _get_upload_setting_integer(
+                    "RESOURCE_REGISTRY_UPLOAD_AUTHORIZATION_TTL_SECONDS", 3600
+                ),
+                60,
+            ),
             3600,
         )
         authorization_expires_at = now + timedelta(seconds=authorization_ttl_seconds)
         expires_at = now + timedelta(
-            seconds=max(int(settings.RESOURCE_REGISTRY_UPLOAD_SESSION_TTL_SECONDS), 300),
+            seconds=max(
+                _get_upload_setting_integer("RESOURCE_REGISTRY_UPLOAD_SESSION_TTL_SECONDS", 86400),
+                300,
+            ),
         )
         idempotent_replay = False
         try:
@@ -379,7 +400,9 @@ class LargeFileUploadService:
                 session=self._snapshot(session),
                 authorization=None,
                 idempotent_replay=True,
-                max_file_size_bytes=int(settings.RESOURCE_REGISTRY_UPLOAD_MAX_FILE_SIZE_BYTES),
+                max_file_size_bytes=_get_upload_setting_integer(
+                    "RESOURCE_REGISTRY_UPLOAD_MAX_FILE_SIZE_BYTES", 10 * 1024**3
+                ),
                 storage_provider=session.storage_provider,
             )
         if session.status not in {
@@ -396,10 +419,12 @@ class LargeFileUploadService:
                 object_key=session.storage_object_key,
                 content_type=session.declared_content_type,
                 expires_at=authorization_expires_at,
-                recommended_chunk_size_bytes=int(
-                    settings.RESOURCE_REGISTRY_UPLOAD_RECOMMENDED_CHUNK_SIZE_BYTES
+                recommended_chunk_size_bytes=_get_upload_setting_integer(
+                    "RESOURCE_REGISTRY_UPLOAD_RECOMMENDED_CHUNK_SIZE_BYTES", 16 * 1024**2
                 ),
-                max_parallel_chunks=int(settings.RESOURCE_REGISTRY_UPLOAD_MAX_PARALLEL_CHUNKS),
+                max_parallel_chunks=_get_upload_setting_integer(
+                    "RESOURCE_REGISTRY_UPLOAD_MAX_PARALLEL_CHUNKS", 4
+                ),
             )
         except UploadApplicationError as error:
             LargeFileUploadSession.objects.filter(pk=session.pk).update(
@@ -430,7 +455,9 @@ class LargeFileUploadService:
             session=self._snapshot(session),
             authorization=authorization,
             idempotent_replay=idempotent_replay,
-            max_file_size_bytes=int(settings.RESOURCE_REGISTRY_UPLOAD_MAX_FILE_SIZE_BYTES),
+            max_file_size_bytes=_get_upload_setting_integer(
+                "RESOURCE_REGISTRY_UPLOAD_MAX_FILE_SIZE_BYTES", 10 * 1024**3
+            ),
             storage_provider=session.storage_provider,
         )
 
@@ -576,7 +603,9 @@ class LargeFileUploadService:
             raise UploadApplicationError("UPLOAD_EMPTY_FILE", 409)
         if metadata.size_bytes != session.declared_size_bytes:
             raise UploadApplicationError("UPLOAD_SIZE_MISMATCH", 409)
-        if metadata.size_bytes > int(settings.RESOURCE_REGISTRY_UPLOAD_MAX_FILE_SIZE_BYTES):
+        if metadata.size_bytes > _get_upload_setting_integer(
+            "RESOURCE_REGISTRY_UPLOAD_MAX_FILE_SIZE_BYTES", 10 * 1024**3
+        ):
             raise UploadApplicationError("UPLOAD_FILE_TOO_LARGE", 413)
         self._format_policy.resolve(
             filename=session.normalized_filename,
@@ -660,20 +689,24 @@ class LargeFileUploadService:
 
     def _enforce_quotas(self, *, admission: UploadAdmission, size_bytes: int) -> None:
         active = LargeFileUploadSession.objects.filter(status__in=_ACTIVE_STATUSES)
-        if active.filter(submitted_by_id=admission.actor_id).count() >= int(
-            settings.RESOURCE_REGISTRY_UPLOAD_MAX_PENDING_PER_USER
+        if active.filter(submitted_by_id=admission.actor_id).count() >= _get_upload_setting_integer(
+            "RESOURCE_REGISTRY_UPLOAD_MAX_PENDING_PER_USER", 5
         ):
             self._audit_rejection("UPLOAD_USER_QUOTA_EXCEEDED")
             raise UploadApplicationError("UPLOAD_USER_QUOTA_EXCEEDED", 429)
-        workspace_active = active.filter(workspace_id=admission.workspace_id)
-        if workspace_active.count() >= int(
-            settings.RESOURCE_REGISTRY_UPLOAD_MAX_PENDING_PER_WORKSPACE
+        workspace_active = (
+            active.filter(workspace_id=admission.workspace_id)
+            if admission.workspace_id is not None
+            else active.filter(workspace_id__isnull=True)
+        )
+        if workspace_active.count() >= _get_upload_setting_integer(
+            "RESOURCE_REGISTRY_UPLOAD_MAX_PENDING_PER_WORKSPACE", 20
         ):
             self._audit_rejection("UPLOAD_WORKSPACE_QUOTA_EXCEEDED")
             raise UploadApplicationError("UPLOAD_WORKSPACE_QUOTA_EXCEEDED", 429)
         pending_bytes = workspace_active.aggregate(total=Sum("declared_size_bytes"))["total"] or 0
-        if pending_bytes + size_bytes > int(
-            settings.RESOURCE_REGISTRY_UPLOAD_MAX_PENDING_BYTES_PER_WORKSPACE
+        if pending_bytes + size_bytes > _get_upload_setting_integer(
+            "RESOURCE_REGISTRY_UPLOAD_MAX_PENDING_BYTES_PER_WORKSPACE", 50 * 1024**3
         ):
             self._audit_rejection("UPLOAD_BYTES_QUOTA_EXCEEDED")
             raise UploadApplicationError("UPLOAD_BYTES_QUOTA_EXCEEDED", 429)
@@ -694,7 +727,9 @@ class LargeFileUploadService:
     def _validate_size(size_bytes: int) -> None:
         if type(size_bytes) is not int or size_bytes <= 0:
             raise UploadApplicationError("UPLOAD_EMPTY_FILE", 400)
-        if size_bytes > int(settings.RESOURCE_REGISTRY_UPLOAD_MAX_FILE_SIZE_BYTES):
+        if size_bytes > _get_upload_setting_integer(
+            "RESOURCE_REGISTRY_UPLOAD_MAX_FILE_SIZE_BYTES", 10 * 1024**3
+        ):
             raise UploadApplicationError("UPLOAD_FILE_TOO_LARGE", 413)
 
     @staticmethod
@@ -765,11 +800,13 @@ class LargeFileUploadService:
     def _authorized_queryset(
         admission: UploadAdmission,
     ) -> QuerySet[LargeFileUploadSession]:
-        return LargeFileUploadSession.objects.filter(
+        queryset = LargeFileUploadSession.objects.filter(
             organization_id=admission.organization_id,
-            workspace_id=admission.workspace_id,
             registry_namespace_id=admission.namespace_id,
         )
+        if admission.workspace_id is None:
+            return queryset.filter(workspace_id__isnull=True)
+        return queryset.filter(workspace_id=admission.workspace_id)
 
     def _locked_authorized_session(
         self,

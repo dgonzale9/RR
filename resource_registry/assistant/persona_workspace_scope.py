@@ -33,6 +33,19 @@ class PersonaWorkspaceScope:
     namespace_id: str
 
 
+@dataclass(frozen=True)
+class PersonaWorkspaceRoutingSetup:
+    """Carry Persona scope and configured Workspace IDs for one routing setup.
+
+    Args:
+        scope: Resolved forced Persona Workspace scope, when applicable.
+        configured_workspace_ids: Immutable configured Persona Workspace identifiers.
+    """
+
+    scope: PersonaWorkspaceScope | None
+    configured_workspace_ids: frozenset[int] | None
+
+
 def resolve_persona_workspace_scope(
     *,
     request: object,
@@ -57,21 +70,52 @@ def resolve_persona_workspace_scope(
         PersonaWorkspaceNotConfiguredError: If no Workspace is assigned to the Persona.
         PersonaWorkspaceScopeError: If the persona configuration or user access is invalid.
     """
+    return resolve_persona_workspace_routing_setup(
+        request=request,
+        authorization_context=authorization_context,
+        persona=persona,
+        require_selected_workspace=require_selected_workspace,
+    ).scope
+
+
+def resolve_persona_workspace_routing_setup(
+    *,
+    request: object,
+    authorization_context: RegistryAuthorizationContext,
+    persona: object | None = None,
+    require_selected_workspace: bool = True,
+) -> PersonaWorkspaceRoutingSetup:
+    """Resolve Persona scope and configured Workspace IDs with one manager retrieval.
+
+    Args:
+        request: Authenticated request carrying the selected Persona.
+        authorization_context: Server-derived Registry authorization result.
+        persona: Optional configured Persona when it is held outside the request.
+        require_selected_workspace: Require an explicit conversation workspace selection when
+            more than one configured workspace is authorized.
+
+    Returns:
+        Immutable Persona routing setup with scope and configured Workspace identifiers.
+
+    Raises:
+        PersonaWorkspaceNotConfiguredError: If no Workspace is assigned to the Persona.
+        PersonaWorkspaceScopeError: If the persona configuration or user access is invalid.
+    """
     persona = persona or getattr(request, "persona", None)
     if persona is None:
-        return None
+        return PersonaWorkspaceRoutingSetup(scope=None, configured_workspace_ids=None)
     relationship_manager = getattr(persona, "builtinfunctionpersonarelationship_set", None)
     relationship_filter = getattr(relationship_manager, "filter", None)
     if not callable(relationship_filter):
-        return None
+        return PersonaWorkspaceRoutingSetup(scope=None, configured_workspace_ids=None)
     if not relationship_filter(
         builtin_function__name__in=tuple(RESOURCE_REGISTRY_BIF_MANIFEST)
     ).exists():
-        return None
+        return PersonaWorkspaceRoutingSetup(scope=None, configured_workspace_ids=None)
     workspace_manager = getattr(persona, "workspaces", None)
     values_list = getattr(workspace_manager, "values_list", None)
     if not callable(values_list):
-        return None
+        return PersonaWorkspaceRoutingSetup(scope=None, configured_workspace_ids=None)
     configured_ids = frozenset(int(value) for value in values_list("pk", flat=True))
     if not configured_ids:
         raise PersonaWorkspaceNotConfiguredError("Resource Registry workspace is not configured.")
@@ -95,18 +139,30 @@ def resolve_persona_workspace_scope(
             raise PersonaWorkspaceScopeError(str(error)) from error
         for scope in scopes:
             if scope.namespace_id == selected.namespace_id:
-                return scope
+                return PersonaWorkspaceRoutingSetup(
+                    scope=scope,
+                    configured_workspace_ids=configured_ids,
+                )
         raise PersonaWorkspaceScopeError(
             "Select a Workspace supported by this Persona in the interface."
         )
     if len(scopes) == 1:
-        return scopes[0]
+        return PersonaWorkspaceRoutingSetup(
+            scope=scopes[0],
+            configured_workspace_ids=configured_ids,
+        )
     if not require_selected_workspace:
-        return scopes[0]
+        return PersonaWorkspaceRoutingSetup(
+            scope=scopes[0],
+            configured_workspace_ids=configured_ids,
+        )
     selected_namespace = _get_explicitly_selected_namespace(request)
     for scope in scopes:
         if scope.namespace_id == selected_namespace:
-            return scope
+            return PersonaWorkspaceRoutingSetup(
+                scope=scope,
+                configured_workspace_ids=configured_ids,
+            )
     raise PersonaWorkspaceScopeError(PERSONA_WORKSPACE_SELECTION_REQUIRED_MESSAGE)
 
 

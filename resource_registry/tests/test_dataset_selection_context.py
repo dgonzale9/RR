@@ -16,7 +16,10 @@ from BotServer.ai_engine_client import AIEngineClient
 from BotServer.builtin_functions import resource_registry_functions
 from BotServer.models import FunctionParameter
 from resource_registry.assistant import dataset_selection_context as selections
-from resource_registry.assistant.dataset_selection_store import load_selections
+from resource_registry.assistant.dataset_selection_store import (
+    VerifiedDatasetSelection,
+    load_selections,
+)
 from resource_registry.assistant.persona_capabilities import DataRegistryPersonaCapabilityService
 from resource_registry.assistant.runtime_adapter import DataRegistryExplorationRoutingAdapter
 from resource_registry.bifs.read_only_namespace_admission import AdmittedBifNamespace
@@ -47,15 +50,15 @@ def admit_workspace(monkeypatch: pytest.MonkeyPatch) -> None:
     """Admit the Workspace currently attached to a fake authenticated request."""
 
     def admit(request: SimpleNamespace, selector: object) -> str:
-        workspace = getattr(request, "workspace")
-        namespace_id = str(getattr(workspace, "namespace_id"))
+        workspace = request.workspace
+        namespace_id = str(workspace.namespace_id)
         admission = AdmittedBifNamespace(
             namespace_id=namespace_id,
             organization_id=request.organization.pk,
             workspace_id=workspace.pk,
             actor_id=request.user.pk,
         )
-        setattr(request, "resource_registry_admitted_namespace", admission)
+        request.resource_registry_admitted_namespace = admission
         return namespace_id
 
     monkeypatch.setattr(selections, "_admit_current_namespace", admit)
@@ -294,22 +297,12 @@ def test_prompt_and_comparison_hide_revoked_selection(
     request = build_request()
     remember_dataset(request, DATASET_A, VERSION_A)
     remember_dataset(request, DATASET_B, VERSION_B)
-    facade = Mock()
-
-    def get_authorized_dataset(
-        authorization: ReadAuthorizationContext, dataset_id: str
-    ) -> SimpleNamespace:
-        """Allow only the first verified dataset in the current authorization context."""
-        if dataset_id != DATASET_A:
-            raise PermissionError("revoked")
-        return SimpleNamespace(status="ACTIVE")
-
-    facade.get_dataset.side_effect = get_authorized_dataset
-    facade.get_version.return_value = SimpleNamespace(status="READY")
-    monkeypatch.setattr(selections, "AuthorizedDataRegistryReadFacade", lambda: facade)
     monkeypatch.setattr(
-        "BotServer.builtin_functions.resource_registry_functions._build_authorization_context",
-        lambda request, namespace_id: ReadAuthorizationContext(tenant_id=namespace_id),
+        selections,
+        "_revalidate_cached_selections",
+        lambda request, namespace_id, cached: tuple(
+            selection for selection in cached if selection.dataset_id == DATASET_A
+        ),
     )
     monkeypatch.setattr(
         DataRegistryPersonaCapabilityService,
@@ -356,13 +349,10 @@ def test_orchestrator_receives_authorized_registry_references(
         "has_resource_registry_capability",
         lambda service, persona: False,
     )
-    facade = Mock()
-    facade.get_dataset.return_value = SimpleNamespace(status="ACTIVE")
-    facade.get_version.return_value = SimpleNamespace(status="READY")
-    monkeypatch.setattr(selections, "AuthorizedDataRegistryReadFacade", lambda: facade)
     monkeypatch.setattr(
-        "BotServer.builtin_functions.resource_registry_functions._build_authorization_context",
-        lambda request, namespace_id: ReadAuthorizationContext(tenant_id=namespace_id),
+        selections,
+        "_revalidate_cached_selections",
+        lambda request, namespace_id, cached: tuple(cached),
     )
 
     prompt = selections.get_registry_selection_prompt_context(request, request.persona)
@@ -425,6 +415,7 @@ def test_common_bif_dispatch_records_and_reuses_selection(
         next_turn,
         {"tenant_id": NAMESPACE_A, "dataset_id": "selected dataset"},
     )
+    assert isinstance(ambiguous_result, str)
     assert json.loads(ambiguous_result)["code"] == "dataset_selection_required"
     assert tool.call_count == 2
 
@@ -527,7 +518,11 @@ def test_comparison_uses_verified_selections_instead_of_legacy_listing(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Keep a mere listing from becoming an implicit multi-dataset selection."""
-    monkeypatch.setattr(selections, "_validate_reused_selection", Mock())
+    monkeypatch.setattr(
+        selections,
+        "_revalidate_cached_selections",
+        lambda request, namespace_id, cached: tuple(cached),
+    )
     request = build_request()
     request.session.resource_registry_selected_dataset_ids = [DATASET_B]
     remember_dataset(request, DATASET_A, VERSION_A)
@@ -539,3 +534,79 @@ def test_comparison_uses_verified_selections_instead_of_legacy_listing(
     )
 
     assert identifiers == (DATASET_A,)
+
+
+def test_selection_persistence_replaces_versionless_and_preserves_distinct_pinned_versions(
+    admit_workspace: None,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Freeze exact duplicate, pinning, and multiple-version persistence behavior."""
+    monkeypatch.setattr(selections, "_validate_reused_selection", Mock())
+    request = build_request()
+
+    remember_dataset(request, DATASET_A)
+    remember_dataset(request, DATASET_A)
+    scope = selections._get_selection_scope(request)
+    assert scope is not None
+    assert load_selections(scope) == (VerifiedDatasetSelection(NAMESPACE_A, 4, DATASET_A, None),)
+
+    remember_dataset(request, DATASET_A, VERSION_A)
+    assert load_selections(scope) == (
+        VerifiedDatasetSelection(NAMESPACE_A, 4, DATASET_A, VERSION_A),
+    )
+    remember_dataset(request, DATASET_A, VERSION_B)
+    assert load_selections(scope) == (
+        VerifiedDatasetSelection(NAMESPACE_A, 4, DATASET_A, VERSION_A),
+        VerifiedDatasetSelection(NAMESPACE_A, 4, DATASET_A, VERSION_B),
+    )
+
+    with pytest.raises(selections.RegistryDatasetSelectionRequired) as error:
+        resolve(build_request(), {"dataset_id": DATASET_A})
+    assert error.value.code == "version_selection_required"
+
+
+def test_comparison_discovery_keeps_statement_identifiers_before_cached_first_seen_order(
+    admit_workspace: None,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Freeze the adapter's documented first-seen de-duplication order."""
+    monkeypatch.setattr(
+        selections,
+        "_revalidate_cached_selections",
+        lambda request, namespace_id, cached: tuple(cached),
+    )
+    request = build_request()
+    remember_dataset(request, DATASET_A, VERSION_A)
+    remember_dataset(request, DATASET_B, VERSION_B)
+
+    identifiers = DataRegistryExplorationRoutingAdapter()._comparison_dataset_ids(
+        request=request,
+        statement=f"Compare {DATASET_B} with the selected datasets.",
+        tenant_id=NAMESPACE_A,
+    )
+
+    assert identifiers == (DATASET_B, DATASET_A)
+
+
+def test_wrong_dataset_version_fails_closed_without_substituting_another_version(
+    admit_workspace: None,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Treat a Version belonging to another Dataset as unavailable rather than falling back."""
+    request = build_request()
+    remember_dataset(request, DATASET_A, VERSION_B)
+    facade = Mock()
+    facade.get_dataset.return_value = SimpleNamespace(status="ACTIVE")
+    facade.get_version.side_effect = LookupError("Version belongs to a different dataset")
+    monkeypatch.setattr(selections, "AuthorizedDataRegistryReadFacade", lambda: facade)
+    monkeypatch.setattr(
+        "BotServer.builtin_functions.resource_registry_functions._build_authorization_context",
+        lambda request, namespace_id: ReadAuthorizationContext(tenant_id=namespace_id),
+    )
+
+    with pytest.raises(selections.RegistryDatasetSelectionRequired) as error:
+        resolve(request, {"dataset_id": DATASET_A, "version_id": VERSION_B})
+
+    assert error.value.code == "dataset_version_unavailable"
+    facade.get_version.assert_called_once()
+    assert facade.get_version.call_args.args[1:] == (DATASET_A, VERSION_B)

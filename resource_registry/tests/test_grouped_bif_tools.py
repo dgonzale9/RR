@@ -30,10 +30,7 @@ def test_groups_cover_every_operation_once_and_keep_analysis_in_inspect() -> Non
         for action in actions
     ]
     assert len(names) == len(set(names)) == 31
-    assert set(names) == set(RESOURCE_REGISTRY_BIF_MANIFEST) - {
-        "resource_registry_replace_dataset",
-        "resource_registry_get_replacement_status",
-    }
+    assert set(names) == set(RESOURCE_REGISTRY_BIF_MANIFEST)
     assert set(names) == GROUPED_REGISTRY_OPERATION_NAMES
     assert [len(actions) for actions in GROUPED_REGISTRY_ACTIONS.values()] == [9, 7, 9, 6]
     assert "analyze_dataset" in GROUPED_REGISTRY_ACTIONS["resource_registry_inspect"]
@@ -266,3 +263,26 @@ def test_campaign_policy_filters_only_exploration_in_every_grouped_client(
     tool = tools[0].get("function", tools[0])
     schema = tool.get("parameters", tool.get("parametersJsonSchema", tool.get("input_schema")))
     assert schema["properties"]["action"]["enum"] == ["get_dataset_schema", "analyze_dataset"]
+
+
+@pytest.mark.parametrize(
+    "operation", ["list_dataset_versions", "get_dataset_schema", "plan_export"]
+)
+def test_partial_assignment_does_not_advertise_unassigned_charts(operation: str) -> None:
+    """Keep chart promises out of tool descriptions when chart creation is unavailable.
+
+    Args:
+        operation: The only Registry operation assigned to the Persona.
+    """
+    tools = build_grouped_registry_tools(
+        [
+            FunctionToolDefinition(
+                name=f"resource_registry_{operation}",
+                description="Perform the assigned Registry operation.",
+                parameters={"type": "object", "properties": {}},
+            ),
+        ],
+    )
+    assert len(tools) == 1
+    assert tools[0].parameters["properties"]["action"]["enum"] == [operation]
+    assert "chart" not in tools[0].description.lower()

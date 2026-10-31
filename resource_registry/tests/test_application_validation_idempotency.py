@@ -6,6 +6,9 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
+
+# Registration now reads the persisted organization rollout policy.
+pytestmark = pytest.mark.django_db
 from openpyxl import Workbook
 
 from resource_registry.application.commands import RegisterDatasetCommand

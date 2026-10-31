@@ -1,5 +1,11 @@
 # Resource Registry Intake Service and lifecycle
 
+An intake and a dataset-change proposal have separate states. Current maintenance uses
+a verified intake to prepare a proposal, then publishes the proposal. It records the
+intake publication without a legacy registration job. See
+[proposal states and versions](RESOURCE_REGISTRY_DATASET_VERSIONING.md). The
+`PUBLISHING → registration job` path below applies to legacy intake publication.
+
 A staged intake is a private, temporary source file. It becomes a Dataset only after inspection and
 an explicit publication to a destination. This reference explains what each intake status means and
 the next permitted operator action.
@@ -36,8 +42,9 @@ For the confirmed Storage remediation, keep `allowBlobPublicAccess=false` and
 `publicNetworkAccess=Disabled`. Application replicas, SharePoint sync execution, and workers
 must have private endpoint connectivity and correct DNS. The browser needs access to Unicorn AI,
 not to Azure Blob. Adding Blob CORS cannot repair missing private connectivity. A localhost backend
-requires approved private connectivity or local Azurite; the development `local` upload provider
-does not implement backend block transfer.
+requires approved private connectivity, local Azurite, or the development-only `local` upload
+provider. The local provider now stages and assembles backend blocks under the configured local
+storage root; no Azure connection is needed for that local flow.
 
 These are the two controls confirmed by GSO, not a declaration that every GSO requirement is met.
 The existing format inspection is not evidence of malware scanning or an approved external-partner
@@ -71,9 +78,9 @@ Inspection can terminally fail -> FAILED
 | `PENDING_UPLOAD` | Intake exists; uploaded bytes have not yet been committed and verified. | Upload/resume the same unchanged file through authenticated blocks, or cancel. |
 | `COMPLETED` | Storage metadata was verified and an inspection job was created or re-queued. | Wait for the inspection worker. Do not publish. |
 | `ANALYZING` | An inspection worker has claimed the intake. | Wait for completion; use the support runbook if it remains here unexpectedly. |
-| `READY_FOR_PUBLICATION` | Inspection completed successfully; the file is eligible for a destination. | Select **Publish to destinations** and choose the correct Workspace or Organization destination. |
+| `READY_FOR_PUBLICATION` | Inspection succeeded. | Prepare a dataset-change proposal for the authorized destination, or use legacy initial registration. |
 | `PUBLISHING` | The verified source is being copied and submitted for registration. | Wait; cancellation is not available. |
-| `PUBLISHED` | At least one destination publication and durable registration submission exist. | Monitor CSV/JSON/JSONL/Parquet registration or XLSX ingestion until the Dataset is available. |
+| `PUBLISHED` | A destination publication exists, backed by a published maintenance proposal or a legacy registration submission. | Read the proposal result for maintenance; monitor the registration job only for legacy publication. |
 | `FAILED` | Inspection reached a terminal failure. | Use the safe failure code, correct the issue, and create a new intake. Do not publish. |
 | `CANCELLED` | The intake was cancelled and staging cleanup was requested. | Create a new intake if the file is still needed. |
 | `EXPIRED` | The temporary retention deadline elapsed before completion of publication. | Create a new intake; staging cleanup is requested. |
@@ -100,12 +107,13 @@ to `READY_FOR_PUBLICATION`.
 
 ## Publication
 
-Publication is permitted only from `READY_FOR_PUBLICATION` (or is safely replayed when the intake is
+Legacy intake publication is permitted only from `READY_FOR_PUBLICATION` (or is safely replayed when the intake is
 already published to the same destination). It copies the verified source into the selected
 destination and creates a durable registration submission. A failed publication attempt restores an
 eligible intake to `READY_FOR_PUBLICATION`; it does not make unverified content publishable.
 
-`PUBLISHED` means publication was accepted, not that the resulting Dataset is immediately ready.
+For legacy intake publication, `PUBLISHED` means the registration was accepted, not that
+the resulting Dataset is immediately ready.
 The CSV/JSON/JSONL/Parquet registration or XLSX workbook-ingestion worker performs the remaining work.
 
 ## Expiration and cleanup
@@ -115,7 +123,12 @@ unpublished states. The expiry worker marks an intake `EXPIRED` after its config
 deadline and requests cleanup of the staging object. `CANCELLED`, `EXPIRED`, and `PUBLISHED` intakes
 with a pending cleanup requirement are retried by the expiry command.
 
-The default intake retention is 24 hours, but `RESOURCE_REGISTRY_INTAKE_TTL_SECONDS` is environment
+Pending proposals and active inspection protect their source from expiration/cleanup.
+Published originals use a separate minimum 30-day retention after last publication/use;
+discarded preparation candidates use at least seven days. A cleaned published intake
+keeps `PUBLISHED` with source-deletion evidence. See [cleanup](RESOURCE_CLEANUP.md).
+
+The default unsubmitted intake retention is 24 hours, but `RESOURCE_REGISTRY_INTAKE_TTL_SECONDS` is environment
 configuration and may differ. Backend block uploads are bounded by intake state/retention and
 current caller authentication; there is no browser SAS renewal. The historical Admin `renew/` action
 now validates the pending intake and returns backend instructions. Legacy internal SAS expiry is

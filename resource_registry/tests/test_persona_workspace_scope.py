@@ -63,13 +63,14 @@ def _context(*workspace_ids: int) -> RegistryAuthorizationContext:
     )
 
 
-def test_resolve_scope_uses_the_personas_only_workspace() -> None:
-    """Force a Registry-capable Persona to its only configured Workspace."""
+def test_resolve_scope_uses_request_workspace_supported_by_persona() -> None:
+    """Admit the request Workspace when it is configured on the Persona."""
     request = SimpleNamespace(
+        workspace=SimpleNamespace(pk=7, organization_id=1, is_active=True),
         persona=SimpleNamespace(
             workspaces=_WorkspaceManager((7,)),
             builtinfunctionpersonarelationship_set=_RelationshipManager(),
-        )
+        ),
     )
 
     scope = resolve_persona_workspace_scope(
@@ -104,9 +105,10 @@ def test_resolve_scope_rejects_personas_without_an_authorized_workspace(
         )
 
 
-def test_resolve_scope_uses_an_explicit_selected_workspace_from_multiple_choices() -> None:
-    """Accept one selected permitted workspace when a Persona has multiple choices."""
+def test_resolve_scope_uses_request_workspace_over_conversation_selection() -> None:
+    """Use request scope when a multi-Workspace Persona has stale conversation selection."""
     request = SimpleNamespace(
+        workspace=SimpleNamespace(pk=7, organization_id=1, is_active=True),
         resource_registry_tenant_id=str(UUID(int=8)),
         session={PERSONA_WORKSPACE_SELECTION_SESSION_KEY: str(UUID(int=8))},
         persona=SimpleNamespace(
@@ -121,11 +123,11 @@ def test_resolve_scope_uses_an_explicit_selected_workspace_from_multiple_choices
     )
 
     assert scope is not None
-    assert scope.workspace_id == 8
+    assert scope.workspace_id == 7
 
 
-def test_resolve_scope_rejects_stale_namespace_without_explicit_selection() -> None:
-    """Reject a stale namespace hint when a Persona has multiple Workspaces."""
+def test_resolve_scope_rejects_stale_namespace_without_request_workspace() -> None:
+    """Reject a stale namespace hint when no request Workspace is available."""
     request = SimpleNamespace(
         resource_registry_tenant_id=str(UUID(int=8)),
         session={},
@@ -135,7 +137,7 @@ def test_resolve_scope_rejects_stale_namespace_without_explicit_selection() -> N
         ),
     )
 
-    with pytest.raises(PersonaWorkspaceScopeError, match="selection is required"):
+    with pytest.raises(PersonaWorkspaceScopeError, match="interface"):
         resolve_persona_workspace_scope(
             request=request,
             authorization_context=_context(7, 8),

@@ -12,6 +12,7 @@ from pathlib import Path
 from threading import Lock
 from typing import Any
 
+from resource_registry.cleanup.cache_storage import reserve_cache_files
 from resource_registry.read.dtos import DatasetArtifactSummary
 from resource_registry.storage.read_adapters import ArtifactReadAdapter
 
@@ -124,23 +125,29 @@ class MaterializedDatasetCache:
                 source_path = Path(temporary_artifact.local_path).resolve()
                 source_size = source_path.stat().st_size
                 self._ensure_capacity(required_bytes=source_size)
-                shutil.move(str(source_path), str(data_path))
-                self._assert_inside_cache(data_path)
-                now = time.time()
-                self._write_metadata(
+                with reserve_cache_files(
+                    dataset_id=dataset_id,
+                    artifact_id=str(artifact.id),
+                    data_path=data_path,
                     metadata_path=metadata_path,
-                    payload={
-                        "cache_key": cache_key,
-                        "tenant_id": tenant_id,
-                        "dataset_id": dataset_id,
-                        "version_id": version_id,
-                        "artifact_id": str(artifact.id),
-                        "file_size_bytes": source_size,
-                        "checksum": artifact.checksum,
-                        "created_at": now,
-                        "last_accessed_at": now,
-                    },
-                )
+                ):
+                    shutil.move(str(source_path), str(data_path))
+                    self._assert_inside_cache(data_path)
+                    now = time.time()
+                    self._write_metadata(
+                        metadata_path=metadata_path,
+                        payload={
+                            "cache_key": cache_key,
+                            "tenant_id": tenant_id,
+                            "dataset_id": dataset_id,
+                            "version_id": version_id,
+                            "artifact_id": str(artifact.id),
+                            "file_size_bytes": source_size,
+                            "checksum": artifact.checksum,
+                            "created_at": now,
+                            "last_accessed_at": now,
+                        },
+                    )
                 self._enforce_max_size()
                 self._log_event("cache_miss", cache_key=cache_key, file_size_bytes=source_size)
                 return MaterializedDatasetCacheResult(

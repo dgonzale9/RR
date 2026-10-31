@@ -1,5 +1,19 @@
 # Resource Registry Admin backend upload
 
+## Choose the upload entry point
+
+For dataset creation and replacement with Dataset Management enabled, use
+**Resource Registry → Datasets → Create from file / Update data**. That flow uses scoped
+creation/edit permissions plus existing staff access, prepares a proposal automatically,
+and publishes after review. It does not require the global intake-operator permission.
+See [dataset maintenance](DATASET_MAINTENANCE.md). Externally managed content must be
+updated by its source integration.
+
+The remaining instructions describe the retained **Staged resource intakes → Upload
+resource / Publish to destinations** operator flow and its separate permissions.
+It still supports initial registrations; it must not be used to replace an existing
+dataset by reusing its filename once legacy implicit updates are blocked.
+
 The staged-intake Admin page accepts CSV, XLSX, JSON, JSONL/NDJSON, and Parquet, subject to the
 configured extension/MIME allowlists. The filename of this guide is retained for existing links;
 the current flow transfers file bytes through Django rather than directly from the browser to Azure.

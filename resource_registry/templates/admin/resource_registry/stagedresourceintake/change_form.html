@@ -1,4 +1,28 @@
 {% extends "admin/change_form.html" %}
+{% load static %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'resource_registry/admin/intake_detail.css' %}">
+{% endblock %}
+
+{% block bodyclass %}{{ block.super }} intake-detail{% endblock %}
+
+{% block content_subtitle %}
+  {% if original %}<h2>{{ original.normalized_filename }}</h2>{% endif %}
+{% endblock %}
+
+{% block form_top %}
+  {{ block.super }}
+  <nav class="intake-section-navigation" aria-label="Jump to intake section">
+    {% for fieldset in adminform %}
+      <a href="#fieldset-0-{{ forloop.counter0 }}-heading">{{ fieldset.name }}</a>
+    {% endfor %}
+    {% for inline_admin_formset in inline_admin_formsets %}
+      <a href="#{{ inline_admin_formset.formset.prefix }}-heading">Publications</a>
+    {% endfor %}
+  </nav>
+{% endblock %}
 
 {% block object-tools-items %}
   {{ block.super }}

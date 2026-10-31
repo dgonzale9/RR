@@ -6,6 +6,9 @@ from unittest.mock import MagicMock
 
 import duckdb
 import pytest
+
+# Registration now reads the persisted organization rollout policy.
+pytestmark = pytest.mark.django_db
 from django.db import IntegrityError
 from openpyxl import Workbook
 
@@ -75,14 +78,12 @@ def csv_dataset_path(tmp_path: Path) -> Path:
 def parquet_dataset_path(tmp_path: Path) -> Path:
     dataset_path = tmp_path / "sample.parquet"
     with duckdb.connect(database=":memory:") as connection:
-        connection.execute(
-            """
+        connection.execute("""
             CREATE TABLE sample_data AS
             SELECT 1 AS id, 'Ada' AS name, 95.5 AS score
             UNION ALL SELECT 2, 'Ben', 88.0
             UNION ALL SELECT 3, 'Cam', 72.5
-            """
-        )
+            """)
         connection.execute("COPY sample_data TO ? (FORMAT PARQUET)", [str(dataset_path)])
     return dataset_path
 
@@ -169,7 +170,7 @@ def _build_registry_service_mock() -> MagicMock:
     return registry_service
 
 
-def _build_idempotency_mock(  # noqa: PLR0913
+def _build_idempotency_mock(
     *,
     dataset: SimpleNamespace | None = None,
     existing_version: SimpleNamespace | None = None,

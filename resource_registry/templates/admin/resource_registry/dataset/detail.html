@@ -1,0 +1,205 @@
+{% extends "admin/resource_registry/dataset/base.html" %}
+{% load static %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'resource_registry/admin/dataset_detail.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="dataset-detail">
+  <nav class="dataset-navigation" aria-label="Dataset navigation">
+    <a href="{% url 'admin:resource_registry_dataset_changelist' %}">Catalog</a>
+    <a href="{% url 'admin:resource_registry_dataset_changes' %}">My updates</a>
+  </nav>
+
+  <section class="dataset-section" aria-labelledby="dataset-overview-heading">
+    <header class="dataset-section-header">
+      <h2 id="dataset-overview-heading">Overview</h2>
+      <span class="dataset-status">{{ dataset.status }}</span>
+    </header>
+    <div class="dataset-section-body">
+      <dl class="dataset-summary">
+        <div><dt>Destination</dt><dd>{{ dataset.workspace|default:dataset.organization }}</dd></div>
+        <div><dt>Current version</dt><dd>{{ dataset.current_version.version_number|default:"Needs review" }}</dd></div>
+        <div><dt>Responsible user</dt><dd>{{ dataset.responsible_user|default:"Unassigned" }}</dd></div>
+        <div><dt>Source</dt><dd>{{ dataset.source_type }}</dd></div>
+        <div class="dataset-summary-identity"><dt>Dataset ID</dt><dd>{{ dataset.id }}</dd></div>
+        <div><dt>Created by</dt><dd>{{ dataset.created_by|default:"—" }}</dd></div>
+        <div><dt>Revision</dt><dd>{{ dataset.revision }}</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <nav class="dataset-section-navigation" aria-label="Jump to dataset section">
+    <a href="#dataset-metadata">Metadata</a>
+    <a href="#dataset-schema">Schema</a>
+    {% if not dataset.purge_started_at %}<a href="#dataset-preview-section">Preview</a>{% endif %}
+    <a href="#dataset-versions">Versions</a>
+    {% if managed %}<a href="#dataset-storage">Storage</a>{% endif %}
+    <a href="#dataset-dependencies">Dependencies</a>
+    <a href="#dataset-activity">Activity</a>
+  </nav>
+
+  <section id="dataset-metadata" class="dataset-section" aria-labelledby="dataset-metadata-heading">
+    <header class="dataset-section-header">
+      <h2 id="dataset-metadata-heading">Metadata</h2>
+      <p>Name, description and ownership.</p>
+    </header>
+    <div class="dataset-section-body">
+      {% if editable %}
+        <form method="post" class="dataset-metadata-form">
+          {% csrf_token %}
+          {{ form.non_field_errors }}
+          {% for hidden in form.hidden_fields %}{{ hidden }}{{ hidden.errors }}{% endfor %}
+          <div class="dataset-metadata-fields">
+            {% for field in form.visible_fields %}
+              <div class="dataset-field{% if field.name == 'name' or field.name == 'description' %} dataset-field-wide{% endif %}">
+                {{ field.label_tag }}
+                {{ field }}
+                {% if field.help_text %}<p class="help" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</p>{% endif %}
+                {{ field.errors }}
+              </div>
+            {% endfor %}
+          </div>
+          <div class="dataset-form-actions"><button name="operation" value="metadata">Save metadata</button></div>
+        </form>
+        {% if dataset.external_source_id %}
+          <p class="dataset-notice">Content is managed by an external source. Review proposed updates in <a href="{% url 'admin:resource_registry_dataset_changes' %}">My updates</a>.</p>
+        {% endif %}
+        {% if not dataset.archived_at and not dataset.external_source_id and dataset.source_type == 'FILE_UPLOAD' %}
+          <div class="dataset-content-actions">
+            <a class="button" href="{% url 'admin:resource_registry_dataset_upload' %}?dataset_id={{ dataset.id }}">Update data{% if dataset.workbook_id %} for the entire workbook{% endif %}</a>
+          </div>
+        {% endif %}
+      {% else %}
+        <p class="dataset-description">{{ dataset.description|default:"No description provided." }}</p>
+      {% endif %}
+    </div>
+  </section>
+
+  <div class="dataset-data-panels">
+    <section id="dataset-schema" class="dataset-section" aria-labelledby="dataset-schema-heading">
+      <header class="dataset-section-header"><h2 id="dataset-schema-heading">Current schema</h2></header>
+      <div class="dataset-section-body">
+        <div class="dataset-table-scroll" role="region" aria-label="Current schema table" tabindex="0">
+          <table>
+            <thead><tr><th scope="col">Column</th><th scope="col">Type</th></tr></thead>
+            <tbody>
+              {% for column in schema %}
+                <tr><td>{{ column.name }}</td><td>{{ column.dtype|default:column.type }}</td></tr>
+              {% empty %}<tr><td colspan="2">Unavailable</td></tr>{% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+    {% if not dataset.purge_started_at %}
+      <section id="dataset-preview-section" class="dataset-section" aria-labelledby="dataset-preview-heading">
+        <header class="dataset-section-header"><h2 id="dataset-preview-heading">Limited preview</h2></header>
+        <div class="dataset-section-body">
+          <p class="dataset-section-description">Inspect up to 20 rows from the current version.</p>
+          <button type="button" data-preview-url="{{ preview_url }}">Load preview (up to 20 rows)</button>
+          <pre id="dataset-preview" aria-live="polite"></pre>
+        </div>
+      </section>
+    {% endif %}
+  </div>
+
+  <section id="dataset-versions" class="dataset-section" aria-labelledby="dataset-versions-heading">
+    <header class="dataset-section-header"><h2 id="dataset-versions-heading">Version history</h2></header>
+    <div class="dataset-section-body">
+      <div class="dataset-table-scroll" role="region" aria-label="Version history table" tabindex="0">
+        <table>
+          <thead><tr><th scope="col">Version</th><th scope="col">Published</th><th scope="col">Status</th></tr></thead>
+          <tbody>
+            {% for version in versions %}
+              <tr>
+                <td>{{ version.version_number }}</td><td>{{ version.created_at }}</td>
+                <td>{% if dataset.purged_at %}Deleted{% elif dataset.purge_started_at %}Deletion in progress{% elif version.id == dataset.current_version_id %}Current{% else %}Historical{% endif %}</td>
+              </tr>
+            {% empty %}<tr><td colspan="3">No published versions.</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  {% if managed %}
+    <section id="dataset-storage" class="dataset-section" aria-labelledby="dataset-storage-heading">
+      <header class="dataset-section-header">
+        <h2 id="dataset-storage-heading">Storage usage</h2>
+        <p>Review storage and retention before requesting deletion.</p>
+      </header>
+      <div class="dataset-section-body">
+        <div class="dataset-links">
+          <a href="{% url 'admin:resource_registry_dataset_deletion' dataset.id %}">Review deletion</a>
+          <a href="{% url 'admin:resource_registry_dataset_cleanup' %}">Cleanup progress</a>
+        </div>
+        {% if dataset.purge_started_at %}<p class="dataset-notice">Data deletion has started. This dataset cannot be recovered.</p>{% endif %}
+      </div>
+    </section>
+    {% if not dataset.purge_started_at %}
+      <section id="dataset-management" class="dataset-section dataset-management-section" aria-labelledby="dataset-management-heading">
+        <header class="dataset-section-header">
+          <h2 id="dataset-management-heading">Management</h2>
+          <p>Lifecycle actions require a reason.</p>
+        </header>
+        <div class="dataset-section-body">
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="expected_revision" value="{{ dataset.revision }}">
+            <div class="dataset-field">
+              <label for="dataset-management-reason">Reason</label>
+              <input type="text" id="dataset-management-reason" name="reason" required maxlength="500">
+            </div>
+            <div class="dataset-form-actions">
+              {% if dataset.archived_at %}
+                <button name="operation" value="unarchive">Unarchive</button>
+              {% else %}
+                <button name="operation" value="archive">Archive</button>
+                {% if not dataset.external_source_id %}
+                  <div class="dataset-restore-actions">
+                    <label for="dataset-restore-version">Version</label>
+                    <select id="dataset-restore-version" name="version_id">
+                      {% for version in versions %}<option value="{{ version.id }}">{{ version.version_number }} — {{ version.created_at }}</option>{% endfor %}
+                    </select>
+                    <button name="operation" value="restore-version">Restore version</button>
+                  </div>
+                {% endif %}
+              {% endif %}
+            </div>
+          </form>
+        </div>
+      </section>
+    {% endif %}
+  {% endif %}
+
+  <section id="dataset-dependencies" class="dataset-section" aria-labelledby="dataset-dependencies-heading">
+    <header class="dataset-section-header">
+      <h2 id="dataset-dependencies-heading">Known registered dependencies</h2>
+      <p>This list is not a complete inventory.</p>
+    </header>
+    <div class="dataset-section-body">
+      <ul class="dataset-dependency-list">
+        {% for dependency in usage.results %}<li>{{ dependency.name }} — {{ dependency.version_id }}</li>{% empty %}<li>No visible dependencies registered.</li>{% endfor %}
+      </ul>
+    </div>
+  </section>
+
+  <section id="dataset-activity" class="dataset-section" aria-labelledby="dataset-activity-heading">
+    <header class="dataset-section-header"><h2 id="dataset-activity-heading">Activity</h2></header>
+    <div class="dataset-section-body">
+      <div class="dataset-table-scroll" role="region" aria-label="Dataset activity table" tabindex="0">
+        <table>
+          <thead><tr><th scope="col">Date</th><th scope="col">Actor</th><th scope="col">Action</th><th scope="col">Reason</th></tr></thead>
+          <tbody>
+            {% for event in activity %}<tr><td>{{ event.created_at }}</td><td>{{ event.actor|default:"—" }}</td><td>{{ event.action }}</td><td>{{ event.reason }}</td></tr>{% empty %}<tr><td colspan="4">No activity recorded.</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</div>
+<script src="{% static 'resource_registry/admin/dataset_management.js' %}" defer></script>
+{% endblock %}

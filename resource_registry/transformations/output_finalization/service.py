@@ -57,7 +57,9 @@ from resource_registry.transformations.operational.logging import (
     TransformationOperationalLogContextBuilder,
     get_transformation_operational_logger,
 )
-from resource_registry.transformations.operational.metrics import TransformationOperationalMetricsPort
+from resource_registry.transformations.operational.metrics import (
+    TransformationOperationalMetricsPort,
+)
 from resource_registry.transformations.output_finalization.contracts import (
     TransformationOutputFinalizationClaim,
 )
@@ -107,7 +109,7 @@ class _VerifiedMaterialization:
 class TransformationRunOutputFinalizationService:
     """Materialize and register successful run outputs without executing providers."""
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         *,
         storage_factory: DataRegistryStorageFactory,
@@ -686,7 +688,13 @@ class TransformationRunOutputFinalizationService:
                 version_was_created=version_was_created,
             )
             self._register_lineage(output=output, dataset_version=dataset_version, plan=plan)
-            if dataset.status != DatasetStatus.ACTIVE or dataset.archived_at is not None:
+            if dataset.archive_reason != "MANUAL":
+                dataset.current_version = dataset_version
+                dataset.revision += 1
+                dataset.save(update_fields=["current_version", "revision"])
+            if dataset.archive_reason != "MANUAL" and (
+                dataset.status != DatasetStatus.ACTIVE or dataset.archived_at is not None
+            ):
                 dataset.status = DatasetStatus.ACTIVE
                 dataset.archived_at = None
                 dataset.save(update_fields=["status", "archived_at", "updated_at"])

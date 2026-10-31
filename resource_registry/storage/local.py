@@ -49,6 +49,28 @@ class LocalStorageProvider:
         )
 
     def put(self, local_path: str, destination_path: str) -> StorageObjectMetadata:
+        """Reserve a managed generation before copying data into Registry storage."""
+        from resource_registry.cleanup.storage import (  # noqa: PLC0415
+            complete_object_write,
+            lease_object,
+        )
+
+        with lease_object(
+            self.PROVIDER_NAME,
+            self.get_uri(destination_path),
+            writing=True,
+            location=str(self._base_directory),
+        ) as stored:
+            metadata = self._put_file(local_path, destination_path)
+            complete_object_write(
+                stored,
+                size_bytes=metadata.size_bytes or 0,
+                checksum=metadata.checksum,
+                etag=metadata.etag,
+            )
+            return metadata
+
+    def _put_file(self, local_path: str, destination_path: str) -> StorageObjectMetadata:
         source_path = Path(local_path)
         if not source_path.exists() or not source_path.is_file():
             raise StorageObjectNotFoundError(f"Source file not found: {local_path}")
@@ -69,11 +91,39 @@ class LocalStorageProvider:
         return f"{self.URI_SCHEME}{normalized_path}"
 
     def delete(self, uri_or_path: str) -> None:
-        target_path = self._resolve_target_path(uri_or_path)
-        if target_path.exists() and target_path.is_file():
-            target_path.unlink()
+        """Delete only unreferenced temporary files or a reviewed cleanup item."""
+        from resource_registry.cleanup.storage import (  # noqa: PLC0415
+            guarded_deletion,
+        )
+
+        relative = (
+            self._resolve_target_path(uri_or_path).relative_to(self._base_directory).as_posix()
+        )
+        with guarded_deletion(self.PROVIDER_NAME, self.get_uri(relative)):
+            target_path = self._resolve_target_path(uri_or_path)
+            if target_path.exists() and target_path.is_file():
+                target_path.unlink()
+
+    def delete_checked(self, uri_or_path: str, *, etag: str | None, checksum: str | None) -> None:
+        """Recheck local content immediately before deleting the fenced immutable path."""
+        target = self._resolve_target_path(uri_or_path)
+        if target.exists() and checksum and self._compute_sha256(target) != checksum:
+            raise UnsafeStorageUriError("The stored file changed before deletion.")
+        self.delete(uri_or_path)
 
     def download_to_file(self, uri_or_path: str, local_path: str) -> StorageObjectMetadata:
+        """Hold a read reservation until the complete private copy is available."""
+        from resource_registry.cleanup.storage import (  # noqa: PLC0415
+            lease_object,
+        )
+
+        relative = (
+            self._resolve_target_path(uri_or_path).relative_to(self._base_directory).as_posix()
+        )
+        with lease_object(self.PROVIDER_NAME, self.get_uri(relative)):
+            return self._download_file(uri_or_path, local_path)
+
+    def _download_file(self, uri_or_path: str, local_path: str) -> StorageObjectMetadata:
         source_path = self._resolve_target_path(uri_or_path)
         if not source_path.exists() or not source_path.is_file():
             raise StorageObjectNotFoundError(f"Local storage object not found: {uri_or_path}")
@@ -89,8 +139,11 @@ class LocalStorageProvider:
 
     def _resolve_target_path(self, uri_or_path: str) -> Path:
         relative_path = self._normalize_relative_path(uri_or_path)
-        resolved_path = (self._base_directory / relative_path).resolve()
-        if not str(resolved_path).startswith(str(self._base_directory)):
+        candidate_path = self._base_directory / relative_path
+        resolved_path = candidate_path.resolve()
+        if candidate_path != resolved_path:
+            raise UnsafeStorageUriError("Symbolic links are not managed storage locations.")
+        if not resolved_path.is_relative_to(self._base_directory):
             raise UnsafeStorageUriError("Path traversal detected for local storage provider.")
         return resolved_path
 

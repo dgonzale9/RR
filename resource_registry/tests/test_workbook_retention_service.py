@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
@@ -22,52 +22,16 @@ class _FakeQuerySet(list):
         return self[0] if self else None
 
 
-def test_apply_workbook_retention_reports_targets_in_dry_run() -> None:
-    now = datetime.now(tz=timezone.utc)
+def test_legacy_retention_reports_no_deletion_targets() -> None:
+    now = datetime.now(tz=UTC)
     group = SimpleNamespace(id="group-1", tenant_id="tenant-1")
-    datasets = _FakeQuerySet([SimpleNamespace(id="d-1", slug="sales")])
+    datasets = _FakeQuerySet([SimpleNamespace(id="d-1", slug="sales", current_version_id=None)])
     versions = _FakeQuerySet(
         [
             SimpleNamespace(id="v-2", dataset_id="d-1", version_number=2, created_at=now),
             SimpleNamespace(id="v-1", dataset_id="d-1", version_number=1, created_at=now),
         ],
     )
-    old_artifact = SimpleNamespace(
-        id="a-old",
-        dataset_version_id="v-1",
-        artifact_role="SNAPSHOT",
-        lifecycle_status="ACTIVE",
-        metadata_json={},
-        checksum=None,
-        uri="local://old",
-        sheet_name="Summary",
-        created_at=now,
-    )
-    dup_primary_a = SimpleNamespace(
-        id="a-dup-a",
-        dataset_version_id="v-2",
-        artifact_role="PRIMARY",
-        lifecycle_status="ACTIVE",
-        metadata_json={"workbook_group_id": "group-1"},
-        checksum="same",
-        uri="azure://datasets/original.xlsx",
-        sheet_name="Summary",
-        created_at=now,
-    )
-    dup_primary_b = SimpleNamespace(
-        id="a-dup-b",
-        dataset_version_id="v-2",
-        artifact_role="PRIMARY",
-        lifecycle_status="ACTIVE",
-        metadata_json={"workbook_group_id": "group-1"},
-        checksum="same",
-        uri="azure://datasets/original.xlsx",
-        sheet_name="Summary",
-        created_at=now,
-    )
-    old_version_artifacts = _FakeQuerySet([old_artifact])
-    primary_artifacts = _FakeQuerySet([dup_primary_a, dup_primary_b])
-
     service = WorkbookRetentionService(artifact_lifecycle_service=MagicMock())
     with (
         patch(
@@ -81,10 +45,6 @@ def test_apply_workbook_retention_reports_targets_in_dry_run() -> None:
             "resource_registry.services.workbook_retention_service.DatasetVersion.objects.filter",
             return_value=versions,
         ),
-        patch(
-            "resource_registry.services.workbook_retention_service.DatasetArtifact.objects.filter",
-            side_effect=[old_version_artifacts, primary_artifacts],
-        ),
     ):
         group_filter.return_value.first.return_value = group
         result = service.apply_workbook_retention(
@@ -95,15 +55,15 @@ def test_apply_workbook_retention_reports_targets_in_dry_run() -> None:
         )
 
     assert result.dry_run is True
-    assert result.versions_selected == 1
-    assert result.artifacts_selected == 2
+    assert result.versions_selected == 0
+    assert result.artifacts_selected == 0
     assert result.deprecated_artifact_ids == []
 
 
-def test_apply_workbook_retention_executes_deprecation_when_not_dry_run() -> None:
-    now = datetime.now(tz=timezone.utc)
+def test_legacy_retention_does_not_deprecate_historical_files() -> None:
+    now = datetime.now(tz=UTC)
     group = SimpleNamespace(id="group-1", tenant_id="tenant-1")
-    datasets = _FakeQuerySet([SimpleNamespace(id="d-1", slug="sales")])
+    datasets = _FakeQuerySet([SimpleNamespace(id="d-1", slug="sales", current_version_id=None)])
     versions = _FakeQuerySet(
         [SimpleNamespace(id="v-1", dataset_id="d-1", version_number=1, created_at=now)],
     )
@@ -133,10 +93,6 @@ def test_apply_workbook_retention_executes_deprecation_when_not_dry_run() -> Non
             "resource_registry.services.workbook_retention_service.DatasetVersion.objects.filter",
             return_value=versions,
         ),
-        patch(
-            "resource_registry.services.workbook_retention_service.DatasetArtifact.objects.filter",
-            side_effect=[_FakeQuerySet([]), _FakeQuerySet([artifact, artifact])],
-        ),
     ):
         group_filter.return_value.first.return_value = group
         result = service.apply_workbook_retention(
@@ -146,9 +102,9 @@ def test_apply_workbook_retention_executes_deprecation_when_not_dry_run() -> Non
             dry_run=False,
         )
 
-    assert result.artifacts_selected == 1
-    assert result.deprecated_artifact_ids == ["a-1"]
-    lifecycle.deprecate_artifact.assert_called_once()
+    assert result.artifacts_selected == 0
+    assert result.deprecated_artifact_ids == []
+    lifecycle.deprecate_artifact.assert_not_called()
 
 
 def test_apply_workbook_retention_raises_for_missing_group() -> None:

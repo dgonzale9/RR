@@ -1,0 +1,9 @@
+{% extends "admin/resource_registry/dataset/base.html" %}
+{% block content %}
+<p><a href="{% url 'admin:resource_registry_dataset_changelist' %}">Catalog</a> · <a href="?">Cleanup candidates</a> · <a href="?status=SCHEDULED">Scheduled deletion</a> · <a href="?status=PARTIAL">Partial cleanup</a> · <a href="?status=FAILED">Cleanup failed</a></p>
+<form method="get"><label>Search <input name="q" value="{{ query }}"></label><label>Status <select name="status"><option value="">All</option>{% for value,label in statuses %}<option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label><button>Filter</button></form>
+<table><thead><tr><th>Request</th><th>Dataset</th><th>Type</th><th>Status</th><th>Earliest execution</th><th>Requested by</th></tr></thead><tbody>
+{% for cleanup in page %}<tr><td><a href="{% url 'admin:resource_registry_dataset_cleanup_detail' cleanup.id %}">{{ cleanup.id }}</a></td><td>{{ cleanup.dataset.name|default:"Private source" }}</td><td>{{ cleanup.kind }}</td><td>{{ cleanup.get_status_display }}</td><td>{{ cleanup.execute_after }}</td><td>{{ cleanup.requested_by|default:"Retention policy" }}</td></tr>{% empty %}<tr><td>No cleanup requests.</td></tr>{% endfor %}
+</tbody></table>
+<p>{{ page.paginator.count }} requests. Page {{ page.number }} of {{ page.paginator.num_pages }}. {% if page.has_previous %}<a href="?page={{ page.previous_page_number }}&amp;status={{ status|urlencode }}&amp;q={{ query|urlencode }}">Previous</a>{% endif %} {% if page.has_next %}<a href="?page={{ page.next_page_number }}&amp;status={{ status|urlencode }}&amp;q={{ query|urlencode }}">Next</a>{% endif %}</p>
+{% endblock %}

@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from django.contrib.auth.models import User
+from django.db.models import Q
 
 from Organization.models import Organization, Workspace
 from resource_registry.models import (
@@ -57,6 +58,14 @@ def _map_dataset_to_workspace(dataset: Dataset, tenant_id: uuid.UUID) -> None:
 
 
 class FakeQuerySet(list):
+    def select_related(self, *fields: str) -> FakeQuerySet:
+        """Keep preloaded fixture relationships available."""
+        return self
+
+    def prefetch_related(self, *lookups: object) -> FakeQuerySet:
+        """Keep preloaded fixture relationships available."""
+        return self
+
     def filter(self, *args: object, **kwargs: object) -> FakeQuerySet:
         """Filter fixture records by equality or an explicit dataset ID set.
 
@@ -124,6 +133,7 @@ def _dataset(*, dataset_id: str, tenant_id: str, slug: str, name: str, status: s
         created_at=now,
         updated_at=now,
         archived_at=None,
+        current_version_id=None,
     )
 
 
@@ -148,15 +158,17 @@ def _version(*, version_id: str, dataset, version_number: int):
 
 def test_dataset_read_service_list_tenant_and_pagination_cap() -> None:
     tenant_id = "tenant-a"
-    datasets = FakeQuerySet([
-        _dataset(
-            dataset_id=f"d-{idx}",
-            tenant_id=tenant_id,
-            slug=f"s{idx}",
-            name=f"N{idx}",
-        )
-        for idx in range(150)
-    ])
+    datasets = FakeQuerySet(
+        [
+            _dataset(
+                dataset_id=f"d-{idx}",
+                tenant_id=tenant_id,
+                slug=f"s{idx}",
+                name=f"N{idx}",
+            )
+            for idx in range(150)
+        ]
+    )
     service = DatasetReadService()
     with patch(
         "resource_registry.read.dataset_read_service.Dataset.objects.filter",
@@ -435,9 +447,14 @@ def test_version_read_service_latest_and_ordering() -> None:
         ],
     )
     service = DatasetVersionReadService()
-    with patch(
-        "resource_registry.read.version_read_service.DatasetVersion.objects.filter",
-        return_value=versions,
+    with (
+        patch(
+            "resource_registry.read.version_read_service.DatasetVersion.objects.filter",
+            return_value=versions,
+        ),
+        patch(
+            "resource_registry.read.version_read_service.current_version_filter", return_value=Q()
+        ),
     ):
         listed = service.list_versions(tenant_id="tenant-a", dataset_id="d-1")
         latest = service.get_latest_version(tenant_id="tenant-a", dataset_id="d-1")
@@ -448,9 +465,14 @@ def test_version_read_service_latest_and_ordering() -> None:
 
 def test_version_read_service_tenant_isolation_not_found() -> None:
     service = DatasetVersionReadService()
-    with patch(
-        "resource_registry.read.version_read_service.DatasetVersion.objects.filter",
-        return_value=FakeQuerySet([]),
+    with (
+        patch(
+            "resource_registry.read.version_read_service.DatasetVersion.objects.filter",
+            return_value=FakeQuerySet([]),
+        ),
+        patch(
+            "resource_registry.read.version_read_service.current_version_filter", return_value=Q()
+        ),
     ):
         with pytest.raises(DatasetVersionNotFoundError):
             service.get_latest_version(tenant_id="tenant-a", dataset_id="d-1")
@@ -572,7 +594,7 @@ def test_dataset_context_read_service_returns_safe_context() -> None:
     profile_service = MagicMock()
     artifact_service = MagicMock()
     dataset_service.get_dataset.return_value = SimpleNamespace(id="d1")
-    version_service.list_versions.return_value = [SimpleNamespace(id="v1")]
+    version_service.get_latest_version.return_value = SimpleNamespace(id="v1")
     schema_service.get_schema_for_version.return_value = SimpleNamespace(id="s1")
     profile_service.get_profile_for_version.return_value = SimpleNamespace(id="p1")
     artifact_service.list_artifacts.return_value = [SimpleNamespace(id="a1")]
@@ -685,6 +707,10 @@ def test_workbook_context_read_service_compacts_sheet_context() -> None:
             return_value=FakeQuerySet([version]),
         ),
         patch(
+            "resource_registry.read.workbook_context_read_service.current_version_filter",
+            return_value=Q(),
+        ),
+        patch(
             "resource_registry.read.workbook_context_read_service.DatasetProfile.objects.filter",
             return_value=FakeQuerySet([profile]),
         ),
@@ -782,6 +808,10 @@ def test_workbook_context_read_service_allows_fully_scoped_workbook_context() ->
         patch(
             "resource_registry.read.workbook_context_read_service.DatasetVersion.objects.filter",
             return_value=FakeQuerySet([]),
+        ),
+        patch(
+            "resource_registry.read.workbook_context_read_service.current_version_filter",
+            return_value=Q(),
         ),
         patch(
             "resource_registry.read.workbook_context_read_service.DatasetProfile.objects.filter",

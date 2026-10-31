@@ -26,12 +26,13 @@ the result. A known Dataset ID never bypasses these checks.
 `PRIVATE` is a Workspace admission state; Dataset visibility uses `WORKSPACE` or
 `ORGANIZATION` scope.
 
-### Example: MiCasa
+### Example: Digitas
 
-Assume `Main` and `Data` are active, `OPEN`, Registry-enabled, and mapped to namespaces;
-all four users are MiCasa members with the same allowed reader policies and a Persona
-configured for the Workspace they select. `rr1` is `WORKSPACE`-visible in Main, `rr2` is
-`WORKSPACE`-visible in Data, and `rr3` is `ORGANIZATION`-visible in MiCasa. All three are
+Assume `Main` is the default Workspace for the `Digitas` Organization. Both `Main` and `Data`
+are active, `OPEN`, Registry-enabled, and mapped to namespaces. All four users are Digitas
+members with the same allowed reader policies and a Persona configured for the Workspace
+they select. `rr1` is `WORKSPACE`-visible in Main, `rr2` is
+`WORKSPACE`-visible in Data, and `rr3` is `ORGANIZATION`-visible in Digitas. All three are
 active with valid publication assignments.
 
 | User | Direct Workspace assignments | Select Main | Select Data |

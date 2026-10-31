@@ -30,8 +30,6 @@ from resource_registry.services.dataset_registration_job_service import (
 from resource_registry.services.destination_assignment_removal_service import (
     DestinationAssignmentRemovalService,
 )
-from resource_registry.registration_submissions.services import RegistrationSubmissionService
-from resource_registry.uploads.exceptions import UploadApplicationError
 
 
 class DatasetRegistrationJobExecutionService:
@@ -51,7 +49,6 @@ class DatasetRegistrationJobExecutionService:
         self._destination_assignment_removal_service = (
             destination_assignment_removal_service or DestinationAssignmentRemovalService()
         )
-        self._replacement_submission_service = RegistrationSubmissionService()
 
     def execute_job(
         self,
@@ -77,29 +74,13 @@ class DatasetRegistrationJobExecutionService:
                     )
                     return self._job_service.mark_cancelled(job=current)
                 with transaction.atomic():
-                    target = self._lock_replacement_target(job=job)
-                    command = self._build_registration_command(
-                        job=job,
-                        source=source,
-                        replacement_target=target,
-                    )
-                    prior_version_id = (
-                        target.versions.order_by("-version_number")
-                        .values_list("id", flat=True)
-                        .first()
-                        if target is not None
-                        else None
-                    )
+                    command = self._build_registration_command(job=job, source=source)
                     result = self._registration_facade.register(
                         command,
                         pre_uploaded_source_metadata=source.source_metadata,
                         canonical_provider_key=source.storage_provider,
                     )
                     result_payload = self._to_result_payload(result)
-                    if target is not None:
-                        result_payload["no_changes_detected"] = (
-                            prior_version_id == result.dataset_version_id
-                        )
                     self._destination_assignment_removal_service.record_job_outputs(
                         publication_id=self._get_staged_publication_id(job=job),
                         result_payload=result_payload,
@@ -117,13 +98,6 @@ class DatasetRegistrationJobExecutionService:
                 error_message=str(error),
                 execution_ms=int((time.perf_counter() - started_at) * 1000),
                 retryable=error.retryable,
-            )
-        except UploadApplicationError as error:
-            return self._job_service.mark_failed(
-                job=job,
-                error_code=error.code.lower(),
-                error_message="Dataset replacement authorization failed.",
-                execution_ms=int((time.perf_counter() - started_at) * 1000),
             )
         except ValidationError as error:
             return self._job_service.mark_failed(
@@ -146,7 +120,6 @@ class DatasetRegistrationJobExecutionService:
         *,
         job: DatasetRegistrationJob,
         source: MaterializedCsvUpload,
-        replacement_target: Dataset | None = None,
     ) -> RegisterDatasetCommand:
         source_filename = Path(source.original_filename)
         base_name = source_filename.stem.strip() or "Dataset"
@@ -169,20 +142,12 @@ class DatasetRegistrationJobExecutionService:
         ):
             slug = legacy_slug
         submission = job.registration_submission
-        if replacement_target is not None:
-            slug = replacement_target.slug
         return RegisterDatasetCommand(
             tenant_id=str(source.tenant_id),
             slug=slug,
-            name=(
-                replacement_target.name
-                if replacement_target is not None
-                else source.original_filename
-            ),
+            name=source.original_filename,
             path=source.local_path,
-            source_type=(
-                replacement_target.source_type if replacement_target is not None else "FILE_UPLOAD"
-            ),
+            source_type="FILE_UPLOAD",
             organization_id=submission.organization_id,
             workspace_id=(
                 None if submission.visibility_scope == "ORGANIZATION" else submission.workspace_id
@@ -193,29 +158,7 @@ class DatasetRegistrationJobExecutionService:
             storage_mode="LOCAL_REFERENCE",
             mime_type=source.content_type,
             ingest_all_sheets=False,
-            replacement_dataset_id=(
-                str(replacement_target.id) if replacement_target is not None else None
-            ),
         )
-
-    def _lock_replacement_target(self, *, job: DatasetRegistrationJob) -> Dataset | None:
-        """Lock the exact submitted target and recheck current mutation grants."""
-        submission = job.registration_submission
-        if submission.replacement_dataset_id is None:
-            return None
-        target = (
-            Dataset.objects.select_for_update()
-            .filter(
-                pk=submission.replacement_dataset_id,
-            )
-            .first()
-        )
-        if target is None:
-            raise UploadApplicationError("DATASET_NOT_FOUND", 404)
-        self._replacement_submission_service.assert_replacement_execution_authorized(
-            submission=submission,
-        )
-        return target
 
     @staticmethod
     def _to_result_payload(result: RegisterDatasetResult) -> dict[str, Any]:

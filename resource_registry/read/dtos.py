@@ -37,6 +37,7 @@ class DatasetSummary:
     created_at: str
     updated_at: str
     sheet_name: str | None = None
+    current_version_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -53,6 +54,7 @@ class DatasetDetails:
     created_at: str
     updated_at: str
     archived_at: str | None
+    current_version_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -67,6 +69,7 @@ class DatasetVersionSummary:
     column_count: int | None
     created_at: str
     content_hash: str = ""
+    is_current: bool = False
 
 
 @dataclass(frozen=True)

@@ -1,0 +1,4 @@
+{% extends "admin/resource_registry/dataset/base.html" %}
+{% block content %}
+<p><a href="?view=mine">My updates</a> · <a href="?view=pending">Pending publication</a> · <a href="?view=failed">Failed updates</a> · <a href="{% url 'admin:resource_registry_dataset_changelist' %}">Catalog</a></p>
+<table><thead><tr><th>Date</th><th>File</th><th>Actor</th><th>Status</th><th>Result</th></tr></thead><tbody>{% for change in changes %}<tr><td><a href="{% url 'admin:resource_registry_dataset_review' change.id %}">{{ change.created_at }}</a></td><td>{{ change.prepared.filename|default:"Processing" }}</td><td>{{ change.submitted_by }}</td><td>{{ change.get_status_display }}</td><td>{{ change.error_message }}</td></tr>{% empty %}<tr><td>No updates in this view.</td></tr>{% endfor %}</tbody></table>{% endblock %}

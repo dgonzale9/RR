@@ -42,7 +42,12 @@ path is required in every mode, including when a destination is derived from the
 
 `RESOURCE_REGISTRY_SCOPE_POLICY` defaults to `observe`; an invalid value fails closed to
 `strict`. REST callers supplying `X-Registry-Scope` explicitly opt into the current contract
-in every environment mode. Assistant/BIF enforcement follows the environment policy.
+in every environment mode. This rollout applies only to REST. Assistant/BIF operations always
+enforce the authorized `request.workspace`, including the Persona's configured Workspace
+restrictions, without offering conversation Workspace choices. Missing, unauthorized, or
+incompatible request scope requires correction in the interface; session hints, chat text,
+Persona metadata, and BIF arguments cannot select a different Workspace. Omitted BIF namespace
+arguments (`None`, empty, or whitespace-only strings) derive the request Workspace namespace.
 
 | Policy | Existing selection | Current contract |
 | --- | --- | --- |
@@ -57,7 +62,7 @@ kind. Headers, persisted ownership, and supplied selectors must agree when enfor
 
 The shared middleware can still reject a request before Registry runs. Registry neither
 bypasses that middleware nor changes global history isolation or session buckets. Strict
-activation remains dependent on external consumers adopting the scope contract.
+activation for REST remains dependent on external consumers adopting the scope contract.
 
 ## Verification
 

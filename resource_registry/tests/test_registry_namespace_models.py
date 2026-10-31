@@ -40,6 +40,10 @@ class RegistryNamespaceModelTests(TestCase):
                 "organization",
                 "created_at",
                 "staged_resource_publications",
+                "datasetworkbook",
+                "datasetchange",
+                "resourcestoragereference",
+                "resourcecleanuprequest",
             },
         )
 

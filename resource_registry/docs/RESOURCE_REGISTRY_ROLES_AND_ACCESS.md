@@ -87,6 +87,11 @@ function `derive_registry_roles`. The BIF wrapper `_derive_roles` calls it.
 ## BIFs permitted by role
 
 Each BIF must be both assigned to the active Persona and allowed by the user's effective role.
+The table uses canonical BIF names because roles and policies are evaluated for those individual
+operations. Model providers receive the matching grouped tool and only the assigned actions inside
+it: for example, an assigned `resource_registry_query_dataset` appears as
+`resource_registry_query` with `action="query_dataset"`. A group neither grants nor exposes its
+other actions.
 
 | Role | Permitted BIFs |
 | --- | --- |
@@ -94,9 +99,10 @@ Each BIF must be both assigned to the active Persona and allowed by the user's e
 | `reader` | Every Registry BIF except `resource_registry_start_transformation_run` |
 | `admin` | Every Registry BIF |
 
-For a metadata-only Persona, assign only the six metadata BIFs. A user cannot obtain a
-capability simply because it is assigned to a Persona: the effective policy must also permit it.
-Explicit tenant and Dataset denials take precedence over the default role capabilities.
+For a metadata-only Persona, assign only the six metadata BIFs. The model then receives one
+`resource_registry_inspect` tool containing only those actions. A user cannot obtain a capability
+simply because it is assigned to a Persona: the effective policy must also permit it. Explicit
+tenant and Dataset denials take precedence over the default role capabilities.
 
 ## Access is the intersection of several checks
 
@@ -188,4 +194,4 @@ For a future user-level and Workspace-level authorization model, document and ag
 - [Resource Registry user permissions](RESOURCE_REGISTRY_USER_PERMISSIONS.md)
 - [Resource Registry BIF catalog](RESOURCE_REGISTRY_BIF_CATALOG.md)
 - [Resource Registry BIF technical overview](RESOURCE_REGISTRY_BIFS_OVERVIEW.md)
-- [Reader access matrix and policy upgrade](../READER_ACCESS.md)
+- [Reader access matrix and policy upgrade](READER_ACCESS.md)

@@ -80,8 +80,8 @@ development, sandbox, and production; this document does not prescribe a shared 
 
 Keep anonymous Blob access and public Storage network access disabled. Blob browser CORS is not
 required for backend intake uploads. For localhost against private Azure, verify approved private
-connectivity and DNS from the backend, or use Azurite. The development `local` provider does not
-implement backend block transfer. Internal SharePoint SAS uploads still require private connectivity;
+connectivity and DNS from the backend, or use Azurite. The development `local` upload provider
+now supports backend block transfer; configure a writable local storage root for isolated tests. Internal SharePoint SAS uploads still require private connectivity;
 see [configuration](RESOURCE_REGISTRY_DIRECT_UPLOAD_CONFIGURATION.md).
 
 ## Escalation package

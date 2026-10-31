@@ -1,5 +1,16 @@
 # Resource Registry User Permissions
 
+Dataset Maintenance REST/Admin authorization is separate from Persona BIF roles.
+Within an admitted destination, creation requires management authority or Guardian
+`resource_registry.create_datasets` on the namespace; editing requires management
+authority or `resource_registry.change_dataset` on the dataset. Sensitive publication,
+manual archive/recovery, manual historical restoration and deletion require a destination
+manager. External proposal creation additionally requires
+`resource_registry.synchronize_dataset_sources` on the namespace; being a manager alone
+does not supply that grant. Metadata editing does not grant external-content replacement.
+Admin also requires active staff access. Enabling management assigns no new user grants.
+See [activation and permissions](DATASET_MANAGEMENT_ENABLEMENT.md).
+
 ## Purpose
 
 This guide explains who can use a Workspace through Resource Registry and why access may be denied.
@@ -15,8 +26,8 @@ For a normal user to use Resource Registry in a Workspace, all of these checks m
 4. The user has direct Workspace access, or is an Organization member using an eligible `OPEN`
    Workspace.
 5. The Workspace is assigned to the active Persona.
-6. The Persona has the requested Resource Registry BIF.
-7. The user's Registry role permits that BIF.
+6. The Persona has the requested canonical Resource Registry BIF action.
+7. The user's Registry role permits that action.
 8. The Dataset is visible through the selected Workspace and passes any tenant/Dataset policy,
    read constraint, and active publication-assignment check.
 
@@ -74,13 +85,14 @@ Workspace access controls *where* a user may work. Registry roles control *which
 | Registry role | Typical capability |
 | --- | --- |
 | `restricted_reader` | Dataset listing/details/schema/profile/context/versions; query planning, bounded read-only SQL, exploration, and own query jobs. |
-| `reader` | The normal reader tools plus broader analysis, derived datasets, charts, exports, and other permitted Registry BIFs, except `resource_registry_start_transformation_run`. |
+| `reader` | The normal reader tools plus broader analysis, derived datasets, charts, exports, and other permitted Registry BIF actions, except `resource_registry_start_transformation_run`. |
 | `admin` | All Registry BIFs. |
 
-The query BIF must be assigned to the Persona, but the default `restricted_reader` role can use it.
-Queries are read-only and bounded by the existing SQL row/time limits. Every referenced column,
-including inside functions and filters, must be visible to the user. Explicit tenant/Dataset
-denials still take precedence.
+The canonical query BIF must be assigned to the Persona, but the default `restricted_reader` role
+can use it. Models receive that assignment as `resource_registry_query` with
+`action="query_dataset"`. Queries are read-only and bounded by the existing SQL row/time limits.
+Every referenced column, including inside functions and filters, must be visible to the user.
+Explicit tenant/Dataset denials still take precedence.
 
 ## Administrators
 
@@ -108,4 +120,4 @@ bypass this selected scope.
 - [Getting started](RESOURCE_REGISTRY_GETTING_STARTED.md)
 - [Publishing datasets](RESOURCE_REGISTRY_DATASET_PUBLICATION.md)
 - [Persona workspace-scope technical reference](RESOURCE_REGISTRY_PERSONA_WORKSPACE_SCOPE.md)
-- [Reader access matrix and policy upgrade](../READER_ACCESS.md)
+- [Reader access matrix and policy upgrade](READER_ACCESS.md)

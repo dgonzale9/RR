@@ -10,13 +10,14 @@ from resource_registry.models import (
     DatasetIntelligenceStatus,
     DatasetQueryRun,
 )
+from resource_registry.read.version_read_service import DatasetVersionReadService
 from resource_registry.services.payload_sanitizer import sanitize_payload
 
 
 class DatasetIntelligencePersistenceService:
     """Persists sanitized Dataset Intelligence artifacts for auditability."""
 
-    def persist_query_run(  # noqa: PLR0913
+    def persist_query_run(
         self,
         *,
         tenant_id: str,
@@ -62,9 +63,9 @@ class DatasetIntelligencePersistenceService:
             analysis_type=analysis_type,
             title=title,
             summary=self._to_text(payload.get("summary")),
-            insights_json=payload.get("insights")
-            if isinstance(payload.get("insights"), list)
-            else [],
+            insights_json=(
+                payload.get("insights") if isinstance(payload.get("insights"), list) else []
+            ),
             queries_used_json=(
                 payload.get("queries_used") if isinstance(payload.get("queries_used"), list) else []
             ),
@@ -108,6 +109,27 @@ class DatasetIntelligencePersistenceService:
         result: dict[str, Any],
         created_by: Any = None,
     ) -> DatasetExportPlan:
+        """Persist an export plan pinned to its selected published dataset version.
+
+        Args:
+            tenant_id: Authorized namespace identifier.
+            dataset_id: Dataset selected for export.
+            version_id: Explicit version, or None to use the current version.
+            result: Planner result to sanitize and persist.
+            created_by: Authenticated actor, when available.
+
+        Returns:
+            The immutable, version-bound export plan.
+
+        Raises:
+            DatasetVersionNotFoundError: If no current published version is available.
+        """
+        if version_id is None:
+            version_id = (
+                DatasetVersionReadService()
+                .get_latest_version(tenant_id=tenant_id, dataset_id=dataset_id)
+                .id
+            )
         payload = self._sanitize_payload(result)
         export_plan = (
             payload.get("export_plan") if isinstance(payload.get("export_plan"), dict) else {}

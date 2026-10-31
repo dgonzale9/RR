@@ -14,14 +14,22 @@ class DatasetQueryJobServiceTests(SimpleTestCase):
     def test_create_job_persists_queued_job_with_sql_hash(self) -> None:
         service = DatasetQueryJobService()
         fake_created = SimpleNamespace(id="job-1")
-        with patch(
-            "resource_registry.services.dataset_query_job_service.DatasetQueryJob.objects.create",
-            return_value=fake_created,
-        ) as create_mock, patch.object(
-            service,
-            "_find_active_job_by_fingerprint",
-            return_value=None,
-        ), patch("resource_registry.services.dataset_query_job_service.transaction.atomic"):
+        with (
+            patch(
+                "resource_registry.services.dataset_query_job_service.DatasetQueryJob.objects.create",
+                return_value=fake_created,
+            ) as create_mock,
+            patch.object(
+                service,
+                "_find_active_job_by_fingerprint",
+                return_value=None,
+            ),
+            patch("resource_registry.services.dataset_query_job_service.transaction.atomic"),
+            patch(
+                "resource_registry.services.dataset_query_job_service.pin_job_dataset_version",
+                return_value=("version-1", None),
+            ),
+        ):
             result = service.create_job(
                 tenant_id="tenant-1",
                 dataset_id="dataset-1",
@@ -43,14 +51,22 @@ class DatasetQueryJobServiceTests(SimpleTestCase):
     def test_create_job_returns_existing_active_job_for_duplicate_request(self) -> None:
         service = DatasetQueryJobService()
         existing_job = SimpleNamespace(id="job-1", status=DatasetQueryJobStatus.QUEUED)
-        with patch.object(
-            service,
-            "_find_active_job_by_fingerprint",
-            return_value=existing_job,
-        ), patch(
-            "resource_registry.services.dataset_query_job_service.DatasetQueryJob.objects.create",
-        ) as create_mock, patch(
-            "resource_registry.services.dataset_query_job_service.transaction.atomic",
+        with (
+            patch.object(
+                service,
+                "_find_active_job_by_fingerprint",
+                return_value=existing_job,
+            ),
+            patch(
+                "resource_registry.services.dataset_query_job_service.DatasetQueryJob.objects.create",
+            ) as create_mock,
+            patch(
+                "resource_registry.services.dataset_query_job_service.transaction.atomic",
+            ),
+            patch(
+                "resource_registry.services.dataset_query_job_service.pin_job_dataset_version",
+                return_value=("version-1", None),
+            ),
         ):
             result = service.create_job(
                 tenant_id="tenant-1",

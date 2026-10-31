@@ -1,0 +1,13 @@
+{% extends "admin/resource_registry/dataset/base.html" %}
+{% block content %}
+<p><a href="{% url 'admin:resource_registry_dataset_cleanup' %}">Cleanup candidates</a> · <a href="">Refresh progress</a></p>
+<p>Status: <strong>{{ cleanup.get_status_display }}</strong> · Earliest execution: {{ cleanup.execute_after }} · Requested by: {{ cleanup.requested_by|default:"Retention policy" }}</p>
+{% if preview.mode == 'DISABLED' %}<p>Cleanup is disabled. Execution is paused.</p>{% elif preview.mode == 'SIMULATE' %}<p>Simulation — files will not be deleted.</p>{% endif %}
+{% if cleanup.error_code %}<p class="errornote">{{ cleanup.error_message }}</p>{% endif %}
+{% if cleanup.started_at %}<p>Deletion has started. Recovery and cancellation are unavailable.</p>{% elif cleanup.status != "CANCELLED" and cleanup.status != "COMPLETED" %}<form method="post">{% csrf_token %}<button name="operation" value="cancel">Cancel deletion</button></form>{% endif %}
+{% if cleanup.status == 'FAILED' %}<form method="post">{% csrf_token %}<button name="operation" value="retry">Retry cleanup</button></form>{% endif %}
+{% if cleanup.status == 'NEEDS_REVIEW' or cleanup.status == 'BLOCKED' %}{% if not cleanup.started_at and preview %}<h2>Review changed inventory</h2><p>Exclusive: {{ preview.exclusive_bytes|filesizeformat }} · Shared: {{ preview.shared_bytes|filesizeformat }} · {{ preview.objects|length }} objects.</p><form method="post">{% csrf_token %}{{ form.as_p }}<button name="operation" value="confirm">Confirm reviewed deletion</button></form>{% endif %}{% endif %}
+{{ form.non_field_errors }}
+<table><thead><tr><th>Object ID</th><th>Size</th><th>Status</th><th>Attempts</th><th>Blocking reason</th></tr></thead><tbody>{% for item in page %}<tr><td>{{ item.storage_object_id }}</td><td>{{ item.storage_object.size_bytes|filesizeformat }}</td><td>{{ item.status }}</td><td>{{ item.attempts }}</td><td>{{ item.block_reason_display|default:"—" }}</td></tr>{% empty %}<tr><td>No physical files.</td></tr>{% endfor %}</tbody></table>
+<p>Page {{ page.number }} of {{ page.paginator.num_pages }}. {% if page.has_previous %}<a href="?page={{ page.previous_page_number }}">Previous</a>{% endif %} {% if page.has_next %}<a href="?page={{ page.next_page_number }}">Next</a>{% endif %}</p>
+{% endblock %}

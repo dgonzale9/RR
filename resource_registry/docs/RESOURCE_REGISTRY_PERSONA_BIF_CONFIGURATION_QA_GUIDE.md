@@ -9,6 +9,11 @@ environment.
 For user membership and data boundaries, see the
 [User permissions QA guide](RESOURCE_REGISTRY_USER_PERMISSIONS_QA_GUIDE.md).
 
+This guide calls the persisted function an **action** when describing model behavior. Actions are
+assigned as canonical BIFs, then published through one of four grouped tools. In particular,
+`plan_query`, `query_dataset`, and query-job actions are called through
+`resource_registry_query`; `explore_dataset` is called through `resource_registry_inspect`.
+
 ## Test setup
 
 Prepare one active, Registry-enabled Organization with two active, Registry-enabled
@@ -22,7 +27,7 @@ Use the following Personas:
 | --- | --- | --- |
 | No-Registry Persona | Workspace A | No Resource Registry BIFs |
 | Read Persona | Workspace A | List, dataset details, schema, profile, and versions |
-| Query Persona | Workspace A | Read BIFs plus `resource_registry_plan_query`, `resource_registry_query_dataset`, `resource_registry_explore_dataset`, and query-job BIFs |
+| Query Persona | Workspace A | Read actions plus `plan_query`, `query_dataset`, `explore_dataset`, and query-job actions |
 | Multi-Workspace Persona | Workspace A and B | Read BIFs plus query BIFs |
 
 ## Test scenarios
@@ -50,11 +55,12 @@ unavailable because the Persona does not include the query or analysis BIF.
 
 1. Open the Query Persona as a standard user and request a bounded read-only query of the Workspace A dataset.
 2. Repeat as the second standard user.
-3. Remove `resource_registry_query_dataset` from the Persona and repeat as the first user.
+3. Remove the canonical `resource_registry_query_dataset` assignment from the Persona and repeat as the first user.
 
 Expected result: both standard users can query when the BIF, Workspace, Dataset, and current
-policies admit it. Removing the BIF makes querying unavailable to both users. A separate
-analysis/chart/export BIF remains outside the default `restricted_reader` capabilities.
+policies admit it. Removing the assignment removes `query_dataset` from the
+`resource_registry_query` action enum and makes querying unavailable to both users. A separate
+analysis/chart/export action remains outside the default `restricted_reader` capabilities.
 
 ### 4. No configured Persona Workspace
 
@@ -99,9 +105,9 @@ configuration change, conversation start time, and observed behavior.
 
 ## Pass criteria
 
-The release passes when a Persona's assigned Registry BIFs control which Registry actions can
-be used, its Workspace configuration controls where data can be used, and role capability does
-not bypass a missing Persona BIF or Workspace assignment.
+The release passes when a Persona's assigned canonical Registry BIFs control which grouped-tool
+actions can be used, its Workspace configuration controls where data can be used, and role
+capability does not bypass a missing Persona assignment or Workspace assignment.
 
 ## Related documentation
 

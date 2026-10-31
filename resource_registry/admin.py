@@ -2,20 +2,24 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import Sequence
 from uuid import UUID
 
 from django import forms
 from django.contrib import admin, messages
 from django.core.exceptions import PermissionDenied
-from django.db.models import Count, Q, QuerySet
+from django.db.models import Count, Prefetch, Q, QuerySet
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, JsonResponse
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
+from django.utils.html import format_html, format_html_join
 
 from BotServer.util.user_group_management import UserGroupManagement
 from Organization.models import Organization
 from resource_registry.api.intakes.dependencies import get_staged_resource_intake_service
+from resource_registry.cleanup.policy_admin import CleanupPolicyAdmin  # noqa: F401
+from resource_registry.dataset_admin import DatasetAdmin  # noqa: F401
 from resource_registry.intake.permissions import (
     MANAGE_STAGED_RESOURCE_INTAKES_PERMISSION,
     can_manage_staged_resource_intakes,
@@ -29,6 +33,7 @@ from resource_registry.models import (
     StagedResourceIntake,
     StagedResourceIntakeStatus,
     StagedResourcePublication,
+    StagedResourcePublicationDataset,
     StagedResourcePublicationStatus,
 )
 from resource_registry.services.destination_assignment_removal_service import (
@@ -51,20 +56,23 @@ def _get_request_organization(request: HttpRequest) -> Organization | None:
     return organization if isinstance(organization, Organization) else None
 
 
-class StagedResourcePublicationInline(admin.TabularInline):
+class StagedResourcePublicationInline(admin.StackedInline):
     """Display immutable destination publications and their processing state."""
 
     model = StagedResourcePublication
     extra = 0
     can_delete = False
-    fields = (
+    readonly_fields = (
         "registry_namespace",
         "organization",
         "workspace",
         "visibility_scope",
+        "published_by",
         "assignment_status",
         "publication_attempt",
         "registration_submission",
+        "maintenance_updates",
+        "published_versions",
         "processing_status",
         "detachment_requested_at",
         "detached_at",
@@ -73,7 +81,39 @@ class StagedResourcePublicationInline(admin.TabularInline):
         "completed_at",
         "cleanup_required",
     )
-    readonly_fields = fields
+    fieldsets = (
+        (
+            "Destination",
+            {"fields": ("organization", "workspace", "registry_namespace", "visibility_scope")},
+        ),
+        (
+            "Publication and processing",
+            {
+                "fields": (
+                    "assignment_status",
+                    "processing_status",
+                    "published_by",
+                    "publication_attempt",
+                    "registration_submission",
+                    "maintenance_updates",
+                    "published_versions",
+                    "completed_at",
+                )
+            },
+        ),
+        (
+            "Removal and cleanup",
+            {
+                "fields": (
+                    "detachment_requested_at",
+                    "detached_at",
+                    "detached_by",
+                    "detachment_reason",
+                    "cleanup_required",
+                )
+            },
+        ),
+    )
 
     def has_add_permission(self, request: HttpRequest, obj: object | None = None) -> bool:
         """Prevent manual publication creation from inline controls."""
@@ -85,8 +125,21 @@ class StagedResourcePublicationInline(admin.TabularInline):
             super()
             .get_queryset(request)
             .select_related(
+                "organization",
+                "workspace",
+                "registry_namespace",
+                "published_by",
                 "registration_submission__dataset_registration_job",
                 "registration_submission__workbook_ingestion_job",
+            )
+            .prefetch_related(
+                "dataset_changes",
+                Prefetch(
+                    "dataset_assignments",
+                    queryset=StagedResourcePublicationDataset.objects.select_related(
+                        "dataset", "dataset_version"
+                    ),
+                ),
             )
         )
         if UserGroupManagement.is_user_scoped_admin(  # type: ignore[no-untyped-call]
@@ -98,6 +151,53 @@ class StagedResourcePublicationInline(admin.TabularInline):
                 )
             )
         return publications
+
+    @admin.display(description="Maintenance updates")
+    def maintenance_updates(self, publication: StagedResourcePublication) -> str:
+        """Link the completed proposals that contributed versions to this publication.
+
+        Args:
+            publication: Destination publication with prefetched proposals.
+
+        Returns:
+            Links to authorized proposal reviews, or an empty-state label.
+        """
+        updates = [
+            change for change in publication.dataset_changes.all() if change.status == "PUBLISHED"
+        ]
+        return (
+            format_html_join(
+                ", ",
+                '<a href="{}">{}</a>',
+                (
+                    (
+                        reverse("admin:resource_registry_dataset_review", args=[change.id]),
+                        str(change.id),
+                    )
+                    for change in updates
+                ),
+            )
+            if updates
+            else "—"
+        )
+
+    @admin.display(description="Published versions")
+    def published_versions(self, publication: StagedResourcePublication) -> str:
+        """Display the exact historical versions assigned to a publication.
+
+        Args:
+            publication: Destination publication with prefetched version assignments.
+
+        Returns:
+            Dataset names with version numbers, preserving detached history.
+        """
+        return (
+            "; ".join(
+                f"{assignment.dataset.name} — version {assignment.dataset_version.version_number}"
+                for assignment in publication.dataset_assignments.all()
+            )
+            or "—"
+        )
 
     @admin.display(description="Dataset processing")
     def processing_status(self, publication: StagedResourcePublication | None) -> str:
@@ -123,6 +223,8 @@ class StagedResourcePublicationInline(admin.TabularInline):
         """
         if publication is None:
             return "—"
+        if any(change.status == "PUBLISHED" for change in publication.dataset_changes.all()):
+            return "Dataset maintenance: Published"
         if publication.registration_submission_id is None:
             return "Registration pending"
         submission = publication.registration_submission
@@ -169,6 +271,7 @@ class PublishDestinationsForm(forms.Form):
         choices=(),
         required=True,
         label="Destinations",
+        widget=forms.CheckboxSelectMultiple(attrs={"class": "destination-options"}),
         help_text="Select one or more enabled Organization or Workspace destinations.",
     )
 
@@ -205,6 +308,7 @@ class RemoveDestinationsForm(forms.Form):
         choices=(),
         required=True,
         label="Destination assignments",
+        widget=forms.CheckboxSelectMultiple(attrs={"class": "destination-options"}),
     )
     reason = forms.CharField(
         max_length=500,
@@ -273,7 +377,10 @@ class StagedResourceIntakeAdmin(admin.ModelAdmin):
         "declared_checksum",
         "verified_checksum",
         "checksum_verification_status",
-        "inspection_json",
+        "inspection_details",
+        "source_availability",
+        "source_deleted_at",
+        "source_last_used_at",
         "status",
         "failure_code",
         "cleanup_required",
@@ -281,7 +388,92 @@ class StagedResourceIntakeAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     )
-    fields = readonly_fields
+    fieldsets = (
+        (
+            "Overview",
+            {
+                "classes": ("intake-section",),
+                "fields": ("id", "status", "submitted_by", "source_availability"),
+            },
+        ),
+        (
+            "File details",
+            {
+                "classes": ("intake-section",),
+                "fields": (
+                    "original_filename",
+                    "normalized_filename",
+                    "resolved_file_format",
+                    "declared_content_type",
+                    "detected_content_type",
+                    "declared_size_bytes",
+                    "actual_size_bytes",
+                ),
+            },
+        ),
+        (
+            "Verification and inspection",
+            {
+                "classes": ("intake-section",),
+                "fields": (
+                    "checksum_verification_status",
+                    "checksum_algorithm",
+                    "declared_checksum",
+                    "verified_checksum",
+                    "inspection_details",
+                ),
+            },
+        ),
+        (
+            "Storage",
+            {
+                "classes": ("intake-section",),
+                "fields": (
+                    "storage_provider",
+                    "storage_object_key",
+                    "storage_etag",
+                    "storage_version_id",
+                ),
+            },
+        ),
+        (
+            "Lifecycle and cleanup",
+            {
+                "classes": ("intake-section",),
+                "fields": (
+                    "failure_code",
+                    "cleanup_required",
+                    "source_last_used_at",
+                    "source_deleted_at",
+                    "expires_at",
+                    "created_at",
+                    "updated_at",
+                ),
+            },
+        ),
+    )
+
+    @admin.display(description="Inspection JSON")
+    def inspection_details(self, obj: StagedResourceIntake) -> str:
+        """Format inspection JSON while escaping untrusted file metadata.
+
+        Args:
+            obj: Intake whose stored inspection is displayed.
+
+        Returns:
+            Escaped, indented JSON in a scrollable read-only block.
+        """
+        return format_html(
+            '<pre class="intake-inspection-json">{}</pre>',
+            json.dumps(obj.inspection_json, indent=2, ensure_ascii=False),
+        )
+
+    @admin.display(description="Source file")
+    def source_availability(self, obj: StagedResourceIntake) -> str:
+        """Distinguish historical publication from private source availability."""
+        if obj.source_deleted_at:
+            return "Source file deleted"
+        return "Source cleanup in progress" if obj.source_cleanup_started_at else "Available"
 
     def has_add_permission(self, request: HttpRequest) -> bool:
         """Prevent intake creation from Django Admin."""
@@ -872,6 +1064,7 @@ class StagedResourceIntakeAdmin(admin.ModelAdmin):
                 "registration_submission__dataset_registration_job",
                 "registration_submission__workbook_ingestion_job",
             )
+            .prefetch_related("dataset_changes")
             .annotate(
                 active_dataset_count=Count(
                     "dataset_assignments__dataset_id",

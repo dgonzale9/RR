@@ -1,0 +1,22 @@
+{% extends "admin/change_list.html" %}
+{% block title %}Datasets | Resource Registry{% endblock %}
+{% block extrahead %}
+  {{ block.super }}
+  <meta charset="utf-8">
+  <style>
+    #dataset-date-range-form { padding: 0 15px 12px; }
+    #dataset-date-range-form label { display: block; margin-bottom: 5px; }
+    #dataset-date-range-form input[type="date"],
+    #dataset-date-range-form select { box-sizing: border-box; width: 100%; }
+    #dataset-date-range-form .help { font-size: 11px; }
+    #dataset-date-range-form .errorlist { padding: 0; color: var(--error-fg); }
+    #dataset-date-range-form .button { margin-bottom: 8px; }
+  </style>
+{% endblock %}
+{% block object-tools-items %}
+  <li><a href="{% url 'admin:resource_registry_dataset_cleanup' %}">Cleanup candidates</a></li>
+  <li><a href="{% url 'admin:resource_registry_dataset_changes' %}">My updates</a></li>
+  <li><a href="{% url 'admin:resource_registry_dataset_changes' %}?view=pending">Pending publication</a></li>
+  <li><a href="{% url 'admin:resource_registry_dataset_changes' %}?view=failed">Failed updates</a></li>
+  {{ block.super }}
+{% endblock %}

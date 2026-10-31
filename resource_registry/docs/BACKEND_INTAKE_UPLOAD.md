@@ -42,8 +42,9 @@ These private, unassigned intakes retain the existing destination authorization 
 - The browser saves acknowledged indexes for resumption. If completion reports missing blocks,
   it clears those acknowledgments and offers retransmission. Cancellation retains the existing
   exact-object cleanup and expiration workflow.
-- Azure/Azurite supports this transfer protocol. The development-only `local` upload provider
-  does not implement backend block transfer and returns `UPLOAD_PROVIDER_UNAVAILABLE`.
+- Azure/Azurite and the development-only `local` upload provider support backend blocks.
+  The local adapter stages fragments and assembles the verified manifest beneath its configured
+  storage root. It permits local integration tests without Azure; it is not production storage.
 
 ## Deployment requirements
 

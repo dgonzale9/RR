@@ -6,6 +6,7 @@ from uuid import UUID
 from django.db import transaction
 from django.utils import timezone
 
+from resource_registry.cleanup.admission import lock_referenced_datasets
 from resource_registry.models import (
     TransformationDefinition,
     TransformationDefinitionVersion,
@@ -93,6 +94,7 @@ class TransformationDefinitionLifecycleService:
                     "Only draft transformation definition versions can be published.",
                 )
 
+            lock_referenced_datasets(target_version.specification_json)
             self._finalize_specification_checksum(version=target_version)
             published_at = timezone.now()
 

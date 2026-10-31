@@ -33,8 +33,6 @@ from resource_registry.services.workbook_upload_materialization_service import (
     WorkbookUploadExecutionError,
     WorkbookUploadMaterializationService,
 )
-from resource_registry.services.workbook_replacement_service import WorkbookReplacementService
-from resource_registry.uploads.exceptions import UploadApplicationError
 
 
 class WorkbookIngestionJobExecutionService:
@@ -65,9 +63,6 @@ class WorkbookIngestionJobExecutionService:
         self._destination_assignment_removal_service = (
             destination_assignment_removal_service or DestinationAssignmentRemovalService()
         )
-        self._workbook_replacement_service = WorkbookReplacementService(
-            registration_facade=self._registration_facade,
-        )
 
     def execute_job(
         self,
@@ -83,33 +78,19 @@ class WorkbookIngestionJobExecutionService:
         try:
             if is_direct_upload_job:
                 with self._upload_materialization_service.materialize(job=job) as source:
-                    if (
-                        job.registration_submission is not None
-                        and job.registration_submission.replacement_workbook_group_id is not None
-                    ):
-                        replacement = self._workbook_replacement_service.replace(
-                            job=job,
-                            source=source,
+                    command = self._build_upload_registration_command(job=job, source=source)
+                    with transaction.atomic():
+                        result = self._registration_facade.register_workbook(
+                            command,
+                            pre_uploaded_source_metadata=source.source_metadata,
+                            canonical_provider_key=source.storage_provider,
                         )
-                        result = replacement.batch
                         payload = self._to_result_payload(result)
-                        payload["archived_dataset_ids"] = list(replacement.archived_dataset_ids)
-                        payload["no_changes_detected"] = replacement.no_changes_detected
-                        publication_id = None
-                    else:
-                        command = self._build_upload_registration_command(job=job, source=source)
-                        with transaction.atomic():
-                            result = self._registration_facade.register_workbook(
-                                command,
-                                pre_uploaded_source_metadata=source.source_metadata,
-                                canonical_provider_key=source.storage_provider,
-                            )
-                            payload = self._to_result_payload(result)
-                            publication_id = self._get_staged_publication_id(job=job)
-                            self._destination_assignment_removal_service.record_job_outputs(
-                                publication_id=publication_id,
-                                result_payload=payload,
-                            )
+                        publication_id = self._get_staged_publication_id(job=job)
+                        self._destination_assignment_removal_service.record_job_outputs(
+                            publication_id=publication_id,
+                            result_payload=payload,
+                        )
             else:
                 command = RegisterDatasetCommand(**dict(job.request_payload_json or {}))
                 with transaction.atomic():
@@ -166,13 +147,6 @@ class WorkbookIngestionJobExecutionService:
                 error_message=str(error),
                 execution_ms=execution_ms,
                 retryable=error.retryable,
-            )
-        except UploadApplicationError as error:
-            return self._job_service.mark_failed(
-                job=job,
-                error_code=error.code.lower(),
-                error_message="Workbook replacement authorization failed.",
-                execution_ms=int((time.perf_counter() - started_at) * 1000),
             )
         except ValidationError as error:
             execution_ms = int((time.perf_counter() - started_at) * 1000)

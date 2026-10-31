@@ -4,6 +4,7 @@ import mimetypes
 from pathlib import Path
 from typing import ClassVar
 
+from django.db.models import Q
 from django.utils.text import slugify
 
 from resource_registry.application.commands import RegisterDatasetCommand
@@ -12,7 +13,7 @@ from resource_registry.application.exceptions import (
     UnsupportedDatasetSourceError,
     ValidationError,
 )
-from resource_registry.models import ArtifactRole, Dataset, DatasetSourceType
+from resource_registry.models import ArtifactRole, Dataset, DatasetSourceType, RegistryNamespace
 
 
 class RegisterDatasetCommandValidator:
@@ -88,6 +89,34 @@ class RegisterDatasetCommandValidator:
         ):
             raise DuplicateDatasetError(
                 f"Dataset slug '{command.slug}' already exists for tenant '{command.tenant_id}'.",
+            )
+        self.require_explicit_update_if_enabled(command.tenant_id, command.slug)
+
+    @staticmethod
+    def require_explicit_update_if_enabled(tenant_id: str, slug: str) -> None:
+        """Reject name-based replacement in destinations using dataset maintenance.
+
+        Args:
+            tenant_id: Existing Registry namespace identifier.
+            slug: Legacy name-derived dataset identifier.
+
+        Raises:
+            ValidationError: If a matching dataset requires an explicit update proposal.
+        """
+        enabled = RegistryNamespace.objects.filter(
+            Q(organization__datasetmanagementconfiguration__enabled=True)
+            | Q(workspace__organization__datasetmanagementconfiguration__enabled=True)
+            | Q(organization__datasetmanagementconfiguration__legacy_updates_blocked=True)
+            | Q(
+                workspace__organization__datasetmanagementconfiguration__legacy_updates_blocked=True
+            ),
+            pk=tenant_id,
+        ).exists()
+        if enabled and Dataset.objects.filter(tenant_id=tenant_id, slug=slug).exists():
+            raise ValidationError(
+                "An explicit dataset update is required. Create a dataset-change proposal with the target ID.",
+                status=409,
+                code="explicit_dataset_update_required",
             )
 
     def _is_supported_dataset_format(self, *, dataset_path: Path, mime_type: str | None) -> bool:

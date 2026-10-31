@@ -1,0 +1,4412 @@
+{
+  "cross_evidence_interpretation": {
+    "confirmed_measurements": [
+      "Direct unchanged and rewritten projections are measured separately from canonical dispatch.",
+      "Canonical dataset-list latency and memory are measured at 1, 50, and 100 records.",
+      "Repeated profiles release output strings and record signed post-GC deltas through 1,000 operations.",
+      "Concurrent profiles confirm synchronized in-flight overlap at 1, 10, and 25 workers."
+    ],
+    "environmental_limitations": [
+      "Results are local controlled benchmarks, not end-to-end provider or chat measurements.",
+      "RSS is explicitly not measured where no reliable current-RSS source exists.",
+      "Three trials show local variation but are not a broad statistical confidence claim."
+    ],
+    "supported_architectural_observations": [
+      "The 100-record rewritten direct p50 is sub-millisecond while canonical p50 is tens of milliseconds; these boundaries are not subtracted to claim exclusive cost.",
+      "Long hint/error fixtures are synthetic direct edge cases and do not by themselves establish representative canonical workload impact.",
+      "Direct post-GC retention remains small in the recorded repeated profiles; no leak claim is supported."
+    ],
+    "unverified_hypotheses": [
+      "A fast path that avoids full JSON projection could reduce direct cost, but no candidate implementation was measured.",
+      "Potential savings, rollback behavior, and end-to-end chat impact are unmeasured."
+    ]
+  },
+  "epic_6_story_completion": {
+    "production_optimization_introduced": false,
+    "rr_09_1": "ACCEPTED",
+    "rr_09_2": "ACCEPTED",
+    "rr_09_3": "FORMALLY_SKIPPED_BY_THIS_CLOSURE"
+  },
+  "evidence_sources": {
+    "baseline_report.md": {
+      "path": "resource_registry/benchmarks/baseline_report.md",
+      "sha256": "327f529c82ea274e2c3e0800c6f3b0e0369e67b419394ae3a9407402d396788b"
+    },
+    "baseline_results.json": {
+      "path": "resource_registry/benchmarks/baseline_results.json",
+      "sha256": "c20dfee85d550121db16d70a1f662ef5d422c78741e1271fa0fe9a040a097824"
+    },
+    "e21_candidate_report.md": {
+      "path": "resource_registry/benchmarks/e21_candidate_report.md",
+      "sha256": "f3107dbd2db70f42c53c2f1d18626429c695aa1d089535e8087eea9b0e778f58"
+    },
+    "e21_candidate_results.json": {
+      "path": "resource_registry/benchmarks/e21_candidate_results.json",
+      "sha256": "4fe2e882ff316fc3a099744557e4c09c3679c820ced0e32cf7b995577e9f6fc5"
+    },
+    "e23_verification_report.md": {
+      "path": "resource_registry/benchmarks/e23_verification_report.md",
+      "sha256": "dffab1a0e6be8c6d33531f3334111d25bf58facac6da1dcbc13eb8ce9fc8b618"
+    },
+    "e23_verification_results.json": {
+      "path": "resource_registry/benchmarks/e23_verification_results.json",
+      "sha256": "4224ffc6c701151745beec32bb2329d31f59e0bc0f5b4128a75f33e239f1424a"
+    },
+    "epic2_closure_report.md": {
+      "path": "resource_registry/benchmarks/epic2_closure_report.md",
+      "sha256": "4212a7c6b7249599a5ffdf0b68cc175682ef70731bbeab495990736337b5d28f"
+    },
+    "epic3_grouped_baseline_report.md": {
+      "path": "resource_registry/benchmarks/epic3_grouped_baseline_report.md",
+      "sha256": "69f5bc4fd6149fe3f4804a398cddc035ef0be65110b1f13145259a2b1201883d"
+    },
+    "epic3_grouped_baseline_results.json": {
+      "path": "resource_registry/benchmarks/epic3_grouped_baseline_results.json",
+      "sha256": "0bfc3b5d55052e7fc480faf5827715f3fc1cde3f8829c950130256c244d7197f"
+    },
+    "epic4_catalog_baseline_report.md": {
+      "path": "resource_registry/benchmarks/epic4_catalog_baseline_report.md",
+      "sha256": "8f5cc9a170465e834985109fa009e4b3797892d858126e72f03fbf673b7ff03a"
+    },
+    "epic4_catalog_baseline_results.json": {
+      "path": "resource_registry/benchmarks/epic4_catalog_baseline_results.json",
+      "sha256": "41025bd1a6972ea7e0b0140a80c5de3e9f72b2394d929aefa8126070146f71b4"
+    },
+    "epic5_selection_baseline_report.md": {
+      "path": "resource_registry/benchmarks/epic5_selection_baseline_report.md",
+      "sha256": "283d3f789921bd0da6b9a36b3301bc6d881a7af8f5b51a2a67f900bbc4e7a1ee"
+    },
+    "epic5_selection_baseline_results.json": {
+      "path": "resource_registry/benchmarks/epic5_selection_baseline_results.json",
+      "sha256": "51a8bdf57dd2e45cd826c6be73b1748c83c62b981759d2078500aab49f24cc0d"
+    },
+    "epic5_selection_candidate_report.md": {
+      "path": "resource_registry/benchmarks/epic5_selection_candidate_report.md",
+      "sha256": "63ec4a5bae27aea4d9260aa7a6ccb2c83e30169e14ef25856db1ef6e5991ea86"
+    },
+    "epic5_selection_candidate_results.json": {
+      "path": "resource_registry/benchmarks/epic5_selection_candidate_results.json",
+      "sha256": "d5ecf72efebac348e5a32b7b9925bd78557eb7bd10dc4db3b50fdde008176ffc"
+    },
+    "epic5_selection_closure_matrix.json": {
+      "path": "resource_registry/benchmarks/epic5_selection_closure_matrix.json",
+      "sha256": "13887c4aec1269d959983e3ba2719031d3310d0c567a04100ce5777e038f2826"
+    },
+    "epic5_selection_closure_report.md": {
+      "path": "resource_registry/benchmarks/epic5_selection_closure_report.md",
+      "sha256": "4b55f311a962b981907ab9a44ede77ecca33c484f86260e93a034bf42af70455"
+    },
+    "epic6_grouped_result_baseline_report.md": {
+      "path": "resource_registry/benchmarks/epic6_grouped_result_baseline_report.md",
+      "sha256": "7f06fd9ad6f2ffcb01d93ad687a1350454e149a5c6309260c62f655bab3a006a"
+    },
+    "epic6_grouped_result_baseline_results.json": {
+      "path": "resource_registry/benchmarks/epic6_grouped_result_baseline_results.json",
+      "sha256": "8a30dc3184ce81b6f5a1ece0e6f97dc71b2915334c6e07ad271a4035d5479503"
+    },
+    "epic6_grouped_result_memory_report.md": {
+      "path": "resource_registry/benchmarks/epic6_grouped_result_memory_report.md",
+      "sha256": "28757aa7e2a32b3cc84f59cc1ccd12e9e6eb24a013d927efce1039efa2f03d60"
+    },
+    "epic6_grouped_result_memory_results.json": {
+      "path": "resource_registry/benchmarks/epic6_grouped_result_memory_results.json",
+      "sha256": "d60d5babe43037aac02868af84168a2df5c8e390c27ac87b5f2bd01912e85b03"
+    }
+  },
+  "historical_artifact_integrity": {
+    "accepted_artifact_names": [
+      "baseline_results.json",
+      "baseline_report.md",
+      "e21_candidate_results.json",
+      "e21_candidate_report.md",
+      "e23_verification_results.json",
+      "e23_verification_report.md",
+      "epic2_closure_report.md",
+      "epic3_grouped_baseline_results.json",
+      "epic3_grouped_baseline_report.md",
+      "epic4_catalog_baseline_results.json",
+      "epic4_catalog_baseline_report.md",
+      "epic5_selection_baseline_results.json",
+      "epic5_selection_baseline_report.md",
+      "epic5_selection_candidate_results.json",
+      "epic5_selection_candidate_report.md",
+      "epic5_selection_closure_matrix.json",
+      "epic5_selection_closure_report.md",
+      "epic6_grouped_result_baseline_results.json",
+      "epic6_grouped_result_baseline_report.md",
+      "epic6_grouped_result_memory_results.json",
+      "epic6_grouped_result_memory_report.md"
+    ],
+    "all_accepted_artifacts_unchanged": true,
+    "verification": "git diff --quiet HEAD -- each listed accepted artifact"
+  },
+  "rr_09_1_performance": {
+    "canonical_dataset_list": [
+      {
+        "category": "canonical_execution",
+        "error_count": 0,
+        "execution_boundary": "canonical_dispatch_included",
+        "input_payload_bytes": null,
+        "p50_ms": 62.621875,
+        "p95_ms": 67.174542,
+        "p99_ms": 74.056625,
+        "projection_changes_result": false,
+        "record_count": 1,
+        "result_payload_bytes": 452.0,
+        "scenario_id": "grouped_result.canonical.dataset_list.records_001",
+        "source_artifact": "epic6_grouped_result_baseline_results.json",
+        "status": "measured",
+        "trial_latency_ms": [
+          {
+            "error_count": 0,
+            "p50_ms": 62.621875,
+            "p95_ms": 67.174542,
+            "p99_ms": 74.056625,
+            "trial": 1
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 55.417792,
+            "p95_ms": 69.139291,
+            "p99_ms": 95.565541,
+            "trial": 2
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 32.647083,
+            "p95_ms": 43.612958,
+            "p99_ms": 80.616042,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "canonical_execution",
+        "error_count": 0,
+        "execution_boundary": "canonical_dispatch_included",
+        "input_payload_bytes": null,
+        "p50_ms": 66.37,
+        "p95_ms": 71.812958,
+        "p99_ms": 80.772167,
+        "projection_changes_result": false,
+        "record_count": 50,
+        "result_payload_bytes": 16859.0,
+        "scenario_id": "grouped_result.canonical.dataset_list.records_050",
+        "source_artifact": "epic6_grouped_result_baseline_results.json",
+        "status": "measured",
+        "trial_latency_ms": [
+          {
+            "error_count": 0,
+            "p50_ms": 66.37,
+            "p95_ms": 71.812958,
+            "p99_ms": 80.772167,
+            "trial": 1
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 37.978334,
+            "p95_ms": 52.720208,
+            "p99_ms": 80.313125,
+            "trial": 2
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 36.121542,
+            "p95_ms": 45.33875,
+            "p99_ms": 75.940708,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "canonical_execution",
+        "error_count": 0,
+        "execution_boundary": "canonical_dispatch_included",
+        "input_payload_bytes": null,
+        "p50_ms": 64.603334,
+        "p95_ms": 72.585417,
+        "p99_ms": 77.392125,
+        "projection_changes_result": false,
+        "record_count": 100,
+        "result_payload_bytes": 33603.0,
+        "scenario_id": "grouped_result.canonical.dataset_list.records_100",
+        "source_artifact": "epic6_grouped_result_baseline_results.json",
+        "status": "measured",
+        "trial_latency_ms": [
+          {
+            "error_count": 0,
+            "p50_ms": 64.603334,
+            "p95_ms": 72.585417,
+            "p99_ms": 77.392125,
+            "trial": 1
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 41.354834,
+            "p95_ms": 55.143625,
+            "p99_ms": 87.179959,
+            "trial": 2
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 43.753667,
+            "p95_ms": 60.257792,
+            "p99_ms": 66.840417,
+            "trial": 3
+          }
+        ]
+      }
+    ],
+    "concurrency": [
+      {
+        "category": "projection_concurrency",
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 9282,
+        "p50_ms": 0.131334,
+        "p95_ms": 0.145166,
+        "p99_ms": 0.168125,
+        "projection_changes_result": true,
+        "record_count": 100,
+        "result_payload_bytes": 9304.0,
+        "scenario_id": "grouped_result.projection.concurrency_1",
+        "source_artifact": "epic6_grouped_result_baseline_results.json",
+        "status": "measured",
+        "trial_latency_ms": [
+          {
+            "error_count": 0,
+            "p50_ms": 0.131334,
+            "p95_ms": 0.145166,
+            "p99_ms": 0.168125,
+            "trial": 1
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.130875,
+            "p95_ms": 0.162333,
+            "p99_ms": 0.174375,
+            "trial": 2
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.136792,
+            "p95_ms": 0.168375,
+            "p99_ms": 0.253959,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "projection_concurrency",
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 9282,
+        "p50_ms": 0.131417,
+        "p95_ms": 0.151667,
+        "p99_ms": 0.163583,
+        "projection_changes_result": true,
+        "record_count": 100,
+        "result_payload_bytes": 9304.0,
+        "scenario_id": "grouped_result.projection.concurrency_10",
+        "source_artifact": "epic6_grouped_result_baseline_results.json",
+        "status": "measured",
+        "trial_latency_ms": [
+          {
+            "error_count": 0,
+            "p50_ms": 0.131417,
+            "p95_ms": 0.151667,
+            "p99_ms": 0.163583,
+            "trial": 1
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.134041,
+            "p95_ms": 0.169792,
+            "p99_ms": 0.193042,
+            "trial": 2
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.130417,
+            "p95_ms": 0.149083,
+            "p99_ms": 0.176917,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "projection_concurrency",
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 9282,
+        "p50_ms": 0.133334,
+        "p95_ms": 0.148334,
+        "p99_ms": 0.159291,
+        "projection_changes_result": true,
+        "record_count": 100,
+        "result_payload_bytes": 9304.0,
+        "scenario_id": "grouped_result.projection.concurrency_25",
+        "source_artifact": "epic6_grouped_result_baseline_results.json",
+        "status": "measured",
+        "trial_latency_ms": [
+          {
+            "error_count": 0,
+            "p50_ms": 0.133334,
+            "p95_ms": 0.148334,
+            "p99_ms": 0.159291,
+            "trial": 1
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.136167,
+            "p95_ms": 0.151959,
+            "p99_ms": 0.1705,
+            "trial": 2
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.136291,
+            "p95_ms": 0.155041,
+            "p99_ms": 0.192333,
+            "trial": 3
+          }
+        ]
+      }
+    ],
+    "direct_projection": [
+      {
+        "category": "projection",
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 127,
+        "p50_ms": 0.016541,
+        "p95_ms": 0.019,
+        "p99_ms": 0.028833,
+        "projection_changes_result": false,
+        "record_count": 1,
+        "result_payload_bytes": 127.0,
+        "scenario_id": "grouped_result.projection.unchanged.records_001",
+        "source_artifact": "epic6_grouped_result_baseline_results.json",
+        "status": "measured",
+        "trial_latency_ms": [
+          {
+            "error_count": 0,
+            "p50_ms": 0.016541,
+            "p95_ms": 0.019,
+            "p99_ms": 0.028833,
+            "trial": 1
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.015,
+            "p95_ms": 0.016667,
+            "p99_ms": 0.017292,
+            "trial": 2
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.016625,
+            "p95_ms": 0.018209,
+            "p99_ms": 0.019792,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "projection",
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 267,
+        "p50_ms": 0.057375,
+        "p95_ms": 0.059291,
+        "p99_ms": 0.064667,
+        "projection_changes_result": true,
+        "record_count": 1,
+        "result_payload_bytes": 289.0,
+        "scenario_id": "grouped_result.projection.rewritten.hint.records_001",
+        "source_artifact": "epic6_grouped_result_baseline_results.json",
+        "status": "measured",
+        "trial_latency_ms": [
+          {
+            "error_count": 0,
+            "p50_ms": 0.057375,
+            "p95_ms": 0.059291,
+            "p99_ms": 0.064667,
+            "trial": 1
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.057458,
+            "p95_ms": 0.059875,
+            "p99_ms": 0.069,
+            "trial": 2
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.057291,
+            "p95_ms": 0.060417,
+            "p99_ms": 0.066,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "projection",
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 270,
+        "p50_ms": 0.058,
+        "p95_ms": 0.061292,
+        "p99_ms": 0.063,
+        "projection_changes_result": true,
+        "record_count": 1,
+        "result_payload_bytes": 292.0,
+        "scenario_id": "grouped_result.projection.rewritten.error.records_001",
+        "source_artifact": "epic6_grouped_result_baseline_results.json",
+        "status": "measured",
+        "trial_latency_ms": [
+          {
+            "error_count": 0,
+            "p50_ms": 0.058,
+            "p95_ms": 0.061292,
+            "p99_ms": 0.063,
+            "trial": 1
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.057917,
+            "p95_ms": 0.066167,
+            "p99_ms": 0.07075,
+            "trial": 2
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.0575,
+            "p95_ms": 0.060958,
+            "p99_ms": 0.070667,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "projection",
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 242,
+        "p50_ms": 0.019125,
+        "p95_ms": 0.019875,
+        "p99_ms": 0.022459,
+        "projection_changes_result": true,
+        "record_count": 1,
+        "result_payload_bytes": 273.0,
+        "scenario_id": "grouped_result.projection.rewritten.suggested_bif.records_001",
+        "source_artifact": "epic6_grouped_result_baseline_results.json",
+        "status": "measured",
+        "trial_latency_ms": [
+          {
+            "error_count": 0,
+            "p50_ms": 0.019125,
+            "p95_ms": 0.019875,
+            "p99_ms": 0.022459,
+            "trial": 1
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.019083,
+            "p95_ms": 0.019542,
+            "p99_ms": 0.020458,
+            "trial": 2
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.019084,
+            "p95_ms": 0.022167,
+            "p99_ms": 0.028584,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "projection",
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 248,
+        "p50_ms": 0.019083,
+        "p95_ms": 0.020292,
+        "p99_ms": 0.021792,
+        "projection_changes_result": true,
+        "record_count": 1,
+        "result_payload_bytes": 279.0,
+        "scenario_id": "grouped_result.projection.rewritten.recommended_bif.records_001",
+        "source_artifact": "epic6_grouped_result_baseline_results.json",
+        "status": "measured",
+        "trial_latency_ms": [
+          {
+            "error_count": 0,
+            "p50_ms": 0.019083,
+            "p95_ms": 0.020292,
+            "p99_ms": 0.021792,
+            "trial": 1
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.019083,
+            "p95_ms": 0.019833,
+            "p99_ms": 0.023917,
+            "trial": 2
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.017167,
+            "p95_ms": 0.019458,
+            "p99_ms": 0.022917,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "projection",
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 4572,
+        "p50_ms": 0.030416,
+        "p95_ms": 0.031041,
+        "p99_ms": 0.032,
+        "projection_changes_result": false,
+        "record_count": 50,
+        "result_payload_bytes": 4572.0,
+        "scenario_id": "grouped_result.projection.unchanged.records_050",
+        "source_artifact": "epic6_grouped_result_baseline_results.json",
+        "status": "measured",
+        "trial_latency_ms": [
+          {
+            "error_count": 0,
+            "p50_ms": 0.030416,
+            "p95_ms": 0.031041,
+            "p99_ms": 0.032,
+            "trial": 1
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.030583,
+            "p95_ms": 0.031125,
+            "p99_ms": 0.037417,
+            "trial": 2
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.030375,
+            "p95_ms": 0.033,
+            "p99_ms": 0.035209,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "projection",
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 4712,
+        "p50_ms": 0.093083,
+        "p95_ms": 0.10175,
+        "p99_ms": 0.143125,
+        "projection_changes_result": true,
+        "record_count": 50,
+        "result_payload_bytes": 4734.0,
+        "scenario_id": "grouped_result.projection.rewritten.hint.records_050",
+        "source_artifact": "epic6_grouped_result_baseline_results.json",
+        "status": "measured",
+        "trial_latency_ms": [
+          {
+            "error_count": 0,
+            "p50_ms": 0.093083,
+            "p95_ms": 0.10175,
+            "p99_ms": 0.143125,
+            "trial": 1
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.093959,
+            "p95_ms": 0.099333,
+            "p99_ms": 0.118709,
+            "trial": 2
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.093667,
+            "p95_ms": 0.106,
+            "p99_ms": 0.162666,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "projection",
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 4715,
+        "p50_ms": 0.092959,
+        "p95_ms": 0.101334,
+        "p99_ms": 0.186125,
+        "projection_changes_result": true,
+        "record_count": 50,
+        "result_payload_bytes": 4737.0,
+        "scenario_id": "grouped_result.projection.rewritten.error.records_050",
+        "source_artifact": "epic6_grouped_result_baseline_results.json",
+        "status": "measured",
+        "trial_latency_ms": [
+          {
+            "error_count": 0,
+            "p50_ms": 0.092959,
+            "p95_ms": 0.101334,
+            "p99_ms": 0.186125,
+            "trial": 1
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.094167,
+            "p95_ms": 0.103208,
+            "p99_ms": 0.113584,
+            "trial": 2
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.093958,
+            "p95_ms": 0.100542,
+            "p99_ms": 0.1105,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "projection",
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 4687,
+        "p50_ms": 0.055417,
+        "p95_ms": 0.071,
+        "p99_ms": 0.153584,
+        "projection_changes_result": true,
+        "record_count": 50,
+        "result_payload_bytes": 4718.0,
+        "scenario_id": "grouped_result.projection.rewritten.suggested_bif.records_050",
+        "source_artifact": "epic6_grouped_result_baseline_results.json",
+        "status": "measured",
+        "trial_latency_ms": [
+          {
+            "error_count": 0,
+            "p50_ms": 0.055417,
+            "p95_ms": 0.071,
+            "p99_ms": 0.153584,
+            "trial": 1
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.055125,
+            "p95_ms": 0.057,
+            "p99_ms": 0.065916,
+            "trial": 2
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.055792,
+            "p95_ms": 0.05825,
+            "p99_ms": 0.062791,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "projection",
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 4693,
+        "p50_ms": 0.055084,
+        "p95_ms": 0.058791,
+        "p99_ms": 0.079958,
+        "projection_changes_result": true,
+        "record_count": 50,
+        "result_payload_bytes": 4724.0,
+        "scenario_id": "grouped_result.projection.rewritten.recommended_bif.records_050",
+        "source_artifact": "epic6_grouped_result_baseline_results.json",
+        "status": "measured",
+        "trial_latency_ms": [
+          {
+            "error_count": 0,
+            "p50_ms": 0.055084,
+            "p95_ms": 0.058791,
+            "p99_ms": 0.079958,
+            "trial": 1
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.055666,
+            "p95_ms": 0.060834,
+            "p99_ms": 0.101334,
+            "trial": 2
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.056042,
+            "p95_ms": 0.060125,
+            "p99_ms": 0.069375,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "projection",
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 9142,
+        "p50_ms": 0.041291,
+        "p95_ms": 0.057416,
+        "p99_ms": 0.069416,
+        "projection_changes_result": false,
+        "record_count": 100,
+        "result_payload_bytes": 9142.0,
+        "scenario_id": "grouped_result.projection.unchanged.records_100",
+        "source_artifact": "epic6_grouped_result_baseline_results.json",
+        "status": "measured",
+        "trial_latency_ms": [
+          {
+            "error_count": 0,
+            "p50_ms": 0.041291,
+            "p95_ms": 0.057416,
+            "p99_ms": 0.069416,
+            "trial": 1
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.044333,
+            "p95_ms": 0.046167,
+            "p99_ms": 0.051541,
+            "trial": 2
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.044875,
+            "p95_ms": 0.047333,
+            "p99_ms": 0.059083,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "projection",
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 9282,
+        "p50_ms": 0.129542,
+        "p95_ms": 0.134458,
+        "p99_ms": 0.147333,
+        "projection_changes_result": true,
+        "record_count": 100,
+        "result_payload_bytes": 9304.0,
+        "scenario_id": "grouped_result.projection.rewritten.hint.records_100",
+        "source_artifact": "epic6_grouped_result_baseline_results.json",
+        "status": "measured",
+        "trial_latency_ms": [
+          {
+            "error_count": 0,
+            "p50_ms": 0.129542,
+            "p95_ms": 0.134458,
+            "p99_ms": 0.147333,
+            "trial": 1
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.1325,
+            "p95_ms": 0.153708,
+            "p99_ms": 0.261875,
+            "trial": 2
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.130833,
+            "p95_ms": 0.133292,
+            "p99_ms": 0.145958,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "projection",
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 9285,
+        "p50_ms": 0.129834,
+        "p95_ms": 0.135584,
+        "p99_ms": 0.14275,
+        "projection_changes_result": true,
+        "record_count": 100,
+        "result_payload_bytes": 9307.0,
+        "scenario_id": "grouped_result.projection.rewritten.error.records_100",
+        "source_artifact": "epic6_grouped_result_baseline_results.json",
+        "status": "measured",
+        "trial_latency_ms": [
+          {
+            "error_count": 0,
+            "p50_ms": 0.129834,
+            "p95_ms": 0.135584,
+            "p99_ms": 0.14275,
+            "trial": 1
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.128875,
+            "p95_ms": 0.157291,
+            "p99_ms": 0.253917,
+            "trial": 2
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.1315,
+            "p95_ms": 0.145458,
+            "p99_ms": 0.165458,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "projection",
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 9257,
+        "p50_ms": 0.0925,
+        "p95_ms": 0.10125,
+        "p99_ms": 0.109167,
+        "projection_changes_result": true,
+        "record_count": 100,
+        "result_payload_bytes": 9288.0,
+        "scenario_id": "grouped_result.projection.rewritten.suggested_bif.records_100",
+        "source_artifact": "epic6_grouped_result_baseline_results.json",
+        "status": "measured",
+        "trial_latency_ms": [
+          {
+            "error_count": 0,
+            "p50_ms": 0.0925,
+            "p95_ms": 0.10125,
+            "p99_ms": 0.109167,
+            "trial": 1
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.090375,
+            "p95_ms": 0.11375,
+            "p99_ms": 0.196416,
+            "trial": 2
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.094542,
+            "p95_ms": 0.102667,
+            "p99_ms": 0.104583,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "projection",
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 9263,
+        "p50_ms": 0.091917,
+        "p95_ms": 0.094709,
+        "p99_ms": 0.102,
+        "projection_changes_result": true,
+        "record_count": 100,
+        "result_payload_bytes": 9294.0,
+        "scenario_id": "grouped_result.projection.rewritten.recommended_bif.records_100",
+        "source_artifact": "epic6_grouped_result_baseline_results.json",
+        "status": "measured",
+        "trial_latency_ms": [
+          {
+            "error_count": 0,
+            "p50_ms": 0.091917,
+            "p95_ms": 0.094709,
+            "p99_ms": 0.102,
+            "trial": 1
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.091333,
+            "p95_ms": 0.100792,
+            "p99_ms": 0.111709,
+            "trial": 2
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.094459,
+            "p95_ms": 0.100292,
+            "p99_ms": 0.103917,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "projection",
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 9142,
+        "p50_ms": 0.045042,
+        "p95_ms": 0.04725,
+        "p99_ms": 0.057667,
+        "projection_changes_result": false,
+        "record_count": 100,
+        "result_payload_bytes": 9142.0,
+        "scenario_id": "grouped_result.projection.structured.large_array",
+        "source_artifact": "epic6_grouped_result_baseline_results.json",
+        "status": "measured",
+        "trial_latency_ms": [
+          {
+            "error_count": 0,
+            "p50_ms": 0.045042,
+            "p95_ms": 0.04725,
+            "p99_ms": 0.057667,
+            "trial": 1
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.0435,
+            "p95_ms": 0.055833,
+            "p99_ms": 0.078042,
+            "trial": 2
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.045209,
+            "p95_ms": 0.046375,
+            "p99_ms": 0.057416,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "projection",
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 371,
+        "p50_ms": 0.015875,
+        "p95_ms": 0.017875,
+        "p99_ms": 0.018792,
+        "projection_changes_result": false,
+        "record_count": 1,
+        "result_payload_bytes": 371.0,
+        "scenario_id": "grouped_result.projection.structured.deep_nesting",
+        "source_artifact": "epic6_grouped_result_baseline_results.json",
+        "status": "measured",
+        "trial_latency_ms": [
+          {
+            "error_count": 0,
+            "p50_ms": 0.015875,
+            "p95_ms": 0.017875,
+            "p99_ms": 0.018792,
+            "trial": 1
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.017458,
+            "p95_ms": 0.017833,
+            "p99_ms": 0.018125,
+            "trial": 2
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.017583,
+            "p95_ms": 0.018,
+            "p99_ms": 0.018708,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "projection",
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 3633,
+        "p50_ms": 0.024958,
+        "p95_ms": 0.025375,
+        "p99_ms": 0.025458,
+        "projection_changes_result": false,
+        "record_count": 128,
+        "result_payload_bytes": 3633.0,
+        "scenario_id": "grouped_result.projection.structured.high_cardinality_metadata",
+        "source_artifact": "epic6_grouped_result_baseline_results.json",
+        "status": "measured",
+        "trial_latency_ms": [
+          {
+            "error_count": 0,
+            "p50_ms": 0.024958,
+            "p95_ms": 0.025375,
+            "p99_ms": 0.025458,
+            "trial": 1
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.024875,
+            "p95_ms": 0.027416,
+            "p99_ms": 0.033417,
+            "trial": 2
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.025042,
+            "p95_ms": 0.025625,
+            "p99_ms": 0.036542,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "projection",
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 10980,
+        "p50_ms": 0.0385,
+        "p95_ms": 0.046333,
+        "p99_ms": 0.049667,
+        "projection_changes_result": false,
+        "record_count": 100,
+        "result_payload_bytes": 10980.0,
+        "scenario_id": "grouped_result.projection.structured.schema_like",
+        "source_artifact": "epic6_grouped_result_baseline_results.json",
+        "status": "measured",
+        "trial_latency_ms": [
+          {
+            "error_count": 0,
+            "p50_ms": 0.0385,
+            "p95_ms": 0.046333,
+            "p99_ms": 0.049667,
+            "trial": 1
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.03875,
+            "p95_ms": 0.039541,
+            "p99_ms": 0.044833,
+            "trial": 2
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.038667,
+            "p95_ms": 0.039083,
+            "p99_ms": 0.041167,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "projection",
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 13409,
+        "p50_ms": 2.140875,
+        "p95_ms": 2.379,
+        "p99_ms": 5.396834,
+        "projection_changes_result": true,
+        "record_count": 1,
+        "result_payload_bytes": 13431.0,
+        "scenario_id": "grouped_result.projection.structured.long_hint",
+        "source_artifact": "epic6_grouped_result_baseline_results.json",
+        "status": "measured",
+        "trial_latency_ms": [
+          {
+            "error_count": 0,
+            "p50_ms": 2.140875,
+            "p95_ms": 2.379,
+            "p99_ms": 5.396834,
+            "trial": 1
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 2.147959,
+            "p95_ms": 2.20675,
+            "p99_ms": 2.361,
+            "trial": 2
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 2.144083,
+            "p95_ms": 2.175042,
+            "p99_ms": 2.230083,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "projection",
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 14435,
+        "p50_ms": 2.539417,
+        "p95_ms": 2.871417,
+        "p99_ms": 5.48375,
+        "projection_changes_result": true,
+        "record_count": 1,
+        "result_payload_bytes": 14457.0,
+        "scenario_id": "grouped_result.projection.structured.long_error",
+        "source_artifact": "epic6_grouped_result_baseline_results.json",
+        "status": "measured",
+        "trial_latency_ms": [
+          {
+            "error_count": 0,
+            "p50_ms": 2.539417,
+            "p95_ms": 2.871417,
+            "p99_ms": 5.48375,
+            "trial": 1
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 2.517958,
+            "p95_ms": 2.571625,
+            "p99_ms": 2.582666,
+            "trial": 2
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 2.509375,
+            "p95_ms": 2.67475,
+            "p99_ms": 2.74325,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "projection",
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 9263,
+        "p50_ms": 0.128708,
+        "p95_ms": 0.139833,
+        "p99_ms": 0.151792,
+        "projection_changes_result": true,
+        "record_count": 100,
+        "result_payload_bytes": 9285.0,
+        "scenario_id": "grouped_result.projection.structured.mixed_success_error",
+        "source_artifact": "epic6_grouped_result_baseline_results.json",
+        "status": "measured",
+        "trial_latency_ms": [
+          {
+            "error_count": 0,
+            "p50_ms": 0.128708,
+            "p95_ms": 0.139833,
+            "p99_ms": 0.151792,
+            "trial": 1
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.128334,
+            "p95_ms": 0.148583,
+            "p99_ms": 0.165375,
+            "trial": 2
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.129667,
+            "p95_ms": 0.151125,
+            "p99_ms": 0.1995,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "projection",
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 9,
+        "p50_ms": 0.016375,
+        "p95_ms": 0.017,
+        "p99_ms": 0.017458,
+        "projection_changes_result": false,
+        "record_count": 0,
+        "result_payload_bytes": 9.0,
+        "scenario_id": "grouped_result.projection.unusual.malformed_json",
+        "source_artifact": "epic6_grouped_result_baseline_results.json",
+        "status": "measured",
+        "trial_latency_ms": [
+          {
+            "error_count": 0,
+            "p50_ms": 0.016375,
+            "p95_ms": 0.017,
+            "p99_ms": 0.017458,
+            "trial": 1
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.016625,
+            "p95_ms": 0.017,
+            "p99_ms": 0.017292,
+            "trial": 2
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.016833,
+            "p95_ms": 0.017541,
+            "p99_ms": 0.018334,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "projection",
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 15,
+        "p50_ms": 0.015542,
+        "p95_ms": 0.015917,
+        "p99_ms": 0.016458,
+        "projection_changes_result": false,
+        "record_count": 0,
+        "result_payload_bytes": 15.0,
+        "scenario_id": "grouped_result.projection.unusual.scalar_json",
+        "source_artifact": "epic6_grouped_result_baseline_results.json",
+        "status": "measured",
+        "trial_latency_ms": [
+          {
+            "error_count": 0,
+            "p50_ms": 0.015542,
+            "p95_ms": 0.015917,
+            "p99_ms": 0.016458,
+            "trial": 1
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.015667,
+            "p95_ms": 0.017375,
+            "p99_ms": 0.020041,
+            "trial": 2
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.01575,
+            "p95_ms": 0.016125,
+            "p99_ms": 0.016834,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "projection",
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 14,
+        "p50_ms": 0.015583,
+        "p95_ms": 0.016208,
+        "p99_ms": 0.01675,
+        "projection_changes_result": false,
+        "record_count": 2,
+        "result_payload_bytes": 14.0,
+        "scenario_id": "grouped_result.projection.unusual.array_json",
+        "source_artifact": "epic6_grouped_result_baseline_results.json",
+        "status": "measured",
+        "trial_latency_ms": [
+          {
+            "error_count": 0,
+            "p50_ms": 0.015583,
+            "p95_ms": 0.016208,
+            "p99_ms": 0.01675,
+            "trial": 1
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.015667,
+            "p95_ms": 0.020208,
+            "p99_ms": 0.020666,
+            "trial": 2
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.015791,
+            "p95_ms": 0.016625,
+            "p99_ms": 0.019208,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "projection",
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 0,
+        "p50_ms": 0.01625,
+        "p95_ms": 0.016625,
+        "p99_ms": 0.017083,
+        "projection_changes_result": false,
+        "record_count": 0,
+        "result_payload_bytes": 0.0,
+        "scenario_id": "grouped_result.projection.unusual.empty_result",
+        "source_artifact": "epic6_grouped_result_baseline_results.json",
+        "status": "measured",
+        "trial_latency_ms": [
+          {
+            "error_count": 0,
+            "p50_ms": 0.01625,
+            "p95_ms": 0.016625,
+            "p99_ms": 0.017083,
+            "trial": 1
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.016375,
+            "p95_ms": 0.019584,
+            "p99_ms": 0.020667,
+            "trial": 2
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.016541,
+            "p95_ms": 0.022625,
+            "p99_ms": 0.047167,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "projection",
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 46,
+        "p50_ms": 0.016,
+        "p95_ms": 0.016417,
+        "p99_ms": 0.017583,
+        "projection_changes_result": false,
+        "record_count": 0,
+        "result_payload_bytes": 46.0,
+        "scenario_id": "grouped_result.projection.unusual.unknown_reference",
+        "source_artifact": "epic6_grouped_result_baseline_results.json",
+        "status": "measured",
+        "trial_latency_ms": [
+          {
+            "error_count": 0,
+            "p50_ms": 0.016,
+            "p95_ms": 0.016417,
+            "p99_ms": 0.017583,
+            "trial": 1
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.015958,
+            "p95_ms": 0.01625,
+            "p99_ms": 0.016375,
+            "trial": 2
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.014625,
+            "p95_ms": 0.018667,
+            "p99_ms": 0.020916,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "projection",
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 46,
+        "p50_ms": 0.016,
+        "p95_ms": 0.016417,
+        "p99_ms": 0.016875,
+        "projection_changes_result": false,
+        "record_count": 0,
+        "result_payload_bytes": 46.0,
+        "scenario_id": "grouped_result.projection.unusual.already_canonical_reference",
+        "source_artifact": "epic6_grouped_result_baseline_results.json",
+        "status": "measured",
+        "trial_latency_ms": [
+          {
+            "error_count": 0,
+            "p50_ms": 0.016,
+            "p95_ms": 0.016417,
+            "p99_ms": 0.016875,
+            "trial": 1
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.016083,
+            "p95_ms": 0.016666,
+            "p99_ms": 0.0175,
+            "trial": 2
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.015792,
+            "p95_ms": 0.018334,
+            "p99_ms": 0.02125,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "projection",
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 52,
+        "p50_ms": 0.04375,
+        "p95_ms": 0.050083,
+        "p99_ms": 0.057875,
+        "projection_changes_result": false,
+        "record_count": 0,
+        "result_payload_bytes": 52.0,
+        "scenario_id": "grouped_result.projection.unusual.similar_name",
+        "source_artifact": "epic6_grouped_result_baseline_results.json",
+        "status": "measured",
+        "trial_latency_ms": [
+          {
+            "error_count": 0,
+            "p50_ms": 0.04375,
+            "p95_ms": 0.050083,
+            "p99_ms": 0.057875,
+            "trial": 1
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.046875,
+            "p95_ms": 0.0575,
+            "p99_ms": 0.067834,
+            "trial": 2
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.046875,
+            "p95_ms": 0.053667,
+            "p99_ms": 0.058958,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "projection",
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 330,
+        "p50_ms": 0.017,
+        "p95_ms": 0.017334,
+        "p99_ms": 0.017709,
+        "projection_changes_result": false,
+        "record_count": 2,
+        "result_payload_bytes": 330.0,
+        "scenario_id": "grouped_result.projection.unusual.business_data_reference",
+        "source_artifact": "epic6_grouped_result_baseline_results.json",
+        "status": "measured",
+        "trial_latency_ms": [
+          {
+            "error_count": 0,
+            "p50_ms": 0.017,
+            "p95_ms": 0.017334,
+            "p99_ms": 0.017709,
+            "trial": 1
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.01675,
+            "p95_ms": 0.021583,
+            "p99_ms": 0.029042,
+            "trial": 2
+          },
+          {
+            "error_count": 0,
+            "p50_ms": 0.01725,
+            "p95_ms": 0.040875,
+            "p99_ms": 0.108625,
+            "trial": 3
+          }
+        ]
+      }
+    ],
+    "explicitly_not_measured_canonical": [
+      {
+        "execution_boundary": "canonical_dispatch_included",
+        "reason": "The existing isolated benchmark fixture has no version-list action assignment and no representative version-cardinality fixture.",
+        "scenario_id": "grouped_result.canonical.dataset_versions",
+        "source_artifact": "epic6_grouped_result_baseline_results.json",
+        "status": "not_measured"
+      },
+      {
+        "execution_boundary": "canonical_dispatch_included",
+        "reason": "The existing isolated benchmark fixture has no representative persisted transformation-run cardinality fixture.",
+        "scenario_id": "grouped_result.canonical.transformation_runs",
+        "source_artifact": "epic6_grouped_result_baseline_results.json",
+        "status": "not_measured"
+      },
+      {
+        "execution_boundary": "canonical_dispatch_included",
+        "reason": "The existing isolated benchmark fixture does not provide an authorized query-result storage fixture without substituting the canonical handler.",
+        "scenario_id": "grouped_result.canonical.query_results",
+        "source_artifact": "epic6_grouped_result_baseline_results.json",
+        "status": "not_measured"
+      },
+      {
+        "execution_boundary": "canonical_dispatch_included",
+        "reason": "The existing isolated benchmark fixture does not provide a deterministic authorized exploration-result storage fixture.",
+        "scenario_id": "grouped_result.canonical.exploration_results",
+        "source_artifact": "epic6_grouped_result_baseline_results.json",
+        "status": "not_measured"
+      },
+      {
+        "execution_boundary": "canonical_dispatch_included",
+        "reason": "The existing isolated benchmark fixture lacks representative persisted schema metadata at the requested cardinalities.",
+        "scenario_id": "grouped_result.canonical.schema_response",
+        "source_artifact": "epic6_grouped_result_baseline_results.json",
+        "status": "not_measured"
+      },
+      {
+        "execution_boundary": "canonical_dispatch_included",
+        "reason": "The existing isolated benchmark fixture lacks representative persisted profile metadata at the requested cardinalities.",
+        "scenario_id": "grouped_result.canonical.profile_response",
+        "source_artifact": "epic6_grouped_result_baseline_results.json",
+        "status": "not_measured"
+      },
+      {
+        "execution_boundary": "canonical_dispatch_included",
+        "reason": "The existing isolated benchmark fixture lacks representative combined context metadata at the requested cardinalities.",
+        "scenario_id": "grouped_result.canonical.context_response",
+        "source_artifact": "epic6_grouped_result_baseline_results.json",
+        "status": "not_measured"
+      }
+    ],
+    "independent_trials": 3,
+    "iterations_per_trial": 120,
+    "measurement_limitations": [
+      "Direct projection is synthetic_projection_only and is not canonical dispatch.",
+      "Canonical dataset-list timing is canonical_dispatch_included and inclusive.",
+      "Nested inclusive stages overlap and are not summed or subtracted."
+    ],
+    "source_artifact": "epic6_grouped_result_baseline_results.json",
+    "warmups": 5
+  },
+  "rr_09_2_memory": {
+    "canonical_dataset_list": [
+      {
+        "category": "canonical_execution_memory",
+        "concurrency": null,
+        "error_count": 0,
+        "execution_boundary": "canonical_dispatch_included",
+        "input_payload_bytes": null,
+        "iterations_per_trial": null,
+        "output_payload_bytes": 452,
+        "projection_changes_result": false,
+        "record_count": 1,
+        "scenario_id": "grouped_result.canonical.dataset_list.records_001",
+        "source_artifact": "epic6_grouped_result_memory_results.json",
+        "status": "measured",
+        "trials": [
+          {
+            "canonical_dispatch_call_count": 1,
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 452,
+            "post_gc_current_bytes": 41285,
+            "post_gc_retained_delta_bytes": 41285,
+            "reason": null,
+            "stabilization_operation_count": 1,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 204876,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 100565,
+            "traced_peak_bytes": 204876,
+            "trial": 1
+          },
+          {
+            "canonical_dispatch_call_count": 1,
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 452,
+            "post_gc_current_bytes": 44129,
+            "post_gc_retained_delta_bytes": 44129,
+            "reason": null,
+            "stabilization_operation_count": 1,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 203791,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 103301,
+            "traced_peak_bytes": 203791,
+            "trial": 2
+          },
+          {
+            "canonical_dispatch_call_count": 1,
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 452,
+            "post_gc_current_bytes": 45578,
+            "post_gc_retained_delta_bytes": 45578,
+            "reason": null,
+            "stabilization_operation_count": 1,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 203458,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 104804,
+            "traced_peak_bytes": 203458,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "canonical_execution_memory",
+        "concurrency": null,
+        "error_count": 0,
+        "execution_boundary": "canonical_dispatch_included",
+        "input_payload_bytes": null,
+        "iterations_per_trial": null,
+        "output_payload_bytes": 16859,
+        "projection_changes_result": false,
+        "record_count": 50,
+        "scenario_id": "grouped_result.canonical.dataset_list.records_050",
+        "source_artifact": "epic6_grouped_result_memory_results.json",
+        "status": "measured",
+        "trials": [
+          {
+            "canonical_dispatch_call_count": 1,
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 16859,
+            "post_gc_current_bytes": 42220,
+            "post_gc_retained_delta_bytes": 42220,
+            "reason": null,
+            "stabilization_operation_count": 1,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 279759,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 132485,
+            "traced_peak_bytes": 279759,
+            "trial": 1
+          },
+          {
+            "canonical_dispatch_call_count": 1,
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 16859,
+            "post_gc_current_bytes": 45189,
+            "post_gc_retained_delta_bytes": 45189,
+            "reason": null,
+            "stabilization_operation_count": 1,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 282418,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 135400,
+            "traced_peak_bytes": 282418,
+            "trial": 2
+          },
+          {
+            "canonical_dispatch_call_count": 1,
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 16859,
+            "post_gc_current_bytes": 43824,
+            "post_gc_retained_delta_bytes": 43824,
+            "reason": null,
+            "stabilization_operation_count": 1,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 280933,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 134035,
+            "traced_peak_bytes": 280933,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "canonical_execution_memory",
+        "concurrency": null,
+        "error_count": 0,
+        "execution_boundary": "canonical_dispatch_included",
+        "input_payload_bytes": null,
+        "iterations_per_trial": null,
+        "output_payload_bytes": 33603,
+        "projection_changes_result": false,
+        "record_count": 100,
+        "scenario_id": "grouped_result.canonical.dataset_list.records_100",
+        "source_artifact": "epic6_grouped_result_memory_results.json",
+        "status": "measured",
+        "trials": [
+          {
+            "canonical_dispatch_call_count": 1,
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 33603,
+            "post_gc_current_bytes": 42744,
+            "post_gc_retained_delta_bytes": 42744,
+            "reason": null,
+            "stabilization_operation_count": 1,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 443171,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 164553,
+            "traced_peak_bytes": 443171,
+            "trial": 1
+          },
+          {
+            "canonical_dispatch_call_count": 1,
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 33603,
+            "post_gc_current_bytes": 42005,
+            "post_gc_retained_delta_bytes": 42005,
+            "reason": null,
+            "stabilization_operation_count": 1,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 442322,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 163814,
+            "traced_peak_bytes": 442322,
+            "trial": 2
+          },
+          {
+            "canonical_dispatch_call_count": 1,
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 33603,
+            "post_gc_current_bytes": 42884,
+            "post_gc_retained_delta_bytes": 42884,
+            "reason": null,
+            "stabilization_operation_count": 1,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 442987,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 164639,
+            "traced_peak_bytes": 442987,
+            "trial": 3
+          }
+        ]
+      }
+    ],
+    "concurrency": [
+      {
+        "category": "concurrent_projection_memory",
+        "concurrency": 1,
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 9282,
+        "iterations_per_trial": null,
+        "output_payload_bytes": 9304,
+        "projection_changes_result": true,
+        "record_count": 100,
+        "scenario_id": "grouped_result.memory.concurrency.workers_001",
+        "source_artifact": "epic6_grouped_result_memory_results.json",
+        "status": "measured",
+        "trials": [
+          {
+            "actual_peak_in_flight_operations": 1,
+            "completed_operations": 1,
+            "output_included_during_measurement": true,
+            "output_parity_failures": 0,
+            "post_gc_current_bytes": 248,
+            "post_gc_retained_delta_bytes": 248,
+            "process_rss_after_execution": {
+              "bytes": null,
+              "reason": "no_portable_current_rss_source_on_this_platform",
+              "status": "not_measured"
+            },
+            "process_rss_after_gc": {
+              "bytes": null,
+              "reason": "no_portable_current_rss_source_on_this_platform",
+              "status": "not_measured"
+            },
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 65876,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 37380,
+            "traced_peak_bytes": 65876,
+            "trial": 1,
+            "unexpected_error_count": 0
+          },
+          {
+            "actual_peak_in_flight_operations": 1,
+            "completed_operations": 1,
+            "output_included_during_measurement": true,
+            "output_parity_failures": 0,
+            "post_gc_current_bytes": 248,
+            "post_gc_retained_delta_bytes": 248,
+            "process_rss_after_execution": {
+              "bytes": null,
+              "reason": "no_portable_current_rss_source_on_this_platform",
+              "status": "not_measured"
+            },
+            "process_rss_after_gc": {
+              "bytes": null,
+              "reason": "no_portable_current_rss_source_on_this_platform",
+              "status": "not_measured"
+            },
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 65820,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 37324,
+            "traced_peak_bytes": 65820,
+            "trial": 2,
+            "unexpected_error_count": 0
+          },
+          {
+            "actual_peak_in_flight_operations": 1,
+            "completed_operations": 1,
+            "output_included_during_measurement": true,
+            "output_parity_failures": 0,
+            "post_gc_current_bytes": 504,
+            "post_gc_retained_delta_bytes": 504,
+            "process_rss_after_execution": {
+              "bytes": null,
+              "reason": "no_portable_current_rss_source_on_this_platform",
+              "status": "not_measured"
+            },
+            "process_rss_after_gc": {
+              "bytes": null,
+              "reason": "no_portable_current_rss_source_on_this_platform",
+              "status": "not_measured"
+            },
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 66028,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 37532,
+            "traced_peak_bytes": 66028,
+            "trial": 3,
+            "unexpected_error_count": 0
+          }
+        ]
+      },
+      {
+        "category": "concurrent_projection_memory",
+        "concurrency": 10,
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 9282,
+        "iterations_per_trial": null,
+        "output_payload_bytes": 9304,
+        "projection_changes_result": true,
+        "record_count": 100,
+        "scenario_id": "grouped_result.memory.concurrency.workers_010",
+        "source_artifact": "epic6_grouped_result_memory_results.json",
+        "status": "measured",
+        "trials": [
+          {
+            "actual_peak_in_flight_operations": 10,
+            "completed_operations": 10,
+            "output_included_during_measurement": true,
+            "output_parity_failures": 0,
+            "post_gc_current_bytes": 2544,
+            "post_gc_retained_delta_bytes": 2544,
+            "process_rss_after_execution": {
+              "bytes": null,
+              "reason": "no_portable_current_rss_source_on_this_platform",
+              "status": "not_measured"
+            },
+            "process_rss_after_gc": {
+              "bytes": null,
+              "reason": "no_portable_current_rss_source_on_this_platform",
+              "status": "not_measured"
+            },
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 204888,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 176344,
+            "traced_peak_bytes": 204888,
+            "trial": 1,
+            "unexpected_error_count": 0
+          },
+          {
+            "actual_peak_in_flight_operations": 10,
+            "completed_operations": 10,
+            "output_included_during_measurement": true,
+            "output_parity_failures": 0,
+            "post_gc_current_bytes": 1720,
+            "post_gc_retained_delta_bytes": 1720,
+            "process_rss_after_execution": {
+              "bytes": null,
+              "reason": "no_portable_current_rss_source_on_this_platform",
+              "status": "not_measured"
+            },
+            "process_rss_after_gc": {
+              "bytes": null,
+              "reason": "no_portable_current_rss_source_on_this_platform",
+              "status": "not_measured"
+            },
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 200920,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 172376,
+            "traced_peak_bytes": 200920,
+            "trial": 2,
+            "unexpected_error_count": 0
+          },
+          {
+            "actual_peak_in_flight_operations": 10,
+            "completed_operations": 10,
+            "output_included_during_measurement": true,
+            "output_parity_failures": 0,
+            "post_gc_current_bytes": 1264,
+            "post_gc_retained_delta_bytes": 1264,
+            "process_rss_after_execution": {
+              "bytes": null,
+              "reason": "no_portable_current_rss_source_on_this_platform",
+              "status": "not_measured"
+            },
+            "process_rss_after_gc": {
+              "bytes": null,
+              "reason": "no_portable_current_rss_source_on_this_platform",
+              "status": "not_measured"
+            },
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 199800,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 171256,
+            "traced_peak_bytes": 199800,
+            "trial": 3,
+            "unexpected_error_count": 0
+          }
+        ]
+      },
+      {
+        "category": "concurrent_projection_memory",
+        "concurrency": 25,
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 9282,
+        "iterations_per_trial": null,
+        "output_payload_bytes": 9304,
+        "projection_changes_result": true,
+        "record_count": 100,
+        "scenario_id": "grouped_result.memory.concurrency.workers_025",
+        "source_artifact": "epic6_grouped_result_memory_results.json",
+        "status": "measured",
+        "trials": [
+          {
+            "actual_peak_in_flight_operations": 25,
+            "completed_operations": 25,
+            "output_included_during_measurement": true,
+            "output_parity_failures": 0,
+            "post_gc_current_bytes": 6712,
+            "post_gc_retained_delta_bytes": 6712,
+            "process_rss_after_execution": {
+              "bytes": null,
+              "reason": "no_portable_current_rss_source_on_this_platform",
+              "status": "not_measured"
+            },
+            "process_rss_after_gc": {
+              "bytes": null,
+              "reason": "no_portable_current_rss_source_on_this_platform",
+              "status": "not_measured"
+            },
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 428387,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 399843,
+            "traced_peak_bytes": 428387,
+            "trial": 1,
+            "unexpected_error_count": 0
+          },
+          {
+            "actual_peak_in_flight_operations": 25,
+            "completed_operations": 25,
+            "output_included_during_measurement": true,
+            "output_parity_failures": 0,
+            "post_gc_current_bytes": 2872,
+            "post_gc_retained_delta_bytes": 2872,
+            "process_rss_after_execution": {
+              "bytes": null,
+              "reason": "no_portable_current_rss_source_on_this_platform",
+              "status": "not_measured"
+            },
+            "process_rss_after_gc": {
+              "bytes": null,
+              "reason": "no_portable_current_rss_source_on_this_platform",
+              "status": "not_measured"
+            },
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 424316,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 395772,
+            "traced_peak_bytes": 424316,
+            "trial": 2,
+            "unexpected_error_count": 0
+          },
+          {
+            "actual_peak_in_flight_operations": 25,
+            "completed_operations": 25,
+            "output_included_during_measurement": true,
+            "output_parity_failures": 0,
+            "post_gc_current_bytes": 3640,
+            "post_gc_retained_delta_bytes": 3640,
+            "process_rss_after_execution": {
+              "bytes": null,
+              "reason": "no_portable_current_rss_source_on_this_platform",
+              "status": "not_measured"
+            },
+            "process_rss_after_gc": {
+              "bytes": null,
+              "reason": "no_portable_current_rss_source_on_this_platform",
+              "status": "not_measured"
+            },
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 425340,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 396796,
+            "traced_peak_bytes": 425340,
+            "trial": 3,
+            "unexpected_error_count": 0
+          }
+        ]
+      }
+    ],
+    "independent_trials": 3,
+    "measurement_limitations": [
+      "tracemalloc reports Python allocations in bytes, not process RSS.",
+      "Concurrent tracemalloc and available RSS observations are process-wide.",
+      "Signed post-GC deltas are not leak findings without lifetime analysis.",
+      "Canonical memory is inclusive and is not attributed exclusively to projection."
+    ],
+    "repeated_retention": [
+      {
+        "category": "repeated_projection_retention",
+        "concurrency": null,
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 127,
+        "iterations_per_trial": 100,
+        "output_payload_bytes": 127,
+        "projection_changes_result": false,
+        "record_count": 1,
+        "scenario_id": "grouped_result.memory.retention.records_001.iterations_0100",
+        "source_artifact": "epic6_grouped_result_memory_results.json",
+        "status": "measured",
+        "trials": [
+          {
+            "completed_operations": 100,
+            "error_count": 0,
+            "final_retained_delta_bytes": 1088,
+            "initial_retained_delta_bytes": 0,
+            "intermediate_retained_delta_bytes": 1064,
+            "output_retention": "none",
+            "post_gc_retained_delta_bytes": 128,
+            "reason": null,
+            "status": "measured",
+            "traced_peak_bytes": 2881,
+            "trial": 1
+          },
+          {
+            "completed_operations": 100,
+            "error_count": 0,
+            "final_retained_delta_bytes": 1088,
+            "initial_retained_delta_bytes": 0,
+            "intermediate_retained_delta_bytes": 1064,
+            "output_retention": "none",
+            "post_gc_retained_delta_bytes": 128,
+            "reason": null,
+            "status": "measured",
+            "traced_peak_bytes": 2881,
+            "trial": 2
+          },
+          {
+            "completed_operations": 100,
+            "error_count": 0,
+            "final_retained_delta_bytes": 1088,
+            "initial_retained_delta_bytes": 0,
+            "intermediate_retained_delta_bytes": 1064,
+            "output_retention": "none",
+            "post_gc_retained_delta_bytes": 128,
+            "reason": null,
+            "status": "measured",
+            "traced_peak_bytes": 2881,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "repeated_projection_retention",
+        "concurrency": null,
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 127,
+        "iterations_per_trial": 500,
+        "output_payload_bytes": 127,
+        "projection_changes_result": false,
+        "record_count": 1,
+        "scenario_id": "grouped_result.memory.retention.records_001.iterations_0500",
+        "source_artifact": "epic6_grouped_result_memory_results.json",
+        "status": "measured",
+        "trials": [
+          {
+            "completed_operations": 500,
+            "error_count": 0,
+            "final_retained_delta_bytes": 1152,
+            "initial_retained_delta_bytes": 0,
+            "intermediate_retained_delta_bytes": 1064,
+            "output_retention": "none",
+            "post_gc_retained_delta_bytes": 192,
+            "reason": null,
+            "status": "measured",
+            "traced_peak_bytes": 2945,
+            "trial": 1
+          },
+          {
+            "completed_operations": 500,
+            "error_count": 0,
+            "final_retained_delta_bytes": 1152,
+            "initial_retained_delta_bytes": 0,
+            "intermediate_retained_delta_bytes": 1064,
+            "output_retention": "none",
+            "post_gc_retained_delta_bytes": 192,
+            "reason": null,
+            "status": "measured",
+            "traced_peak_bytes": 2945,
+            "trial": 2
+          },
+          {
+            "completed_operations": 500,
+            "error_count": 0,
+            "final_retained_delta_bytes": 1152,
+            "initial_retained_delta_bytes": 0,
+            "intermediate_retained_delta_bytes": 1064,
+            "output_retention": "none",
+            "post_gc_retained_delta_bytes": 192,
+            "reason": null,
+            "status": "measured",
+            "traced_peak_bytes": 2945,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "repeated_projection_retention",
+        "concurrency": null,
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 127,
+        "iterations_per_trial": 1000,
+        "output_payload_bytes": 127,
+        "projection_changes_result": false,
+        "record_count": 1,
+        "scenario_id": "grouped_result.memory.retention.records_001.iterations_1000",
+        "source_artifact": "epic6_grouped_result_memory_results.json",
+        "status": "measured",
+        "trials": [
+          {
+            "completed_operations": 1000,
+            "error_count": 0,
+            "final_retained_delta_bytes": 1184,
+            "initial_retained_delta_bytes": 0,
+            "intermediate_retained_delta_bytes": 1160,
+            "output_retention": "none",
+            "post_gc_retained_delta_bytes": 224,
+            "reason": null,
+            "status": "measured",
+            "traced_peak_bytes": 2977,
+            "trial": 1
+          },
+          {
+            "completed_operations": 1000,
+            "error_count": 0,
+            "final_retained_delta_bytes": 1184,
+            "initial_retained_delta_bytes": 0,
+            "intermediate_retained_delta_bytes": 1160,
+            "output_retention": "none",
+            "post_gc_retained_delta_bytes": 224,
+            "reason": null,
+            "status": "measured",
+            "traced_peak_bytes": 2977,
+            "trial": 2
+          },
+          {
+            "completed_operations": 1000,
+            "error_count": 0,
+            "final_retained_delta_bytes": 1184,
+            "initial_retained_delta_bytes": 0,
+            "intermediate_retained_delta_bytes": 1160,
+            "output_retention": "none",
+            "post_gc_retained_delta_bytes": 224,
+            "reason": null,
+            "status": "measured",
+            "traced_peak_bytes": 2977,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "repeated_projection_retention",
+        "concurrency": null,
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 9282,
+        "iterations_per_trial": 100,
+        "output_payload_bytes": 9304,
+        "projection_changes_result": true,
+        "record_count": 100,
+        "scenario_id": "grouped_result.memory.retention.records_100.iterations_0100",
+        "source_artifact": "epic6_grouped_result_memory_results.json",
+        "status": "measured",
+        "trials": [
+          {
+            "completed_operations": 100,
+            "error_count": 0,
+            "final_retained_delta_bytes": 22224,
+            "initial_retained_delta_bytes": 0,
+            "intermediate_retained_delta_bytes": 22200,
+            "output_retention": "none",
+            "post_gc_retained_delta_bytes": 128,
+            "reason": null,
+            "status": "measured",
+            "traced_peak_bytes": 60153,
+            "trial": 1
+          },
+          {
+            "completed_operations": 100,
+            "error_count": 0,
+            "final_retained_delta_bytes": 22224,
+            "initial_retained_delta_bytes": 0,
+            "intermediate_retained_delta_bytes": 22200,
+            "output_retention": "none",
+            "post_gc_retained_delta_bytes": 128,
+            "reason": null,
+            "status": "measured",
+            "traced_peak_bytes": 60153,
+            "trial": 2
+          },
+          {
+            "completed_operations": 100,
+            "error_count": 0,
+            "final_retained_delta_bytes": 22224,
+            "initial_retained_delta_bytes": 0,
+            "intermediate_retained_delta_bytes": 22200,
+            "output_retention": "none",
+            "post_gc_retained_delta_bytes": 128,
+            "reason": null,
+            "status": "measured",
+            "traced_peak_bytes": 60153,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "repeated_projection_retention",
+        "concurrency": null,
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 9282,
+        "iterations_per_trial": 500,
+        "output_payload_bytes": 9304,
+        "projection_changes_result": true,
+        "record_count": 100,
+        "scenario_id": "grouped_result.memory.retention.records_100.iterations_0500",
+        "source_artifact": "epic6_grouped_result_memory_results.json",
+        "status": "measured",
+        "trials": [
+          {
+            "completed_operations": 500,
+            "error_count": 0,
+            "final_retained_delta_bytes": 22288,
+            "initial_retained_delta_bytes": 0,
+            "intermediate_retained_delta_bytes": 22200,
+            "output_retention": "none",
+            "post_gc_retained_delta_bytes": 192,
+            "reason": null,
+            "status": "measured",
+            "traced_peak_bytes": 60217,
+            "trial": 1
+          },
+          {
+            "completed_operations": 500,
+            "error_count": 0,
+            "final_retained_delta_bytes": 22288,
+            "initial_retained_delta_bytes": 0,
+            "intermediate_retained_delta_bytes": 22200,
+            "output_retention": "none",
+            "post_gc_retained_delta_bytes": 192,
+            "reason": null,
+            "status": "measured",
+            "traced_peak_bytes": 60217,
+            "trial": 2
+          },
+          {
+            "completed_operations": 500,
+            "error_count": 0,
+            "final_retained_delta_bytes": 22288,
+            "initial_retained_delta_bytes": 0,
+            "intermediate_retained_delta_bytes": 22200,
+            "output_retention": "none",
+            "post_gc_retained_delta_bytes": 192,
+            "reason": null,
+            "status": "measured",
+            "traced_peak_bytes": 60217,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "repeated_projection_retention",
+        "concurrency": null,
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 9282,
+        "iterations_per_trial": 1000,
+        "output_payload_bytes": 9304,
+        "projection_changes_result": true,
+        "record_count": 100,
+        "scenario_id": "grouped_result.memory.retention.records_100.iterations_1000",
+        "source_artifact": "epic6_grouped_result_memory_results.json",
+        "status": "measured",
+        "trials": [
+          {
+            "completed_operations": 1000,
+            "error_count": 0,
+            "final_retained_delta_bytes": 22320,
+            "initial_retained_delta_bytes": 0,
+            "intermediate_retained_delta_bytes": 22296,
+            "output_retention": "none",
+            "post_gc_retained_delta_bytes": 224,
+            "reason": null,
+            "status": "measured",
+            "traced_peak_bytes": 60249,
+            "trial": 1
+          },
+          {
+            "completed_operations": 1000,
+            "error_count": 0,
+            "final_retained_delta_bytes": 22320,
+            "initial_retained_delta_bytes": 0,
+            "intermediate_retained_delta_bytes": 22296,
+            "output_retention": "none",
+            "post_gc_retained_delta_bytes": 224,
+            "reason": null,
+            "status": "measured",
+            "traced_peak_bytes": 60249,
+            "trial": 2
+          },
+          {
+            "completed_operations": 1000,
+            "error_count": 0,
+            "final_retained_delta_bytes": 22320,
+            "initial_retained_delta_bytes": 0,
+            "intermediate_retained_delta_bytes": 22296,
+            "output_retention": "none",
+            "post_gc_retained_delta_bytes": 224,
+            "reason": null,
+            "status": "measured",
+            "traced_peak_bytes": 60249,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "repeated_projection_retention",
+        "concurrency": null,
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 13409,
+        "iterations_per_trial": 100,
+        "output_payload_bytes": 13431,
+        "projection_changes_result": true,
+        "record_count": 1,
+        "scenario_id": "grouped_result.memory.retention.long_hint.iterations_0100",
+        "source_artifact": "epic6_grouped_result_memory_results.json",
+        "status": "measured",
+        "trials": [
+          {
+            "completed_operations": 100,
+            "error_count": 0,
+            "final_retained_delta_bytes": 1200,
+            "initial_retained_delta_bytes": 0,
+            "intermediate_retained_delta_bytes": 1176,
+            "output_retention": "none",
+            "post_gc_retained_delta_bytes": 128,
+            "reason": null,
+            "status": "measured",
+            "traced_peak_bytes": 59099,
+            "trial": 1
+          },
+          {
+            "completed_operations": 100,
+            "error_count": 0,
+            "final_retained_delta_bytes": 1200,
+            "initial_retained_delta_bytes": 0,
+            "intermediate_retained_delta_bytes": 1176,
+            "output_retention": "none",
+            "post_gc_retained_delta_bytes": 128,
+            "reason": null,
+            "status": "measured",
+            "traced_peak_bytes": 59099,
+            "trial": 2
+          },
+          {
+            "completed_operations": 100,
+            "error_count": 0,
+            "final_retained_delta_bytes": 1200,
+            "initial_retained_delta_bytes": 0,
+            "intermediate_retained_delta_bytes": 1176,
+            "output_retention": "none",
+            "post_gc_retained_delta_bytes": 128,
+            "reason": null,
+            "status": "measured",
+            "traced_peak_bytes": 59099,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "repeated_projection_retention",
+        "concurrency": null,
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 13409,
+        "iterations_per_trial": 500,
+        "output_payload_bytes": 13431,
+        "projection_changes_result": true,
+        "record_count": 1,
+        "scenario_id": "grouped_result.memory.retention.long_hint.iterations_0500",
+        "source_artifact": "epic6_grouped_result_memory_results.json",
+        "status": "measured",
+        "trials": [
+          {
+            "completed_operations": 500,
+            "error_count": 0,
+            "final_retained_delta_bytes": 1264,
+            "initial_retained_delta_bytes": 0,
+            "intermediate_retained_delta_bytes": 1176,
+            "output_retention": "none",
+            "post_gc_retained_delta_bytes": 192,
+            "reason": null,
+            "status": "measured",
+            "traced_peak_bytes": 59163,
+            "trial": 1
+          },
+          {
+            "completed_operations": 500,
+            "error_count": 0,
+            "final_retained_delta_bytes": 1264,
+            "initial_retained_delta_bytes": 0,
+            "intermediate_retained_delta_bytes": 1176,
+            "output_retention": "none",
+            "post_gc_retained_delta_bytes": 192,
+            "reason": null,
+            "status": "measured",
+            "traced_peak_bytes": 59163,
+            "trial": 2
+          },
+          {
+            "completed_operations": 500,
+            "error_count": 0,
+            "final_retained_delta_bytes": 1264,
+            "initial_retained_delta_bytes": 0,
+            "intermediate_retained_delta_bytes": 1176,
+            "output_retention": "none",
+            "post_gc_retained_delta_bytes": 192,
+            "reason": null,
+            "status": "measured",
+            "traced_peak_bytes": 59163,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "repeated_projection_retention",
+        "concurrency": null,
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 13409,
+        "iterations_per_trial": 1000,
+        "output_payload_bytes": 13431,
+        "projection_changes_result": true,
+        "record_count": 1,
+        "scenario_id": "grouped_result.memory.retention.long_hint.iterations_1000",
+        "source_artifact": "epic6_grouped_result_memory_results.json",
+        "status": "measured",
+        "trials": [
+          {
+            "completed_operations": 1000,
+            "error_count": 0,
+            "final_retained_delta_bytes": 1296,
+            "initial_retained_delta_bytes": 0,
+            "intermediate_retained_delta_bytes": 1272,
+            "output_retention": "none",
+            "post_gc_retained_delta_bytes": 224,
+            "reason": null,
+            "status": "measured",
+            "traced_peak_bytes": 59195,
+            "trial": 1
+          },
+          {
+            "completed_operations": 1000,
+            "error_count": 0,
+            "final_retained_delta_bytes": 1296,
+            "initial_retained_delta_bytes": 0,
+            "intermediate_retained_delta_bytes": 1272,
+            "output_retention": "none",
+            "post_gc_retained_delta_bytes": 224,
+            "reason": null,
+            "status": "measured",
+            "traced_peak_bytes": 59195,
+            "trial": 2
+          },
+          {
+            "completed_operations": 1000,
+            "error_count": 0,
+            "final_retained_delta_bytes": 1296,
+            "initial_retained_delta_bytes": 0,
+            "intermediate_retained_delta_bytes": 1272,
+            "output_retention": "none",
+            "post_gc_retained_delta_bytes": 224,
+            "reason": null,
+            "status": "measured",
+            "traced_peak_bytes": 59195,
+            "trial": 3
+          }
+        ]
+      }
+    ],
+    "single_operation": [
+      {
+        "category": "direct_projection_memory",
+        "concurrency": null,
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 127,
+        "iterations_per_trial": null,
+        "output_payload_bytes": 127,
+        "projection_changes_result": false,
+        "record_count": 1,
+        "scenario_id": "grouped_result.projection.unchanged.records_001",
+        "source_artifact": "epic6_grouped_result_memory_results.json",
+        "status": "measured",
+        "trials": [
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 127,
+            "post_gc_current_bytes": 64,
+            "post_gc_retained_delta_bytes": 64,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 2777,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 1024,
+            "traced_peak_bytes": 2777,
+            "trial": 1
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 127,
+            "post_gc_current_bytes": 64,
+            "post_gc_retained_delta_bytes": 64,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 2777,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 1024,
+            "traced_peak_bytes": 2777,
+            "trial": 2
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 127,
+            "post_gc_current_bytes": 64,
+            "post_gc_retained_delta_bytes": 64,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 2777,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 1024,
+            "traced_peak_bytes": 2777,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "direct_projection_memory",
+        "concurrency": null,
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 267,
+        "iterations_per_trial": null,
+        "output_payload_bytes": 289,
+        "projection_changes_result": true,
+        "record_count": 1,
+        "scenario_id": "grouped_result.projection.rewritten.hint.records_001",
+        "source_artifact": "epic6_grouped_result_memory_results.json",
+        "status": "measured",
+        "trials": [
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 289,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 3693,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 1850,
+            "traced_peak_bytes": 3693,
+            "trial": 1
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 289,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 3693,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 1850,
+            "traced_peak_bytes": 3693,
+            "trial": 2
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 289,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 3693,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 1850,
+            "traced_peak_bytes": 3693,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "direct_projection_memory",
+        "concurrency": null,
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 270,
+        "iterations_per_trial": null,
+        "output_payload_bytes": 292,
+        "projection_changes_result": true,
+        "record_count": 1,
+        "scenario_id": "grouped_result.projection.rewritten.error.records_001",
+        "source_artifact": "epic6_grouped_result_memory_results.json",
+        "status": "measured",
+        "trials": [
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 292,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 3703,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 1853,
+            "traced_peak_bytes": 3703,
+            "trial": 1
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 292,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 3703,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 1853,
+            "traced_peak_bytes": 3703,
+            "trial": 2
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 292,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 3703,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 1853,
+            "traced_peak_bytes": 3703,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "direct_projection_memory",
+        "concurrency": null,
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 242,
+        "iterations_per_trial": null,
+        "output_payload_bytes": 273,
+        "projection_changes_result": true,
+        "record_count": 1,
+        "scenario_id": "grouped_result.projection.rewritten.suggested_bif.records_001",
+        "source_artifact": "epic6_grouped_result_memory_results.json",
+        "status": "measured",
+        "trials": [
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 273,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 3529,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 1714,
+            "traced_peak_bytes": 3529,
+            "trial": 1
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 273,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 3529,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 1714,
+            "traced_peak_bytes": 3529,
+            "trial": 2
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 273,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 3529,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 1714,
+            "traced_peak_bytes": 3529,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "direct_projection_memory",
+        "concurrency": null,
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 248,
+        "iterations_per_trial": null,
+        "output_payload_bytes": 279,
+        "projection_changes_result": true,
+        "record_count": 1,
+        "scenario_id": "grouped_result.projection.rewritten.recommended_bif.records_001",
+        "source_artifact": "epic6_grouped_result_memory_results.json",
+        "status": "measured",
+        "trials": [
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 279,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 3607,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 1720,
+            "traced_peak_bytes": 3607,
+            "trial": 1
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 279,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 3607,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 1720,
+            "traced_peak_bytes": 3607,
+            "trial": 2
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 279,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 3607,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 1720,
+            "traced_peak_bytes": 3607,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "direct_projection_memory",
+        "concurrency": null,
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 4572,
+        "iterations_per_trial": null,
+        "output_payload_bytes": 4572,
+        "projection_changes_result": false,
+        "record_count": 50,
+        "scenario_id": "grouped_result.projection.unchanged.records_050",
+        "source_artifact": "epic6_grouped_result_memory_results.json",
+        "status": "measured",
+        "trials": [
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 4572,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 25265,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 13960,
+            "traced_peak_bytes": 25265,
+            "trial": 1
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 4572,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 25265,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 13960,
+            "traced_peak_bytes": 25265,
+            "trial": 2
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 4572,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 25265,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 13960,
+            "traced_peak_bytes": 25265,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "direct_projection_memory",
+        "concurrency": null,
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 4712,
+        "iterations_per_trial": null,
+        "output_payload_bytes": 4734,
+        "projection_changes_result": true,
+        "record_count": 50,
+        "scenario_id": "grouped_result.projection.rewritten.hint.records_050",
+        "source_artifact": "epic6_grouped_result_memory_results.json",
+        "status": "measured",
+        "trials": [
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 4734,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 31755,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 19231,
+            "traced_peak_bytes": 31755,
+            "trial": 1
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 4734,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 31755,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 19231,
+            "traced_peak_bytes": 31755,
+            "trial": 2
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 4734,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 31755,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 19231,
+            "traced_peak_bytes": 31755,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "direct_projection_memory",
+        "concurrency": null,
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 4715,
+        "iterations_per_trial": null,
+        "output_payload_bytes": 4737,
+        "projection_changes_result": true,
+        "record_count": 50,
+        "scenario_id": "grouped_result.projection.rewritten.error.records_050",
+        "source_artifact": "epic6_grouped_result_memory_results.json",
+        "status": "measured",
+        "trials": [
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 4737,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 31760,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 19234,
+            "traced_peak_bytes": 31760,
+            "trial": 1
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 4737,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 31760,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 19234,
+            "traced_peak_bytes": 31760,
+            "trial": 2
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 4737,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 31760,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 19234,
+            "traced_peak_bytes": 31760,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "direct_projection_memory",
+        "concurrency": null,
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 4687,
+        "iterations_per_trial": null,
+        "output_payload_bytes": 4718,
+        "projection_changes_result": true,
+        "record_count": 50,
+        "scenario_id": "grouped_result.projection.rewritten.suggested_bif.records_050",
+        "source_artifact": "epic6_grouped_result_memory_results.json",
+        "status": "measured",
+        "trials": [
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 4718,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 31679,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 19095,
+            "traced_peak_bytes": 31679,
+            "trial": 1
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 4718,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 31679,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 19095,
+            "traced_peak_bytes": 31679,
+            "trial": 2
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 4718,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 31679,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 19095,
+            "traced_peak_bytes": 31679,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "direct_projection_memory",
+        "concurrency": null,
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 4693,
+        "iterations_per_trial": null,
+        "output_payload_bytes": 4724,
+        "projection_changes_result": true,
+        "record_count": 50,
+        "scenario_id": "grouped_result.projection.rewritten.recommended_bif.records_050",
+        "source_artifact": "epic6_grouped_result_memory_results.json",
+        "status": "measured",
+        "trials": [
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 4724,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 31757,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 19101,
+            "traced_peak_bytes": 31757,
+            "trial": 1
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 4724,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 31757,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 19101,
+            "traced_peak_bytes": 31757,
+            "trial": 2
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 4724,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 31757,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 19101,
+            "traced_peak_bytes": 31757,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "direct_projection_memory",
+        "concurrency": null,
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 9142,
+        "iterations_per_trial": null,
+        "output_payload_bytes": 9142,
+        "projection_changes_result": false,
+        "record_count": 100,
+        "scenario_id": "grouped_result.projection.unchanged.records_100",
+        "source_artifact": "epic6_grouped_result_memory_results.json",
+        "status": "measured",
+        "trials": [
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 9142,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 48238,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 21808,
+            "traced_peak_bytes": 48238,
+            "trial": 1
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 9142,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 48238,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 21808,
+            "traced_peak_bytes": 48238,
+            "trial": 2
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 9142,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 48238,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 21808,
+            "traced_peak_bytes": 48238,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "direct_projection_memory",
+        "concurrency": null,
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 9282,
+        "iterations_per_trial": null,
+        "output_payload_bytes": 9304,
+        "projection_changes_result": true,
+        "record_count": 100,
+        "scenario_id": "grouped_result.projection.rewritten.hint.records_100",
+        "source_artifact": "epic6_grouped_result_memory_results.json",
+        "status": "measured",
+        "trials": [
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 9304,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 60049,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 31505,
+            "traced_peak_bytes": 60049,
+            "trial": 1
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 9304,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 60049,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 31505,
+            "traced_peak_bytes": 60049,
+            "trial": 2
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 9304,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 60049,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 31505,
+            "traced_peak_bytes": 60049,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "direct_projection_memory",
+        "concurrency": null,
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 9285,
+        "iterations_per_trial": null,
+        "output_payload_bytes": 9307,
+        "projection_changes_result": true,
+        "record_count": 100,
+        "scenario_id": "grouped_result.projection.rewritten.error.records_100",
+        "source_artifact": "epic6_grouped_result_memory_results.json",
+        "status": "measured",
+        "trials": [
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 9307,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 60054,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 31508,
+            "traced_peak_bytes": 60054,
+            "trial": 1
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 9307,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 60054,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 31508,
+            "traced_peak_bytes": 60054,
+            "trial": 2
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 9307,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 60054,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 31508,
+            "traced_peak_bytes": 60054,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "direct_projection_memory",
+        "concurrency": null,
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 9257,
+        "iterations_per_trial": null,
+        "output_payload_bytes": 9288,
+        "projection_changes_result": true,
+        "record_count": 100,
+        "scenario_id": "grouped_result.projection.rewritten.suggested_bif.records_100",
+        "source_artifact": "epic6_grouped_result_memory_results.json",
+        "status": "measured",
+        "trials": [
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 9288,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 59973,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 31425,
+            "traced_peak_bytes": 59973,
+            "trial": 1
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 9288,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 59973,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 31425,
+            "traced_peak_bytes": 59973,
+            "trial": 2
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 9288,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 59973,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 31425,
+            "traced_peak_bytes": 59973,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "direct_projection_memory",
+        "concurrency": null,
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 9263,
+        "iterations_per_trial": null,
+        "output_payload_bytes": 9294,
+        "projection_changes_result": true,
+        "record_count": 100,
+        "scenario_id": "grouped_result.projection.rewritten.recommended_bif.records_100",
+        "source_artifact": "epic6_grouped_result_memory_results.json",
+        "status": "measured",
+        "trials": [
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 9294,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 60051,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 31431,
+            "traced_peak_bytes": 60051,
+            "trial": 1
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 9294,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 60051,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 31431,
+            "traced_peak_bytes": 60051,
+            "trial": 2
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 9294,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 60051,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 31431,
+            "traced_peak_bytes": 60051,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "direct_projection_memory",
+        "concurrency": null,
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 9142,
+        "iterations_per_trial": null,
+        "output_payload_bytes": 9142,
+        "projection_changes_result": false,
+        "record_count": 100,
+        "scenario_id": "grouped_result.projection.structured.large_array",
+        "source_artifact": "epic6_grouped_result_memory_results.json",
+        "status": "measured",
+        "trials": [
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 9142,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 48238,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 21808,
+            "traced_peak_bytes": 48238,
+            "trial": 1
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 9142,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 48238,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 21808,
+            "traced_peak_bytes": 48238,
+            "trial": 2
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 9142,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 48238,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 21808,
+            "traced_peak_bytes": 48238,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "direct_projection_memory",
+        "concurrency": null,
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 371,
+        "iterations_per_trial": null,
+        "output_payload_bytes": 371,
+        "projection_changes_result": false,
+        "record_count": 1,
+        "scenario_id": "grouped_result.projection.structured.deep_nesting",
+        "source_artifact": "epic6_grouped_result_memory_results.json",
+        "status": "measured",
+        "trials": [
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 371,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 7713,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 5120,
+            "traced_peak_bytes": 7713,
+            "trial": 1
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 371,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 7713,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 5120,
+            "traced_peak_bytes": 7713,
+            "trial": 2
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 371,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 7713,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 5120,
+            "traced_peak_bytes": 7713,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "direct_projection_memory",
+        "concurrency": null,
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 3633,
+        "iterations_per_trial": null,
+        "output_payload_bytes": 3633,
+        "projection_changes_result": false,
+        "record_count": 128,
+        "scenario_id": "grouped_result.projection.structured.high_cardinality_metadata",
+        "source_artifact": "epic6_grouped_result_memory_results.json",
+        "status": "measured",
+        "trials": [
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 3633,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 20467,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 824,
+            "traced_peak_bytes": 20467,
+            "trial": 1
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 3633,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 20467,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 824,
+            "traced_peak_bytes": 20467,
+            "trial": 2
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 3633,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 20467,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 824,
+            "traced_peak_bytes": 20467,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "direct_projection_memory",
+        "concurrency": null,
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 10980,
+        "iterations_per_trial": null,
+        "output_payload_bytes": 10980,
+        "projection_changes_result": false,
+        "record_count": 100,
+        "scenario_id": "grouped_result.projection.structured.schema_like",
+        "source_artifact": "epic6_grouped_result_memory_results.json",
+        "status": "measured",
+        "trials": [
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 10980,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 38488,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 14984,
+            "traced_peak_bytes": 38488,
+            "trial": 1
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 10980,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 38488,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 14984,
+            "traced_peak_bytes": 38488,
+            "trial": 2
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 10980,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 38488,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 14984,
+            "traced_peak_bytes": 38488,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "direct_projection_memory",
+        "concurrency": null,
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 13409,
+        "iterations_per_trial": null,
+        "output_payload_bytes": 13431,
+        "projection_changes_result": true,
+        "record_count": 1,
+        "scenario_id": "grouped_result.projection.structured.long_hint",
+        "source_artifact": "epic6_grouped_result_memory_results.json",
+        "status": "measured",
+        "trials": [
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 13431,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 58995,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 14608,
+            "traced_peak_bytes": 58995,
+            "trial": 1
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 13431,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 58995,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 14608,
+            "traced_peak_bytes": 58995,
+            "trial": 2
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 13431,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 58995,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 14608,
+            "traced_peak_bytes": 58995,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "direct_projection_memory",
+        "concurrency": null,
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 14435,
+        "iterations_per_trial": null,
+        "output_payload_bytes": 14457,
+        "projection_changes_result": true,
+        "record_count": 1,
+        "scenario_id": "grouped_result.projection.structured.long_error",
+        "source_artifact": "epic6_grouped_result_memory_results.json",
+        "status": "measured",
+        "trials": [
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 14457,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 63352,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 15634,
+            "traced_peak_bytes": 63352,
+            "trial": 1
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 14457,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 63352,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 15634,
+            "traced_peak_bytes": 63352,
+            "trial": 2
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 14457,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 63352,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 15634,
+            "traced_peak_bytes": 63352,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "direct_projection_memory",
+        "concurrency": null,
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 9263,
+        "iterations_per_trial": null,
+        "output_payload_bytes": 9285,
+        "projection_changes_result": true,
+        "record_count": 100,
+        "scenario_id": "grouped_result.projection.structured.mixed_success_error",
+        "source_artifact": "epic6_grouped_result_memory_results.json",
+        "status": "measured",
+        "trials": [
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 9285,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 59800,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 31486,
+            "traced_peak_bytes": 59800,
+            "trial": 1
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 9285,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 59800,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 31486,
+            "traced_peak_bytes": 59800,
+            "trial": 2
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 9285,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 59800,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 31486,
+            "traced_peak_bytes": 59800,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "direct_projection_memory",
+        "concurrency": null,
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 9,
+        "iterations_per_trial": null,
+        "output_payload_bytes": 9,
+        "projection_changes_result": false,
+        "record_count": 0,
+        "scenario_id": "grouped_result.projection.unusual.malformed_json",
+        "source_artifact": "epic6_grouped_result_memory_results.json",
+        "status": "measured",
+        "trials": [
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 9,
+            "post_gc_current_bytes": 64,
+            "post_gc_retained_delta_bytes": 64,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 2358,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 840,
+            "traced_peak_bytes": 2358,
+            "trial": 1
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 9,
+            "post_gc_current_bytes": 64,
+            "post_gc_retained_delta_bytes": 64,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 2358,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 840,
+            "traced_peak_bytes": 2358,
+            "trial": 2
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 9,
+            "post_gc_current_bytes": 64,
+            "post_gc_retained_delta_bytes": 64,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 2358,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 840,
+            "traced_peak_bytes": 2358,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "direct_projection_memory",
+        "concurrency": null,
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 15,
+        "iterations_per_trial": null,
+        "output_payload_bytes": 15,
+        "projection_changes_result": false,
+        "record_count": 0,
+        "scenario_id": "grouped_result.projection.unusual.scalar_json",
+        "source_artifact": "epic6_grouped_result_memory_results.json",
+        "status": "measured",
+        "trials": [
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 15,
+            "post_gc_current_bytes": 64,
+            "post_gc_retained_delta_bytes": 64,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 1604,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 336,
+            "traced_peak_bytes": 1604,
+            "trial": 1
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 15,
+            "post_gc_current_bytes": 64,
+            "post_gc_retained_delta_bytes": 64,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 1604,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 336,
+            "traced_peak_bytes": 1604,
+            "trial": 2
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 15,
+            "post_gc_current_bytes": 64,
+            "post_gc_retained_delta_bytes": 64,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 1604,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 336,
+            "traced_peak_bytes": 1604,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "direct_projection_memory",
+        "concurrency": null,
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 14,
+        "iterations_per_trial": null,
+        "output_payload_bytes": 14,
+        "projection_changes_result": false,
+        "record_count": 2,
+        "scenario_id": "grouped_result.projection.unusual.array_json",
+        "source_artifact": "epic6_grouped_result_memory_results.json",
+        "status": "measured",
+        "trials": [
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 14,
+            "post_gc_current_bytes": 64,
+            "post_gc_retained_delta_bytes": 64,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 1726,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 392,
+            "traced_peak_bytes": 1726,
+            "trial": 1
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 14,
+            "post_gc_current_bytes": 64,
+            "post_gc_retained_delta_bytes": 64,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 1726,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 392,
+            "traced_peak_bytes": 1726,
+            "trial": 2
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 14,
+            "post_gc_current_bytes": 64,
+            "post_gc_retained_delta_bytes": 64,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 1726,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 392,
+            "traced_peak_bytes": 1726,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "direct_projection_memory",
+        "concurrency": null,
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 0,
+        "iterations_per_trial": null,
+        "output_payload_bytes": 0,
+        "projection_changes_result": false,
+        "record_count": 0,
+        "scenario_id": "grouped_result.projection.unusual.empty_result",
+        "source_artifact": "epic6_grouped_result_memory_results.json",
+        "status": "measured",
+        "trials": [
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 0,
+            "post_gc_current_bytes": 64,
+            "post_gc_retained_delta_bytes": 64,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 2258,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 712,
+            "traced_peak_bytes": 2258,
+            "trial": 1
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 0,
+            "post_gc_current_bytes": 64,
+            "post_gc_retained_delta_bytes": 64,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 2258,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 712,
+            "traced_peak_bytes": 2258,
+            "trial": 2
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 0,
+            "post_gc_current_bytes": 64,
+            "post_gc_retained_delta_bytes": 64,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 2258,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 712,
+            "traced_peak_bytes": 2258,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "direct_projection_memory",
+        "concurrency": null,
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 46,
+        "iterations_per_trial": null,
+        "output_payload_bytes": 46,
+        "projection_changes_result": false,
+        "record_count": 0,
+        "scenario_id": "grouped_result.projection.unusual.unknown_reference",
+        "source_artifact": "epic6_grouped_result_memory_results.json",
+        "status": "measured",
+        "trials": [
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 46,
+            "post_gc_current_bytes": 64,
+            "post_gc_retained_delta_bytes": 64,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 1974,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 640,
+            "traced_peak_bytes": 1974,
+            "trial": 1
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 46,
+            "post_gc_current_bytes": 64,
+            "post_gc_retained_delta_bytes": 64,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 1974,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 640,
+            "traced_peak_bytes": 1974,
+            "trial": 2
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 46,
+            "post_gc_current_bytes": 64,
+            "post_gc_retained_delta_bytes": 64,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 1974,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 640,
+            "traced_peak_bytes": 1974,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "direct_projection_memory",
+        "concurrency": null,
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 46,
+        "iterations_per_trial": null,
+        "output_payload_bytes": 46,
+        "projection_changes_result": false,
+        "record_count": 0,
+        "scenario_id": "grouped_result.projection.unusual.already_canonical_reference",
+        "source_artifact": "epic6_grouped_result_memory_results.json",
+        "status": "measured",
+        "trials": [
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 46,
+            "post_gc_current_bytes": 64,
+            "post_gc_retained_delta_bytes": 64,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 1974,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 640,
+            "traced_peak_bytes": 1974,
+            "trial": 1
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 46,
+            "post_gc_current_bytes": 64,
+            "post_gc_retained_delta_bytes": 64,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 1974,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 640,
+            "traced_peak_bytes": 1974,
+            "trial": 2
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 46,
+            "post_gc_current_bytes": 64,
+            "post_gc_retained_delta_bytes": 64,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 1974,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 640,
+            "traced_peak_bytes": 1974,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "direct_projection_memory",
+        "concurrency": null,
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 52,
+        "iterations_per_trial": null,
+        "output_payload_bytes": 52,
+        "projection_changes_result": false,
+        "record_count": 0,
+        "scenario_id": "grouped_result.projection.unusual.similar_name",
+        "source_artifact": "epic6_grouped_result_memory_results.json",
+        "status": "measured",
+        "trials": [
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 52,
+            "post_gc_current_bytes": 64,
+            "post_gc_retained_delta_bytes": 64,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 2335,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 760,
+            "traced_peak_bytes": 2335,
+            "trial": 1
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 52,
+            "post_gc_current_bytes": 64,
+            "post_gc_retained_delta_bytes": 64,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 2335,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 760,
+            "traced_peak_bytes": 2335,
+            "trial": 2
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 52,
+            "post_gc_current_bytes": 64,
+            "post_gc_retained_delta_bytes": 64,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 2335,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 760,
+            "traced_peak_bytes": 2335,
+            "trial": 3
+          }
+        ]
+      },
+      {
+        "category": "direct_projection_memory",
+        "concurrency": null,
+        "error_count": 0,
+        "execution_boundary": "synthetic_projection_only",
+        "input_payload_bytes": 330,
+        "iterations_per_trial": null,
+        "output_payload_bytes": 330,
+        "projection_changes_result": false,
+        "record_count": 2,
+        "scenario_id": "grouped_result.projection.unusual.business_data_reference",
+        "source_artifact": "epic6_grouped_result_memory_results.json",
+        "status": "measured",
+        "trials": [
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 330,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 3517,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 1288,
+            "traced_peak_bytes": 3517,
+            "trial": 1
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 330,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 3517,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 1288,
+            "traced_peak_bytes": 3517,
+            "trial": 2
+          },
+          {
+            "output_included_during_measurement": true,
+            "output_parity": "exact",
+            "output_payload_bytes": 330,
+            "post_gc_current_bytes": 92,
+            "post_gc_retained_delta_bytes": 92,
+            "reason": null,
+            "status": "measured",
+            "temporary_peak_amplification_bytes": 3517,
+            "traced_baseline_current_bytes": 0,
+            "traced_current_after_execution_bytes": 1288,
+            "traced_peak_bytes": 3517,
+            "trial": 3
+          }
+        ]
+      }
+    ],
+    "source_artifact": "epic6_grouped_result_memory_results.json",
+    "tracing_configuration": {
+      "global_tracing_policy": "not_measured_when_already_active",
+      "input_fixture_prepared_before_tracing": true,
+      "library": "tracemalloc",
+      "output_string_included_in_current_and_peak": true,
+      "post_gc_delta_is_signed": true,
+      "traceback_frame_limit": 10,
+      "units": "bytes"
+    }
+  },
+  "rr_09_3_decision": {
+    "candidate_assessment": {
+      "expected_latency_benefit": "unmeasured",
+      "expected_memory_benefit": "unmeasured",
+      "maintenance_burden": "additional_branch_and_parity_surface",
+      "metadata_rewrite_risk": "incorrect_legacy_reference_detection_would_change_contract",
+      "representative_workload_relevance": "not_established",
+      "result_contract_complexity": "would_need_full_passthrough_and_rewrite_parity",
+      "rollback_simplicity": "unmeasured_candidate_not_authorized",
+      "security_boundary": "canonical_dispatch_and_authorization_are_not_bypassed"
+    },
+    "candidate_implementation_measured": false,
+    "optimization_savings_inferred": false,
+    "rationale": [
+      "No material Registry-owned bottleneck is established in the measured canonical boundary.",
+      "The RR-09.1 materiality gate is explicitly PROPOSED_NOT_APPROVED, not an approval threshold.",
+      "A branch that bypasses JSON projection would add response-contract and legacy-reference rewrite risk without a measured candidate benefit.",
+      "Canonical admission, authorization, and handler boundaries remain outside any inferred direct-projection saving."
+    ],
+    "recommendation": "SKIP",
+    "reopening_criteria": [
+      "A representative canonical workload demonstrates a material, attributable Registry-owned projection cost.",
+      "A bounded candidate preserves exact passthrough, legacy rewrites, envelopes, correlation IDs, ordering, duplicates, and business data.",
+      "Canonical admission, namespace isolation, visibility, capability, and handler-authorization regressions remain green.",
+      "The candidate is measured against the same fixture, trial, and boundary contract without inferring savings from inclusive-stage differences."
+    ],
+    "rr_09_1_gate_formally_approved": false,
+    "rr_09_1_gate_status": "PROPOSED_NOT_APPROVED"
+  },
+  "schema_version": 1,
+  "security_and_behavior_verification": {
+    "production_changes_to_grouped_result_processing": false,
+    "regression_modules": [
+      "resource_registry/tests/test_grouped_bif_tools.py",
+      "resource_registry/tests/test_grouped_bif_boundaries.py",
+      "resource_registry/tests/test_grouped_bif_namespace.py",
+      "resource_registry/tests/test_grouped_execution_baseline.py",
+      "resource_registry/tests/test_dataset_selection_context.py",
+      "resource_registry/tests/test_read_authorization.py",
+      "resource_registry/tests/test_read_visibility.py"
+    ],
+    "verified_invariants": [
+      "Canonical BIF admission and persona assignment freshness.",
+      "Capability revocation, namespace isolation, workspace, dataset, and version visibility.",
+      "Handler-level authorization and no unauthorized domain reads or side effects.",
+      "Error envelopes, correlation IDs, exact passthrough, legacy rewrites, business data, ordering, and duplicates."
+    ]
+  },
+  "six_epic_roadmap_completion": [
+    {
+      "epic": 1,
+      "status": "ACCEPTED_BASELINE",
+      "summary": "Performance baseline artifacts remain frozen."
+    },
+    {
+      "epic": 2,
+      "status": "CLOSED",
+      "summary": "Routing closure accepted; E2.2 namespace-resolution optimization remains intentionally skipped."
+    },
+    {
+      "epic": 3,
+      "status": "ACCEPTED_BASELINE",
+      "summary": "Grouped execution baseline recommends result-normalization reduction SKIP and validator reuse DEFER."
+    },
+    {
+      "epic": 4,
+      "status": "ACCEPTED_BASELINE",
+      "summary": "Validator-caching candidate remains DEFER without a measured candidate clearing its proposed gate."
+    },
+    {
+      "epic": 5,
+      "status": "CLOSE \u2014 EPIC 5 ACCEPTANCE SATISFIED",
+      "summary": "Bounded cached-selection discovery closure accepted with documented limits."
+    },
+    {
+      "epic": 6,
+      "status": "CLOSE \u2014 EPIC 6 ACCEPTANCE SATISFIED",
+      "summary": "RR-09.1 and RR-09.2 accepted; RR-09.3 is formally skipped by this closure."
+    }
+  ],
+  "status": "CLOSE \u2014 EPIC 6 ACCEPTANCE SATISFIED",
+  "verification": {
+    "commands": [
+      {
+        "command": "pytest RR-09 closure, RR-09.1, RR-09.2, grouped, authorization, visibility, and benchmark integrity modules",
+        "outcome": "passed during closure acceptance workflow"
+      },
+      {
+        "command": "Black --check and scoped mypy on closure files",
+        "outcome": "passed during closure acceptance workflow"
+      },
+      {
+        "command": "git diff --check and historical git diff --quiet",
+        "outcome": "passed during closure acceptance workflow"
+      }
+    ]
+  }
+}

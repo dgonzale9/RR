@@ -5,7 +5,13 @@ import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from resource_registry.models import Dataset, DatasetArtifact, DatasetVersion, WorkbookIngestionGroup
+from resource_registry.models import (
+    Dataset,
+    DatasetArtifact,
+    DatasetVersion,
+    WorkbookIngestionGroup,
+)
+from resource_registry.read.current_version import current_version_filter
 from resource_registry.services.duckdb_service import (
     DuckDbConnectionProvider,
     InMemoryDuckDbConnectionProvider,
@@ -184,7 +190,9 @@ class WorkbookConsolidationService:
 
     def _latest_versions_by_dataset(self, dataset_ids: list[str]) -> dict[str, DatasetVersion]:
         versions = list(
-            DatasetVersion.objects.filter(dataset_id__in=dataset_ids).order_by(
+            DatasetVersion.objects.filter(
+                current_version_filter(), dataset_id__in=dataset_ids, status="READY"
+            ).order_by(
                 "dataset_id",
                 "-version_number",
                 "-created_at",
@@ -219,10 +227,7 @@ class WorkbookConsolidationService:
 
     def _is_canonical(self, artifact: DatasetArtifact) -> bool:
         metadata = artifact.metadata_json if isinstance(artifact.metadata_json, dict) else {}
-        return (
-            str(artifact.format).upper() == "PARQUET"
-            and bool(metadata.get("is_canonical"))
-        )
+        return str(artifact.format).upper() == "PARQUET" and bool(metadata.get("is_canonical"))
 
     def _resolve_adapter(self, *, artifact_uri: str) -> ArtifactReadAdapter:
         adapters = self._adapters or self._build_default_adapters()

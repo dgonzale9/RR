@@ -289,7 +289,7 @@ def test_admission_denial_prevents_every_phase_3b_side_effect(
 
 
 @pytest.mark.parametrize(("function_name", "function_arguments"), _PHASE_3B_INVOCATIONS)
-def test_canonical_namespace_is_forwarded_once_by_every_phase_3b_bif(  # noqa: PLR0915
+def test_canonical_namespace_is_forwarded_once_by_every_phase_3b_bif(
     monkeypatch: pytest.MonkeyPatch,
     function_name: str,
     function_arguments: dict[str, object],

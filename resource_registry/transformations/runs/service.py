@@ -7,6 +7,7 @@ from uuid import UUID
 from django.db import IntegrityError, transaction
 from django.utils import timezone
 
+from resource_registry.cleanup.admission import lock_referenced_datasets
 from resource_registry.models import (
     Dataset,
     TransformationDefinition,
@@ -172,6 +173,8 @@ class TransformationRunCreationService:
                 if active_run is not None:
                     return self._build_result(run=active_run, was_created=False)
 
+                lock_referenced_datasets(plan_snapshot)
+                lock_referenced_datasets(policy_snapshots)
                 run = TransformationRun.objects.create(
                     id=run_id,
                     tenant_id=tenant_id,
@@ -254,7 +257,7 @@ class TransformationRunCreationService:
             )
         return datasets
 
-    def _build_output_row(  # noqa: PLR0913
+    def _build_output_row(
         self,
         *,
         run: TransformationRun,
@@ -512,7 +515,7 @@ def _validate_authorization_decision(
     return decision
 
 
-def _validate_plan_identity(  # noqa: PLR0913
+def _validate_plan_identity(
     *,
     tenant_id: UUID,
     definition_id: UUID,

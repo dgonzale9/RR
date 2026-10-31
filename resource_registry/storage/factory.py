@@ -6,6 +6,7 @@ from django.conf import settings
 
 from resource_registry.storage.azure_blob import AzureBlobStorageProvider
 from resource_registry.storage.base import StorageProvider
+from resource_registry.storage.dataset_cache import DatasetCacheStorageProvider
 from resource_registry.storage.exceptions import (
     StorageConfigurationError,
     StorageProviderUnsupportedError,
@@ -26,6 +27,10 @@ class DataRegistryStorageFactory:
         local_base_directory: str | Path | None = None,
     ) -> StorageProvider:
         selected_provider = (provider_key or self._default_provider()).strip().lower()
+        if selected_provider == "dataset_cache":
+            return DatasetCacheStorageProvider(
+                base_directory=str(getattr(settings, "RESOURCE_REGISTRY_DATASET_CACHE_DIR", ""))
+            )
         if selected_provider == self.LOCAL_PROVIDER:
             base_directory = local_base_directory or self._default_local_directory()
             return LocalStorageProvider(base_directory=base_directory)

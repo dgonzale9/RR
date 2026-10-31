@@ -14,25 +14,20 @@ from resource_registry.bifs.grouped_tools import GROUPED_REGISTRY_ACTIONS
 from resource_registry.bifs.manifest import RESOURCE_REGISTRY_BIF_MANIFEST
 from resource_registry.bifs.operation_handlers import resolve_registry_operation_handler
 
-INDEPENDENT_REGISTRY_TOOLS = {
-    "resource_registry_replace_dataset",
-    "resource_registry_get_replacement_status",
-}
 
-
-def test_host_namespace_exports_four_groups_and_independent_replacement_tools() -> None:
-    """Expose grouped entry points and retain ATLAS-666's independent replacement tools."""
+def test_host_namespace_exports_only_grouped_registry_tools() -> None:
+    """Expose grouped entry points without retired dataset replacement tools."""
     assert {
         name for name in builtin_functions.__all__ if name.startswith("resource_registry_")
-    } == set(GROUPED_REGISTRY_ACTIONS) | INDEPENDENT_REGISTRY_TOOLS
+    } == set(GROUPED_REGISTRY_ACTIONS)
     assert {
         name
         for name in builtin_functions._FUNCTION_MODULES
         if name.startswith("resource_registry_")
-    } == set(GROUPED_REGISTRY_ACTIONS) | INDEPENDENT_REGISTRY_TOOLS
-    for name in set(GROUPED_REGISTRY_ACTIONS) | INDEPENDENT_REGISTRY_TOOLS:
+    } == set(GROUPED_REGISTRY_ACTIONS)
+    for name in GROUPED_REGISTRY_ACTIONS:
         assert callable(getattr(builtin_functions, name))
-    for name in set(RESOURCE_REGISTRY_BIF_MANIFEST) - INDEPENDENT_REGISTRY_TOOLS:
+    for name in RESOURCE_REGISTRY_BIF_MANIFEST:
         assert not hasattr(builtin_functions, name)
 
 
@@ -87,9 +82,7 @@ def test_canonical_resolution_preserves_handlers_without_public_aliases(function
     assert resolve_registry_operation_handler(function_name) is getattr(
         import_module(module_name), function_name
     )
-    assert hasattr(builtin_functions, function_name) == (
-        function_name in INDEPENDENT_REGISTRY_TOOLS
-    )
+    assert not hasattr(builtin_functions, function_name)
 
 
 @pytest.mark.parametrize(

@@ -1,0 +1,16 @@
+{% extends "admin/base_site.html" %}
+{% block title %}{{ title }} | Datasets{% endblock %}
+{% block extrahead %}{{ block.super }}<meta charset="utf-8">{% endblock %}
+{% block extrastyle %}{{ block.super }}
+<style>
+  #content form p > label { display: block; margin-bottom: .4rem; }
+  #content input[type=text], #content textarea { box-sizing: border-box; width: min(100%, 42rem); }
+  #content textarea { height: 6rem; vertical-align: top; }
+  #content button, #content .button { background: var(--button-bg); color: var(--button-fg); border: 0; border-radius: 4px; padding: .6rem .9rem; cursor: pointer; display: inline-block; margin: .3rem .3rem .3rem 0; }
+  #content button:disabled { opacity: .5; cursor: default; }
+  #content h2 { margin-top: 1.8rem; }
+  #content table { display: block; max-width: 100%; overflow-x: auto; }
+  #content pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+  #dataset-upload-progress { width: min(100%, 42rem); }
+</style>
+{% endblock %}

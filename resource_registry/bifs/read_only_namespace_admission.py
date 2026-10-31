@@ -21,6 +21,10 @@ from resource_registry.authorization.registry_authorization_context_service impo
 from resource_registry.conversation_state import clear_registry_context
 from resource_registry.dataset_scope import get_visible_workspace_dataset_ids
 from resource_registry.namespace_selection import RegistryScopeSelectionError
+from resource_registry.performance.instrumentation import (
+    RegistryPerformanceStage,
+    instrument_registry_function,
+)
 from resource_registry.read_auth.exceptions import DataRegistryAuthorizationError
 from resource_registry.scope_adapters import (
     get_request_scope_policy,
@@ -89,6 +93,7 @@ class ReadOnlyBifNamespaceAdmissionService:
             requested_namespace_id=requested_namespace_id,
         ).namespace_id
 
+    @instrument_registry_function(RegistryPerformanceStage.NAMESPACE_ADMISSION)
     def admit_namespace_with_provenance(
         self,
         *,
@@ -131,10 +136,15 @@ class ReadOnlyBifNamespaceAdmissionService:
                 ) from error
             raise DataRegistryAuthorizationError(TENANT_NOT_AUTHORIZED_MESSAGE) from error
         if get_request_scope_policy(request, assistant=True).is_enforced:
+            namespace_selectors = (
+                (requested_namespace_id,)
+                if self._has_selector_value(requested_namespace_id)
+                else ()
+            )
             try:
                 selected = select_request_registry_namespace(
                     request=request,
-                    namespace_selectors=(requested_namespace_id,),
+                    namespace_selectors=namespace_selectors,
                     assistant=True,
                     authorization_context=authorization_context,
                 )
@@ -149,7 +159,7 @@ class ReadOnlyBifNamespaceAdmissionService:
             )
             if previous_namespace != selected.namespace_id:
                 clear_registry_context(request)
-            setattr(request, "resource_registry_tenant_id", selected.namespace_id)
+            setattr(request, "resource_registry_tenant_id", selected.namespace_id)  # noqa: B010
             if session is not None:
                 session["resource_registry_tenant_id"] = selected.namespace_id
                 session["resource_registry_workspace_id"] = selected.workspace_id
@@ -300,7 +310,7 @@ class ReadOnlyBifNamespaceAdmissionService:
 
         for mapping in getattr(authorized_namespaces, "mappings", ()):  # pragma: no branch
             if getattr(mapping, "workspace_id", None) == workspace_id:
-                return str(getattr(mapping, "namespace_id"))
+                return str(mapping.namespace_id)
         return None
 
     @staticmethod
@@ -313,7 +323,7 @@ class ReadOnlyBifNamespaceAdmissionService:
 
         for mapping in getattr(authorized_namespaces, "mappings", ()):  # pragma: no branch
             if getattr(mapping, "workspace_id", None) is None:
-                return str(getattr(mapping, "namespace_id"))
+                return str(mapping.namespace_id)
         return None
 
     @staticmethod

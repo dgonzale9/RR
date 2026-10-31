@@ -16,6 +16,11 @@ from resource_registry.bifs.grouped_tools import (
     FunctionToolDefinition,
     build_grouped_registry_tools,
 )
+from resource_registry.performance.instrumentation import (
+    RegistryPerformanceStage,
+    instrument_registry_function,
+)
+from resource_registry.performance.payload_metrics import measure_registry_publication_result
 
 RegistryToolProvider = Literal["openai", "openai_responses", "gemini", "anthropic"]
 
@@ -52,7 +57,6 @@ def prepare_registry_tools(
     persona: object | None,
     provider: RegistryToolProvider,
     statement: str,
-    allow_dataset_replacement: bool = False,
 ) -> tuple[
     QuerySet[BuiltInFunctionPersonaRelationship, BuiltInFunctionPersonaRelationship],
     list[dict[str, object]],
@@ -66,17 +70,19 @@ def prepare_registry_tools(
     persona: object | None,
     provider: RegistryToolProvider,
     statement: str,
-    allow_dataset_replacement: bool = False,
 ) -> tuple[Iterable[BuiltInFunctionPersonaRelationship], list[dict[str, object]]]: ...
 
 
+@instrument_registry_function(
+    RegistryPerformanceStage.REGISTRY_TOOL_PUBLICATION,
+    payload_measurement=measure_registry_publication_result,
+)
 def prepare_registry_tools(
     relationships: Iterable[BuiltInFunctionPersonaRelationship],
     *,
     persona: object | None,
     provider: RegistryToolProvider,
     statement: str,
-    allow_dataset_replacement: bool = False,
 ) -> tuple[Iterable[BuiltInFunctionPersonaRelationship], list[dict[str, object]]]:
     """Separate Registry publication from the client's unchanged legacy BIF construction.
 
@@ -85,7 +91,6 @@ def prepare_registry_tools(
         persona: Active Persona used by the Registry campaign presentation policy.
         provider: Provider envelope for grouped Registry tools only.
         statement: Current request used to identify campaign rendering intent.
-        allow_dataset_replacement: Whether the original chat turn explicitly requests a write.
 
     Returns:
         Assignments left for the original formatter and grouped Registry definitions.
@@ -103,10 +108,6 @@ def prepare_registry_tools(
         remaining = relationships.exclude(
             builtin_function__name__in=GROUPED_REGISTRY_OPERATION_NAMES
         )
-        if not allow_dataset_replacement:
-            remaining = remaining.exclude(
-                builtin_function__name="resource_registry_replace_dataset"
-            )
     else:
         loaded = list(relationships)
         registry_relationships = [
@@ -118,10 +119,6 @@ def prepare_registry_tools(
             relationship
             for relationship in loaded
             if relationship.builtin_function.name not in GROUPED_REGISTRY_OPERATION_NAMES
-            and (
-                allow_dataset_replacement
-                or relationship.builtin_function.name != "resource_registry_replace_dataset"
-            )
         ]
 
     definitions: list[FunctionToolDefinition] = []

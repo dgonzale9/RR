@@ -1,0 +1,12 @@
+{% extends "admin/resource_registry/dataset/base.html" %}{% load static %}
+{% block content %}
+<p>Select the complete file. The current version remains available until the update is published.</p>
+<form method="post" id="dataset-upload" data-create-url="{% url 'admin:resource_registry_dataset_intake_create' %}">{% csrf_token %}
+<input type="hidden" name="idempotency_key" value="{{ request_key }}"><input type="hidden" name="intake_id" id="dataset-intake-id">
+{% if dataset %}<input type="hidden" name="dataset_id" value="{{ dataset.id }}"><input type="hidden" name="expected_revision" value="{{ dataset.revision }}"><p>Dataset: {{ dataset.name }}{% if dataset.workbook_id %} · The entire workbook will be updated.{% endif %}</p>{% else %}<p><label>Name <input name="name" required maxlength="255"></label></p>{% endif %}
+<p><label>Destination <select name="namespace_id">{% for namespace in namespaces %}<option value="{{ namespace.id }}">{{ namespace.workspace|default:namespace.organization }}</option>{% endfor %}</select></label></p>
+<p><label>File <input type="file" id="dataset-file" required></label></p><button type="button" id="dataset-upload-start">Upload and verify</button>
+<progress id="dataset-upload-progress" max="100" value="0" hidden></progress><p id="dataset-upload-status" role="status" aria-live="polite"></p>
+<button type="submit" id="dataset-prepare" disabled>Process and review differences</button></form>
+<script src="{% static 'resource_registry/admin/dataset_management.js' %}" defer></script>
+{% endblock %}

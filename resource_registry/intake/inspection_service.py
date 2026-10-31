@@ -14,6 +14,7 @@ from django.db import transaction
 from django.utils import timezone
 from openpyxl import load_workbook  # type: ignore[import-untyped]  # Openpyxl has no bundled stubs.
 
+from resource_registry.cleanup.inventory import register_intake_object
 from resource_registry.models import (
     StagedResourceInspectionJob,
     StagedResourceInspectionJobStatus,
@@ -63,23 +64,28 @@ class StagedResourceIntakeInspectionService:
         *,
         batch_size: int,
         inspect_uploaded_file: InspectionFunction | None = None,
+        intake_id: uuid.UUID | None = None,
     ) -> int:
         """Claim and execute a bounded batch of private intake inspections.
 
         Args:
             batch_size: Maximum number of queued jobs to claim.
             inspect_uploaded_file: Optional compatibility hook for inspecting one file.
+            intake_id: Optional exact intake for an authorized automatic wake-up.
 
         Returns:
             Number of inspections completed successfully.
         """
         completed = 0
-        self._recover_abandoned_jobs()
+        self._recover_abandoned_jobs(intake_id=intake_id)
         inspection_function = inspect_uploaded_file or self.inspect_uploaded_file
+        candidates = StagedResourceInspectionJob.objects.all()
+        if intake_id is not None:
+            candidates = candidates.filter(intake_id=intake_id)
         for _ in range(max(int(batch_size), 1)):
             with transaction.atomic():
                 job = (
-                    StagedResourceInspectionJob.objects.select_for_update(skip_locked=True)
+                    candidates.select_for_update(skip_locked=True)
                     .select_related("intake")
                     .filter(status=StagedResourceInspectionJobStatus.QUEUED)
                     .order_by("created_at", "id")
@@ -101,23 +107,23 @@ class StagedResourceIntakeInspectionService:
                 job.save(update_fields=["status", "started_at", "updated_at"])
                 job.intake.status = StagedResourceIntakeStatus.ANALYZING
                 job.intake.save(update_fields=["status", "updated_at"])
-                intake_id = job.intake_id
+                claimed_intake_id = job.intake_id
             try:
-                intake = StagedResourceIntake.objects.get(pk=intake_id)
+                intake = StagedResourceIntake.objects.get(pk=claimed_intake_id)
                 inspection = inspection_function(intake=intake)
             except (JsonDatasetValidationError, ParquetDatasetValidationError) as error:
                 self._record_terminal_inspection_failure(
                     job_id=job.pk,
-                    intake_id=intake_id,
+                    intake_id=claimed_intake_id,
                     error_code=str(error),
                 )
                 break
             except Exception:
-                self._record_inspection_failure(job_id=job.pk, intake_id=intake_id)
+                self._record_inspection_failure(job_id=job.pk, intake_id=claimed_intake_id)
                 break
             if self._persist_inspection_success(
                 job_id=job.pk,
-                intake_id=intake_id,
+                intake_id=claimed_intake_id,
                 inspection=inspection,
             ):
                 completed += 1
@@ -343,11 +349,16 @@ class StagedResourceIntakeInspectionService:
                     "updated_at",
                 ]
             )
+
+            register_intake_object(locked_intake)
         return True
 
     @staticmethod
-    def _recover_abandoned_jobs() -> int:
+    def _recover_abandoned_jobs(*, intake_id: uuid.UUID | None = None) -> int:
         """Requeue inspections whose worker lease elapsed before terminal persistence.
+
+        Args:
+            intake_id: Optional exact intake; leave unrelated leases untouched.
 
         Returns:
             Number of jobs returned to the queue.
@@ -357,9 +368,12 @@ class StagedResourceIntakeInspectionService:
                 int(getattr(settings, "RESOURCE_REGISTRY_INTAKE_INSPECTION_LEASE_SECONDS", 900)), 60
             )
         )
+        candidates = StagedResourceInspectionJob.objects.all()
+        if intake_id is not None:
+            candidates = candidates.filter(intake_id=intake_id)
         with transaction.atomic():
             jobs = tuple(
-                StagedResourceInspectionJob.objects.select_for_update(skip_locked=True)
+                candidates.select_for_update(skip_locked=True)
                 .filter(
                     status=StagedResourceInspectionJobStatus.RUNNING,
                     started_at__lte=lease_cutoff,

@@ -17,8 +17,9 @@ Create the following within one active, Resource Registry-enabled Organization:
 - One published, workspace-scoped test dataset in each Workspace. Record both dataset IDs.
 - One published, organization-global test dataset. Record its dataset ID.
 - A Persona with the Registry BIFs needed for the test. Include listing, dataset details,
-  schema, profile, versions, `resource_registry_query_dataset`, and query-job BIFs when testing
-  ordinary-user queries.
+  schema, profile, versions, the canonical `resource_registry_query_dataset` assignment, and
+  query-job assignments when testing ordinary-user queries. These are published to the model as
+  `resource_registry_inspect` and `resource_registry_query` actions.
 
 Create these test accounts. All accounts should be Organization members unless a case says
 otherwise.
@@ -149,13 +150,13 @@ An explicit tenant or Dataset capability denial takes precedence over the defaul
 ### 7. Missing Persona BIF
 
 Use `qa-workspace-a` with a Persona assigned to Workspace A but without
-`resource_registry_query_dataset`.
+the canonical `resource_registry_query_dataset` action.
 
 1. Confirm that the user can perform the assigned Registry read actions.
 2. Ask the Persona to query data.
 
-Expected result: querying is unavailable because the Persona does not have that BIF.
-The user's role cannot make an unassigned Persona BIF callable.
+Expected result: `query_dataset` is absent from `resource_registry_query`, so querying is
+unavailable. The user's role cannot make an unassigned canonical Persona BIF callable.
 
 ### 8. Administrator does not bypass a scoped Persona
 

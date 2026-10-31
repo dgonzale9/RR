@@ -23,7 +23,8 @@ uv run --env-file .env python manage.py migrate
 4. Provision one Registry Namespace for each Workspace.
 5. Configure the Persona and its Workspace list.
 6. Add the minimum Registry BIFs.
-7. Publish a workspace-scoped Dataset and test the Persona.
+7. Create a workspace-scoped Dataset through [Dataset Management](DATASET_MAINTENANCE.md)
+   and test the Persona against its published current version.
 
 ## 1. Create the Organization
 
@@ -33,6 +34,13 @@ The slug cannot be changed after creation.
 
 Resource Registry must be enabled on the Organization before it can be enabled on a Workspace.
 
+Saving a new Organization with this flag enabled, or changing it from off to on, also
+enables Dataset Management atomically. Existing cleanup/retention policy is preserved;
+new policy defaults to `SIMULATE`. Pending legacy registration/workbook jobs prevent
+activation until drained. Saving unrelated fields does not resume an intentional
+management pause. See [activation and migration](DATASET_MANAGEMENT_ENABLEMENT.md),
+including organizations that were already enabled before this change.
+
 ## 2. Add the hostname and members
 
 On the Organization page, add an **Organization host** inline row.
@@ -41,7 +49,8 @@ Mark one host as **Primary host**.
 
 The host is a security boundary: it resolves the trusted Organization for the request.
 
-Add an **Organization membership** for every intended user.
+Use **Manage memberships** to open the Organization membership list, and add an
+**Organization membership** for every intended user.
 Choose **Org Member** for normal users or **Org Owner** for an organization manager.
 Organization membership admits a user to an eligible `OPEN` Workspace in Resource Registry, but
 does not admit a `PRIVATE` Workspace or grant Workspace administration.
@@ -93,28 +102,39 @@ Do not leave **Workspaces** empty for a Persona intended to use Resource Registr
 Even an eligible `OPEN` Workspace must be explicitly associated with the Persona before it can be
 selected for that Persona's Registry BIFs.
 
-## 6. Assign minimum BIFs
+## 6. Assign minimum Registry actions
 
 On the Persona form, add rows in the **Built-in Function Persona Relationship** inline.
-For a minimum metadata-only discovery Persona, add:
+Persona relationships remain canonical BIF assignments. The model does not receive one tool per
+row: all assigned discovery actions below are advertised inside `resource_registry_inspect`, using
+the action name without the `resource_registry_` prefix. For a minimum metadata-only discovery
+Persona, add:
 
-| BIF | Purpose |
+| Canonical assigned BIF | Model-facing action | Purpose |
 | --- | --- |
-| `resource_registry_list_datasets` | List available workspace datasets. |
-| `resource_registry_get_dataset` | Read safe dataset details. |
-| `resource_registry_get_dataset_schema` | Inspect columns and types. |
-| `resource_registry_get_dataset_profile` | Read aggregate profile information. |
-| `resource_registry_list_dataset_versions` | List Dataset versions. |
+| `resource_registry_list_datasets` | `resource_registry_inspect` / `list_datasets` | List available workspace datasets. |
+| `resource_registry_get_dataset` | `resource_registry_inspect` / `get_dataset` | Read safe dataset details. |
+| `resource_registry_get_dataset_schema` | `resource_registry_inspect` / `get_dataset_schema` | Inspect columns and types. |
+| `resource_registry_get_dataset_profile` | `resource_registry_inspect` / `get_dataset_profile` | Read aggregate profile information. |
+| `resource_registry_list_dataset_versions` | `resource_registry_inspect` / `list_dataset_versions` | List Dataset versions. |
 
-`resource_registry_get_dataset_context` is another optional metadata BIF.
+`resource_registry_get_dataset_context` is another optional `resource_registry_inspect` action.
 
 For a Persona that must inspect rows or aggregates, also assign `resource_registry_plan_query`,
 `resource_registry_query_dataset`, and optionally `resource_registry_explore_dataset`. For
 asynchronous queries, assign `resource_registry_start_query_job`,
 `resource_registry_get_query_job_status`, and `resource_registry_get_query_job_result`.
+The first two query actions are published through `resource_registry_query`; exploration is an
+`resource_registry_inspect` action. Query-job actions are also published through
+`resource_registry_query`.
 The default `restricted_reader` role can use these bounded read-only operations; no staff,
 power-user, or publisher role is needed. Effective tenant/Dataset policies, visible columns,
 and SQL row/time limits still apply. Separate analysis/chart/export BIFs require broader authority.
+
+The API catalog groups canonical operations into virtual entries; those entries are not persisted
+BIF records. Adding a whole group through that API assigns each visible canonical action. Use
+individual canonical assignments when a Persona needs only a subset; grouped publication preserves
+that subset in its `action` enum.
 
 ## 7. Publish a Dataset
 
@@ -160,7 +180,7 @@ access to another Workspace's `WORKSPACE` Datasets.
 | Workspace not offered | Workspace is active, Registry-enabled, provisioned, and configured on the Persona. For `PRIVATE`, verify direct Workspace access; for `OPEN`, verify Organization membership. |
 | Persona asks to choose a Workspace | In `observe`, name one authorized Persona Workspace in chat. In `strict`, select it in the interface. |
 | No datasets | `no_visible_datasets` means none are visible in the selected scope; check namespace, Workspace/Organization visibility, active assignments, status, archive state, and policy. `no_matching_datasets` means a filter or offset returned no rows. |
-| BIF missing | Confirm the Persona/BIF relationship and Registry BIF seed migrations. |
+| Registry action missing | Confirm the Persona/canonical-BIF relationship, Registry BIF seed migrations, and that the action is present in the advertised group. |
 | Query denied | Confirm the query BIF, effective tenant/Dataset capability policy, visible schema, and SQL safety limits. Normal `restricted_reader` users can query under current defaults. |
 
 ## Security reminders

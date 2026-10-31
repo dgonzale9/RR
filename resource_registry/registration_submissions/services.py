@@ -7,17 +7,14 @@ import uuid
 
 from django.contrib.auth.models import User
 from django.db import transaction
-from guardian.shortcuts import get_objects_for_user
 
+from Organization.models import Organization
 from resource_registry.models import (
-    Dataset,
-    DatasetStatus,
     DatasetVisibilityScope,
     LargeFileUploadSession,
     LargeFileUploadStatus,
     RegistrationSubmission,
     RegistrationSubmissionStatus,
-    WorkbookIngestionGroup,
 )
 from resource_registry.registration_submissions.contracts import (
     RegistrationJobKind,
@@ -29,7 +26,6 @@ from resource_registry.registration_submissions.format_resolver import (
 from resource_registry.registration_submissions.job_factory import RegistrationSubmissionJobFactory
 from resource_registry.uploads.exceptions import UploadApplicationError
 from resource_registry.uploads.services import LargeFileUploadAuthorizationService, UploadAdmission
-from Organization.models import Organization
 
 _logger = logging.getLogger("app-logger")
 
@@ -38,215 +34,6 @@ class RegistrationSubmissionService:
     """Authorize and persist one idempotent registration request and async job."""
 
     permission_name = "resource_registry.submit_upload_registration"
-
-    def submit_replacement(
-        self,
-        *,
-        user: User,
-        organization: Organization | None,
-        namespace_id: uuid.UUID,
-        upload_id: uuid.UUID,
-        dataset_id: uuid.UUID | None = None,
-        workbook_group_id: uuid.UUID | None = None,
-    ) -> RegistrationSubmissionResult:
-        """Queue an exact Dataset or workbook replacement from an owned completed upload.
-
-        Args:
-            user: Current authenticated actor.
-            organization: Trusted request Organization.
-            namespace_id: Canonical Workspace namespace admitted for this invocation.
-            upload_id: Completed upload owned by the actor.
-            dataset_id: Exact non-workbook Dataset target.
-            workbook_group_id: Exact multi-sheet Workbook target.
-
-        Returns:
-            Stable asynchronous registration submission.
-
-        Raises:
-            UploadApplicationError: If selection, authorization, or upload state is invalid.
-        """
-        if (dataset_id is None) == (workbook_group_id is None):
-            raise UploadApplicationError("REPLACEMENT_TARGET_INVALID", 400)
-        admission = self._authorization_service.admit_existing_upload(
-            user=user,
-            organization=organization,
-            upload_id=upload_id,
-            require_mutation=True,
-        )
-        if admission.workspace_id is None or admission.namespace_id != namespace_id:
-            raise UploadApplicationError("AUTHORIZATION_DENIED", 403)
-        if not user.has_perm(self.permission_name):
-            raise UploadApplicationError("AUTHORIZATION_DENIED", 403)
-        with transaction.atomic():
-            upload = self._get_locked_upload(upload_id=upload_id, admission=admission)
-            self._validate_upload_state(upload)
-            if upload.submitted_by_id != admission.actor_id:
-                raise UploadApplicationError("AUTHORIZATION_DENIED", 403)
-            job_kind = self._format_resolver.resolve(
-                resolved_file_format=upload.resolved_file_format,
-            )
-            if (job_kind == RegistrationJobKind.WORKBOOK_INGESTION) != (
-                workbook_group_id is not None
-            ):
-                raise UploadApplicationError("REPLACEMENT_TARGET_INVALID", 400)
-            target_dataset = None
-            target_group = None
-            if dataset_id is not None:
-                target_dataset = self._get_authorized_replacement_dataset(
-                    user=user,
-                    admission=admission,
-                    dataset_id=dataset_id,
-                )
-            else:
-                target_group = self._get_authorized_replacement_workbook_group(
-                    user=user,
-                    admission=admission,
-                    workbook_group_id=workbook_group_id,
-                )
-            existing = (
-                RegistrationSubmission.objects.select_for_update()
-                .filter(upload_session=upload)
-                .first()
-            )
-            if existing is not None:
-                if (
-                    existing.replacement_dataset_id != dataset_id
-                    or existing.replacement_workbook_group_id != workbook_group_id
-                ):
-                    raise UploadApplicationError("UPLOAD_ALREADY_REGISTERED", 409)
-                self._job_factory.get_job_reference(submission=existing, job_kind=job_kind)
-                return self._result(existing, idempotent_replay=True)
-            submission = RegistrationSubmission.objects.create(
-                upload_session=upload,
-                replacement_dataset=target_dataset,
-                replacement_workbook_group=target_group,
-                organization_id=admission.organization_id,
-                workspace_id=admission.workspace_id,
-                registry_namespace_id=admission.namespace_id,
-                submitted_by=user,
-                status=RegistrationSubmissionStatus.SUBMITTED,
-                job_type=job_kind.value,
-                visibility_scope=DatasetVisibilityScope.WORKSPACE,
-            )
-            self._job_factory.create_job(
-                job_kind=job_kind,
-                submission=submission,
-                upload=upload,
-                actor=user,
-            )
-            return self._result(submission, idempotent_replay=False)
-
-    def assert_replacement_execution_authorized(
-        self,
-        *,
-        submission: RegistrationSubmission,
-    ) -> None:
-        """Recheck a queued replacement against current actor and Workspace grants.
-
-        Args:
-            submission: Persisted target and upload provenance.
-
-        Raises:
-            UploadApplicationError: If a grant or target ownership has changed.
-        """
-        user = submission.submitted_by
-        if user is None or not user.is_active:
-            raise UploadApplicationError("AUTHORIZATION_DENIED", 403)
-        admission = self._authorization_service.admit_existing_upload(
-            user=user,
-            organization=submission.organization,
-            upload_id=submission.upload_session_id,
-            require_mutation=True,
-        )
-        if (
-            admission.workspace_id != submission.workspace_id
-            or admission.namespace_id != submission.registry_namespace_id
-            or admission.workspace_id is None
-            or not user.has_perm(self.permission_name)
-            or submission.upload_session.submitted_by_id != user.pk
-        ):
-            raise UploadApplicationError("AUTHORIZATION_DENIED", 403)
-        if submission.replacement_dataset_id is not None:
-            self._get_authorized_replacement_dataset(
-                user=user,
-                admission=admission,
-                dataset_id=submission.replacement_dataset_id,
-            )
-        elif submission.replacement_workbook_group_id is not None:
-            self._get_authorized_replacement_workbook_group(
-                user=user,
-                admission=admission,
-                workbook_group_id=submission.replacement_workbook_group_id,
-            )
-
-    @staticmethod
-    def _get_authorized_replacement_dataset(
-        *,
-        user: User,
-        admission: UploadAdmission,
-        dataset_id: uuid.UUID,
-    ) -> Dataset:
-        """Resolve one exact Workspace-owned Dataset with write permission."""
-        dataset = Dataset.objects.filter(pk=dataset_id).first()
-        if dataset is None:
-            raise UploadApplicationError("DATASET_NOT_FOUND", 404)
-        if (
-            dataset.tenant_id != admission.namespace_id
-            or dataset.organization_id != admission.organization_id
-            or dataset.workspace_id != admission.workspace_id
-            or dataset.visibility_scope != DatasetVisibilityScope.WORKSPACE
-            or dataset.status == DatasetStatus.ARCHIVED
-            or dataset.workbook_group_id is not None
-        ):
-            raise UploadApplicationError("AUTHORIZATION_DENIED", 403)
-        if not (
-            user.has_perm("resource_registry.change_dataset")
-            or user.has_perm("resource_registry.change_dataset", dataset)
-        ):
-            raise UploadApplicationError("AUTHORIZATION_DENIED", 403)
-        return dataset
-
-    @staticmethod
-    def _get_authorized_replacement_workbook_group(
-        *,
-        user: User,
-        admission: UploadAdmission,
-        workbook_group_id: uuid.UUID | None,
-    ) -> WorkbookIngestionGroup:
-        """Resolve a Workbook only when every linked Dataset is writable."""
-        if workbook_group_id is None:
-            raise UploadApplicationError("WORKBOOK_GROUP_NOT_FOUND", 404)
-        group = WorkbookIngestionGroup.objects.filter(pk=workbook_group_id).first()
-        if group is None:
-            raise UploadApplicationError("WORKBOOK_GROUP_NOT_FOUND", 404)
-        datasets = list(Dataset.objects.filter(workbook_group=group))
-        if (
-            group.tenant_id != admission.namespace_id
-            or not datasets
-            or not user.has_perm("resource_registry.add_dataset")
-        ):
-            raise UploadApplicationError("AUTHORIZATION_DENIED", 403)
-        if any(
-            dataset.tenant_id != admission.namespace_id
-            or dataset.organization_id != admission.organization_id
-            or dataset.workspace_id != admission.workspace_id
-            or dataset.visibility_scope != DatasetVisibilityScope.WORKSPACE
-            for dataset in datasets
-        ):
-            raise UploadApplicationError("AUTHORIZATION_DENIED", 403)
-        if not user.has_perm("resource_registry.change_dataset"):
-            permitted_ids = set(
-                get_objects_for_user(
-                    user,
-                    "resource_registry.change_dataset",
-                    klass=Dataset,
-                )
-                .filter(pk__in=[dataset.pk for dataset in datasets])
-                .values_list("pk", flat=True),
-            )
-            if any(dataset.pk not in permitted_ids for dataset in datasets):
-                raise UploadApplicationError("AUTHORIZATION_DENIED", 403)
-        return group
 
     def __init__(
         self,

@@ -42,7 +42,7 @@ class DataRegistryModelContractTests(SimpleTestCase):
     def test_dataset_version_has_expected_uniqueness_constraints(self) -> None:
         constraint_names = {constraint.name for constraint in DatasetVersion._meta.constraints}
         self.assertIn("dataset_version_number_uniq", constraint_names)
-        self.assertNotIn("dataset_version_hash_uniq", constraint_names)
+        self.assertIn("dataset_version_hash_uniq", constraint_names)
 
     def test_dataset_version_is_immutable_once_ready(self) -> None:
         version = DatasetVersion(pk=1, status=DatasetVersionStatus.READY)

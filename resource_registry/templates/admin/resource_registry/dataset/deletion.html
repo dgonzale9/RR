@@ -1,0 +1,17 @@
+{% extends "admin/resource_registry/dataset/base.html" %}
+{% block content %}
+<p><a href="{% url 'admin:resource_registry_dataset_change' dataset.id %}">{{ dataset.name }}</a> · <a href="{% url 'admin:resource_registry_dataset_cleanup' %}">Cleanup candidates</a></p>
+<h2>Storage usage</h2>
+<p>Exclusive: {{ preview.exclusive_bytes|filesizeformat }} · Shared: {{ preview.shared_bytes|filesizeformat }}</p>
+<p>Estimated recoverable space: {{ preview.estimated_recoverable_bytes|filesizeformat }}. This does not confirm physical space released by provider backups or versioning.</p>
+<p>Publications: {{ preview.publication_count }}. {% for kind,count in derivative_counts %}{{ kind }}: {{ count }} · {% endfor %}</p>
+<p>Cleanup mode: {% if preview.mode == 'EXECUTE' %}Execute{% elif preview.mode == 'DISABLED' %}Disabled — cleanup is paused{% else %}Simulation — files will not be deleted{% endif %}</p>
+<p>Earliest execution: {{ earliest_execution }}. Published versions: {{ preview.versions|join:", " }}.</p>
+{% if preview.blocker %}<p class="errornote">Deletion is blocked: {{ preview.blocker_message }}.</p>{% endif %}
+<p>Deletion includes Registry profiles, samples, query results, analyses, charts and exports. Shared files remain protected while another resource needs them. Provider backups follow their own retention policy.</p>
+<table><thead><tr><th>Object ID</th><th>Size</th><th>Shared</th><th>Ownership verified</th><th>Status</th></tr></thead><tbody>
+{% for object in preview.objects %}<tr><td>{{ object.id }}</td><td>{{ object.size_bytes|filesizeformat }}</td><td>{{ object.shared|yesno:"Yes,No" }}</td><td>{{ object.ownership_verified|yesno:"Yes,No" }}</td><td>{{ object.state }}</td></tr>{% endfor %}
+</tbody></table>
+<p>{{ preview.object_count }} objects. {% if preview.previous_offset != None %}<a href="?offset={{ preview.previous_offset }}">Previous</a>{% endif %} {% if preview.next_offset != None %}<a href="?offset={{ preview.next_offset }}">Next</a>{% endif %}</p>
+{% if preview.recoverable %}<form method="post">{% csrf_token %}{{ form.as_p }}<button type="submit">Request permanent deletion</button></form>{% else %}<p>Deletion has started. This dataset cannot be recovered.</p>{% endif %}
+{% endblock %}

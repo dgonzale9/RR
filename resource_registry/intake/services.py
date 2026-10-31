@@ -15,17 +15,23 @@ from tempfile import NamedTemporaryFile
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import transaction
+from django.db.models import Min
 from django.utils import timezone
 
 from BotServer.util.user_group_management import UserGroupManagement
 from Organization.models import Organization, Workspace
+from resource_registry.cleanup.inventory import register_object
+from resource_registry.cleanup.protection import has_pending_intake_use
+from resource_registry.cleanup.storage import reserve_upload_source
 from resource_registry.intake.inspection_service import StagedResourceIntakeInspectionService
 from resource_registry.intake.permissions import can_manage_staged_resource_intakes
 from resource_registry.models import (
+    DatasetChangeStatus,
     DatasetVisibilityScope,
     LargeFileUploadSession,
     LargeFileUploadStatus,
     RegistryNamespace,
+    ResourceStorageReference,
     StagedResourceInspectionJob,
     StagedResourceIntake,
     StagedResourceIntakeStatus,
@@ -77,6 +83,8 @@ class IntakeSnapshot:
     inspection: dict[str, object]
     expires_at: datetime | None
     failure_code: str | None
+    source_available: bool = True
+    source_deleted_at: datetime | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -231,6 +239,8 @@ class StagedResourceIntakeService:
                     expires_at=expires_at,
                 )
                 replay = False
+
+        reserve_upload_source(intake)
         authorization = None
         if (
             issue_direct_authorization
@@ -309,6 +319,8 @@ class StagedResourceIntakeService:
                 )
                 intake.upload_authorization_expires_at = upload_expires_at
                 intake.save(update_fields=["upload_authorization_expires_at", "updated_at"])
+
+                reserve_upload_source(intake)
                 authorization = self._provider.create_upload_authorization(
                     object_key=intake.storage_object_key,
                     content_type=intake.declared_content_type,
@@ -523,7 +535,6 @@ class StagedResourceIntakeService:
                 intake_id=intake_id,
                 require_owner=not _allow_administrator_intake_access,
             )
-            self._assert_intake_available_for_publication(intake)
             if intake.status not in {
                 StagedResourceIntakeStatus.READY_FOR_PUBLICATION,
                 StagedResourceIntakeStatus.PUBLISHED,
@@ -554,6 +565,16 @@ class StagedResourceIntakeService:
                     namespace_id=admission.namespace_id,
                     idempotent_replay=True,
                 )
+            if publication is not None and publication.dataset_changes.exists():
+                raise UploadApplicationError(
+                    "INTAKE_ALREADY_PUBLISHED",
+                    409,
+                    "This resource is already published to this destination. "
+                    "Open its dataset to update it.",
+                )
+            self._assert_intake_available_for_publication(intake)
+            intake.source_last_used_at = timezone.now()
+            intake.save(update_fields=["source_last_used_at"])
             if publication is None:
                 previous_attempt = (
                     StagedResourcePublication.objects.filter(
@@ -577,7 +598,7 @@ class StagedResourceIntakeService:
             destination_key = (
                 f"resource-registry/uploads/{admission.organization_id}/{admission.namespace_id}/"
                 f"intakes/{intake.id}/publications/{publication.id}/"
-                f"source{Path(intake.normalized_filename).suffix.lower()}"
+                f"{uuid.uuid4()}/source{Path(intake.normalized_filename).suffix.lower()}"
             )
             publication.destination_object_key = destination_key
             publication.cleanup_required = False
@@ -591,8 +612,12 @@ class StagedResourceIntakeService:
                     .first()
                 )
                 if prior_upload is None or prior_upload.upload_session is None:
-                    raise UploadApplicationError("INTAKE_SOURCE_UNAVAILABLE", 409)
-                source_object_key = prior_upload.upload_session.storage_object_key
+                    if not intake.datasetchange_set.filter(
+                        status=DatasetChangeStatus.PUBLISHED
+                    ).exists():
+                        raise UploadApplicationError("INTAKE_SOURCE_UNAVAILABLE", 409)
+                else:
+                    source_object_key = prior_upload.upload_session.storage_object_key
             intake.status = StagedResourceIntakeStatus.PUBLISHING
             intake.save(update_fields=["status", "updated_at"])
         try:
@@ -695,6 +720,44 @@ class StagedResourceIntakeService:
             idempotent_replay=False,
         )
 
+    @staticmethod
+    @transaction.atomic
+    def synchronize_dataset_publication(*, intake_id: uuid.UUID) -> int:
+        """Reflect a committed dataset proposal in its source intake without publishing again.
+
+        Args:
+            intake_id: Server-selected source of an authorized dataset publication.
+
+        Returns:
+            Number of intakes changed (zero or one). Ignore sources without publications and
+            preserve an in-flight legacy publication's state and existing publication date.
+
+        Raises:
+            StagedResourceIntake.DoesNotExist: If the source intake no longer exists.
+        """
+        intake = StagedResourceIntake.objects.select_for_update().get(pk=intake_id)
+        if intake.status not in {
+            StagedResourceIntakeStatus.READY_FOR_PUBLICATION,
+            StagedResourceIntakeStatus.PUBLISHED,
+        }:
+            return 0
+        published_at = intake.datasetchange_set.filter(
+            status=DatasetChangeStatus.PUBLISHED
+        ).aggregate(value=Min("completed_at"))["value"]
+        if published_at is None:
+            return 0
+        if (
+            intake.status == StagedResourceIntakeStatus.PUBLISHED
+            and intake.published_at is not None
+            and intake.expires_at is None
+        ):
+            return 0
+        intake.status = StagedResourceIntakeStatus.PUBLISHED
+        intake.published_at = intake.published_at or published_at
+        intake.expires_at = None
+        intake.save(update_fields=["status", "published_at", "expires_at", "updated_at"])
+        return 1
+
     def publish_intake_to_namespace(
         self,
         *,
@@ -752,6 +815,9 @@ class StagedResourceIntakeService:
             intakes = tuple(
                 StagedResourceIntake.objects.select_for_update(skip_locked=True)
                 .filter(status__in=_EXPIRABLE_STATUSES, expires_at__lte=now)
+                .exclude(
+                    datasetchange__status__in=["QUEUED", "PROCESSING", "READY", "NEEDS_MANAGER"]
+                )
                 .order_by("expires_at", "id")[: max(int(batch_size), 1)]
             )
             for intake in intakes:
@@ -913,12 +979,15 @@ class StagedResourceIntakeService:
                 raise UploadApplicationError("INTAKE_COPY_CHECKSUM_MISMATCH", 409)
 
     def _cleanup_intake(self, intake: StagedResourceIntake) -> None:
-        try:
-            self._provider.delete_object(object_key=intake.storage_object_key)
-        except UploadApplicationError:
-            StagedResourceIntake.objects.filter(pk=intake.pk).update(cleanup_required=True)
-        else:
+
+        if has_pending_intake_use(intake.id) or intake.source_deleted_at:
+            return
+        if intake.status == StagedResourceIntakeStatus.PUBLISHED:
+            # Proposals still use this verified source for retries and other destinations.
             StagedResourceIntake.objects.filter(pk=intake.pk).update(cleanup_required=False)
+            return
+        # The periodic coordinator owns deletion, retention, simulation and retry accounting.
+        StagedResourceIntake.objects.filter(pk=intake.pk).update(cleanup_required=True)
 
     @staticmethod
     def _mark_publication_cleanup_required(*, publication_id: uuid.UUID) -> None:
@@ -929,27 +998,31 @@ class StagedResourceIntakeService:
         ).update(cleanup_required=True)
 
     def _cleanup_publication_destination(self, *, publication_id: uuid.UUID) -> None:
-        """Delete one failed destination copy and retain retry state on provider failure."""
+        """Register failed copied data for automatic policy cleanup after its retention period."""
         publication = StagedResourcePublication.objects.filter(
             pk=publication_id,
             registration_submission__isnull=True,
         ).first()
         if publication is None or not publication.destination_object_key:
             return
-        try:
-            self._provider.delete_object(object_key=publication.destination_object_key)
-        except UploadApplicationError:
-            StagedResourcePublication.objects.filter(pk=publication_id).update(
-                cleanup_required=True
-            )
-        else:
-            StagedResourcePublication.objects.filter(pk=publication_id).update(
-                cleanup_required=False
-            )
+
+        storage = self._storage_factory.create_provider(publication.intake.storage_provider)
+        stored = register_object(
+            provider=publication.intake.storage_provider,
+            uri=storage.get_uri(publication.destination_object_key),
+            owner_kind="PUBLICATION",
+            owner_id=publication.id,
+            verified=True,
+        )
+        if stored is not None:
+            ResourceStorageReference.objects.filter(
+                storage_object=stored, owner_kind="PUBLICATION", owner_id=publication.id
+            ).update(namespace_id=publication.registry_namespace_id)
 
     @staticmethod
+    @transaction.atomic
     def _restore_after_publication_failure(*, intake_id: uuid.UUID) -> None:
-        intake = StagedResourceIntake.objects.filter(pk=intake_id).first()
+        intake = StagedResourceIntake.objects.select_for_update().filter(pk=intake_id).first()
         if intake is None:
             return
         if intake.status in {
@@ -967,9 +1040,11 @@ class StagedResourceIntakeService:
         restored_status = (
             StagedResourceIntakeStatus.PUBLISHED
             if intake.publications.filter(registration_submission__isnull=False).exists()
+            or intake.datasetchange_set.filter(status=DatasetChangeStatus.PUBLISHED).exists()
             else StagedResourceIntakeStatus.READY_FOR_PUBLICATION
         )
         StagedResourceIntake.objects.filter(pk=intake_id).update(status=restored_status)
+        StagedResourceIntakeService.synchronize_dataset_publication(intake_id=intake_id)
 
     @staticmethod
     def _snapshot(intake: StagedResourceIntake) -> IntakeSnapshot:
@@ -984,6 +1059,9 @@ class StagedResourceIntakeService:
             inspection=dict(intake.inspection_json or {}),
             expires_at=intake.expires_at,
             failure_code=intake.failure_code,
+            source_available=intake.source_deleted_at is None
+            and intake.source_cleanup_started_at is None,
+            source_deleted_at=intake.source_deleted_at,
         )
 
     @staticmethod
@@ -993,6 +1071,8 @@ class StagedResourceIntakeService:
 
     def _assert_intake_available_for_publication(self, intake: StagedResourceIntake) -> None:
         """Reject an unpublished intake whose staging retention deadline elapsed."""
+        if intake.source_deleted_at is not None or intake.source_cleanup_started_at is not None:
+            raise UploadApplicationError("INTAKE_SOURCE_DELETED", 410)
         if intake.status != StagedResourceIntakeStatus.PUBLISHED and self._has_intake_expired(
             intake
         ):

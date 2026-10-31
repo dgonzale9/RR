@@ -200,56 +200,6 @@ _DATASET_LISTING_FALSE_POSITIVE_PATTERN = re.compile(
     r")\b",
     flags=re.IGNORECASE,
 )
-_DATASET_IMPORT_ACTION_PATTERN = re.compile(
-    r"\b(register|import|ingest|upload|replace|update|refresh|sync|create|"
-    r"registra(?:r)?|importa(?:r)?|sube|subir|reemplaza(?:r)?|actualiza(?:r)?)\b",
-    flags=re.IGNORECASE,
-)
-_DATASET_IMPORT_FILE_PATTERN = re.compile(
-    r"\b(file|attachment|archivo|fichero|csv|json|jsonl|ndjson|xlsx|parquet)\b",
-    flags=re.IGNORECASE,
-)
-_DATASET_IMPORT_DIRECT_ACTION_PATTERN = re.compile(
-    r"\b(register|import|ingest|upload|replace|refresh|"
-    r"registra(?:r)?|importa(?:r)?|sube|subir|reemplaza(?:r)?)\b",
-    flags=re.IGNORECASE,
-)
-_DATASET_IMPORT_TARGET_PATTERN = re.compile(
-    r"\b(dataset|workbook|resource registry|conjunto de datos)\b",
-    flags=re.IGNORECASE,
-)
-_DATASET_IMPORT_COMMAND_PATTERN = re.compile(
-    r"^\s*(?:please\s+)?(?:register|import|ingest|upload|replace|update|refresh|sync|"
-    r"registra(?:r)?|importa(?:r)?|sube|subir|reemplaza(?:r)?|actualiza(?:r)?)\b",
-    flags=re.IGNORECASE,
-)
-_UNAMBIGUOUS_DATASET_IMPORT_COMMAND_PATTERN = re.compile(
-    r"^\s*(?:please\s+)?(?:register|replace|registra(?:r)?|reemplaza(?:r)?)\b",
-    flags=re.IGNORECASE,
-)
-_EXPLICIT_REPLACEMENT_TOOL_COMMAND_PATTERN = re.compile(
-    r"^\s*(?:please\s+)?(?:use|call|invoke)\s+`?resource_registry_replace_dataset\b",
-    flags=re.IGNORECASE,
-)
-_REGISTRY_IMPORT_DESTINATION_PATTERN = re.compile(
-    r"\b(resource registry|registry|dataset|workbook|workspace|"
-    r"conjunto de datos|registro de recursos|espacio de trabajo)\b",
-    flags=re.IGNORECASE,
-)
-_CHAT_SOURCE_DESTINATION_PATTERN = re.compile(
-    r"\b(?:to|into|in|as|for|al|en el|para el|como)\s+"
-    r"(?:the\s+|a\s+|my\s+|un\s+|el\s+)?"
-    r"(?:chat(?:\s+source\s+document)?|conversation|source documents?|"
-    r"documentos? fuente)\b",
-    flags=re.IGNORECASE,
-)
-_NON_DATASET_UPDATE_OBJECT_PATTERN = re.compile(
-    r"^\s*(?:please\s+)?(?:update|refresh|sync|actualiza(?:r)?)\s+"
-    r"(?:the\s+|this\s+|my\s+|a\s+)?(?:chart|graph|visualization|dashboard|report)\b",
-    flags=re.IGNORECASE,
-)
-
-
 @dataclass(frozen=True)
 class DatasetRoutingCandidate:
     """Represent one authorized dataset candidate from existing discovery tools.
@@ -361,49 +311,6 @@ class ExplorationRoutingDecision:
 class ExplorationRoutingPolicy:
     """Select deterministic Resource Registry exploration BIF calls from user questions."""
 
-    def is_explicit_dataset_import_command(self, question: str) -> bool:
-        """Identify an explicit command to import the current chat attachment.
-
-        Args:
-            question: User statement, possibly followed by a generated attachment listing.
-
-        Returns:
-            True for a registration or replacement command, or another import verb
-            with an explicit Registry destination. Chat source-document requests are excluded.
-        """
-        user_instruction = question.split("\nUploaded file(s):", 1)[0].split("\n", 1)[0]
-        if _CHAT_SOURCE_DESTINATION_PATTERN.search(user_instruction):
-            return False
-        if _EXPLICIT_REPLACEMENT_TOOL_COMMAND_PATTERN.search(user_instruction):
-            return True
-        if not _DATASET_IMPORT_COMMAND_PATTERN.search(user_instruction):
-            return False
-        if _NON_DATASET_UPDATE_OBJECT_PATTERN.search(user_instruction):
-            return False
-        if _UNAMBIGUOUS_DATASET_IMPORT_COMMAND_PATTERN.search(user_instruction):
-            return bool(
-                _DATASET_IMPORT_FILE_PATTERN.search(user_instruction)
-                or _DATASET_IMPORT_TARGET_PATTERN.search(user_instruction)
-            )
-        return bool(_REGISTRY_IMPORT_DESTINATION_PATTERN.search(user_instruction))
-
-    def is_dataset_import_intent(self, question: str) -> bool:
-        """Return whether the request asks to register or replace Dataset contents.
-
-        Args:
-            question: Raw user request.
-
-        Returns:
-            True when an import action references a file or Registry Dataset.
-        """
-        return bool(
-            _DATASET_IMPORT_ACTION_PATTERN.search(question)
-            and _DATASET_IMPORT_FILE_PATTERN.search(question)
-        ) or bool(
-            _DATASET_IMPORT_DIRECT_ACTION_PATTERN.search(question)
-            and _DATASET_IMPORT_TARGET_PATTERN.search(question)
-        )
-
     def is_creative_workflow_intent(self, question: str) -> bool:
         """Identify an opening instruction to prepare concepts or render specs.
 
@@ -455,7 +362,7 @@ class ExplorationRoutingPolicy:
             "version_not_found",
         }
 
-    def route(  # noqa: PLR0911, PLR0912
+    def route(
         self,
         request: ExplorationRoutingRequest,
     ) -> ExplorationRoutingDecision:
@@ -599,8 +506,6 @@ class ExplorationRoutingPolicy:
             return self._bypass_decision(
                 "Creative workflow requests belong to normal agent/tool orchestration."
             )
-        if self.is_dataset_import_intent(question):
-            return self._bypass_decision("Dataset imports belong to the Registry write tool flow.")
         unconditional_rules: tuple[tuple[re.Pattern[str], str, RoutingStatus], ...] = (
             (
                 _DOCUMENT_TOOL_REQUEST_PATTERN,
@@ -832,7 +737,7 @@ class ExplorationRoutingPolicy:
                 return candidate.version_id
         return None
 
-    def _resolve_columns(  # noqa: PLR0911
+    def _resolve_columns(
         self,
         *,
         question: str,
@@ -918,7 +823,7 @@ class ExplorationRoutingPolicy:
         column_pattern = r"[\W_]*".join(re.escape(part) for part in column_parts)
         return re.search(rf"(?<!\w){column_pattern}(?!\w)", question, re.IGNORECASE) is not None
 
-    def _match_column(  # noqa: PLR0911
+    def _match_column(
         self,
         mention: str,
         schema_columns: tuple[SchemaColumnRoutingEvidence, ...],

@@ -12,7 +12,12 @@ from django.db.models import QuerySet
 from Organization.models import Workspace
 from resource_registry.assistant.persona_workspace_scope import (
     PERSONA_WORKSPACE_SELECTION_SESSION_KEY,
+    PersonaWorkspaceScope,
 )
+from resource_registry.assistant.routing_operation_context import (
+    AssistantRoutingOperationContext,
+)
+from resource_registry.authorization.contracts import RegistryAuthorizationContext
 from resource_registry.authorization.exceptions import (
     RegistryAuthorizationContextError,
     RegistryAuthorizationOrganizationDisabledError,
@@ -26,6 +31,10 @@ from resource_registry.conversation_state import (
     clear_registry_session_keys,
 )
 from resource_registry.namespace_selection import RegistryScopeSelectionError
+from resource_registry.performance.instrumentation import (
+    RegistryPerformanceStage,
+    instrument_registry_function,
+)
 from resource_registry.scope_adapters import (
     get_request_scope_policy,
     select_request_registry_namespace,
@@ -35,6 +44,10 @@ from resource_registry.scope_adapters import (
 NamespaceResolutionStatus = Literal[
     "selected", "multiple", "none", "unavailable", "workspace_change_required"
 ]
+
+
+class InvalidAssistantRoutingOperationContextError(ValueError):
+    """Report an untrusted or identity-mismatched internal routing context."""
 
 
 @dataclass(frozen=True)
@@ -73,7 +86,9 @@ class AssistantNamespaceContextService:
         self._authorization_context_service = (
             authorization_context_service or RegistryAuthorizationContextService()
         )
+        self._routing_operation_context_provenance: object = object()
 
+    @instrument_registry_function(RegistryPerformanceStage.ASSISTANT_NAMESPACE_RESOLUTION)
     def resolve(
         self,
         *,
@@ -114,6 +129,183 @@ class AssistantNamespaceContextService:
             self.clear_context(request)
             return AssistantNamespaceResolution(status="unavailable", selection_changed=True)
 
+        return self._resolve_authorized_context(
+            request=request,
+            statement=statement,
+            authorization_context=authorization_context,
+            required_workspace_ids=required_workspace_ids,
+            require_explicit_workspace_selection=require_explicit_workspace_selection,
+        )
+
+    def _create_routing_operation_context(
+        self,
+        *,
+        request: Any,
+        authorization_context: RegistryAuthorizationContext,
+        persona_workspace_scope: PersonaWorkspaceScope | None,
+        configured_persona_workspace_ids: frozenset[int] | None,
+    ) -> AssistantRoutingOperationContext:
+        """Create an internal, operation-local context from trusted Registry setup inputs.
+
+        Args:
+            request: Authenticated request carrying host-resolved identities.
+            authorization_context: Fresh Registry authorization built for this operation.
+            persona_workspace_scope: Resolved Persona Workspace scope, when applicable.
+            configured_persona_workspace_ids: Server-derived configured Persona Workspace IDs.
+
+        Returns:
+            Immutable context accepted only by this service's internal resolution path.
+
+        Raises:
+            InvalidAssistantRoutingOperationContextError: If request identities cannot prove the
+                supplied authorization context belongs to the current operation.
+        """
+        principal_id, organization_id = self._trusted_request_identity(request)
+        try:
+            return AssistantRoutingOperationContext(
+                authorization_context=authorization_context,
+                persona_workspace_scope=persona_workspace_scope,
+                configured_persona_workspace_ids=configured_persona_workspace_ids,
+                principal_id=principal_id,
+                organization_id=organization_id,
+                _provenance=self._routing_operation_context_provenance,
+            )
+        except (AttributeError, TypeError, ValueError) as error:
+            raise InvalidAssistantRoutingOperationContextError(
+                "Routing operation context failed trusted identity validation."
+            ) from error
+
+    @instrument_registry_function(RegistryPerformanceStage.ASSISTANT_NAMESPACE_RESOLUTION)
+    def _resolve_with_routing_operation_context(
+        self,
+        *,
+        request: Any,
+        statement: str,
+        operation_context: AssistantRoutingOperationContext,
+        required_workspace_ids: frozenset[int] | None = None,
+        require_explicit_workspace_selection: bool = False,
+    ) -> AssistantNamespaceResolution:
+        """Resolve namespace state using a validated adapter-local authorization snapshot.
+
+        Args:
+            request: Current authenticated request with host-resolved identities.
+            statement: Current user message, which may name an authorized Workspace.
+            operation_context: Opaque Registry-created context for this exact operation.
+            required_workspace_ids: Optional server-derived Workspace restriction.
+            require_explicit_workspace_selection: Ignore persisted and UI workspace hints.
+
+        Returns:
+            A selected, ambiguous, empty, or unavailable namespace result.
+
+        Raises:
+            InvalidAssistantRoutingOperationContextError: If provenance or request identity does
+                not match the operation-local context.
+        """
+        self._validate_routing_operation_context(
+            request=request, operation_context=operation_context
+        )
+        return self._resolve_authorized_context(
+            request=request,
+            statement=statement,
+            authorization_context=operation_context.authorization_context,
+            required_workspace_ids=required_workspace_ids,
+            require_explicit_workspace_selection=require_explicit_workspace_selection,
+        )
+
+    def _validate_routing_operation_context(
+        self,
+        *,
+        request: Any,
+        operation_context: AssistantRoutingOperationContext,
+    ) -> None:
+        """Reject forged, foreign, or identity-mismatched operation contexts.
+
+        Args:
+            request: Current request carrying trusted principal and Organization identities.
+            operation_context: Candidate context supplied by the adapter-only path.
+
+        Raises:
+            InvalidAssistantRoutingOperationContextError: If the context fails provenance or
+                identity validation.
+        """
+        if not isinstance(operation_context, AssistantRoutingOperationContext):
+            raise InvalidAssistantRoutingOperationContextError(
+                "Routing operation context has an invalid type."
+            )
+        if operation_context._provenance is not self._routing_operation_context_provenance:
+            raise InvalidAssistantRoutingOperationContextError(
+                "Routing operation context was not created by this namespace service."
+            )
+        principal_id, organization_id = self._trusted_request_identity(request)
+        if (
+            operation_context.principal_id != principal_id
+            or operation_context.organization_id != organization_id
+            or operation_context.authorization_context.authorized_workspaces.user_id != principal_id
+            or operation_context.authorization_context.authorized_workspaces.organization_id
+            != organization_id
+        ):
+            raise InvalidAssistantRoutingOperationContextError(
+                "Routing operation context does not match the current request identities."
+            )
+
+    @staticmethod
+    def _trusted_request_identity(request: Any) -> tuple[int, int]:
+        """Return persisted request identities required for internal context reuse.
+
+        Args:
+            request: Current request carrying trusted user and Organization objects.
+
+        Returns:
+            Persisted principal and Organization identifiers.
+
+        Raises:
+            InvalidAssistantRoutingOperationContextError: If either trusted identity is absent
+                or no longer authenticated and active.
+        """
+        user = getattr(request, "user", None)
+        organization = getattr(request, "organization", None)
+        principal_id = getattr(user, "pk", None)
+        organization_id = getattr(organization, "pk", None)
+        if (
+            not getattr(user, "is_authenticated", False)
+            or not getattr(user, "is_active", False)
+            or not isinstance(principal_id, int)
+            or isinstance(principal_id, bool)
+            or organization is None
+            or not getattr(organization, "is_active", False)
+            or not isinstance(organization_id, int)
+            or isinstance(organization_id, bool)
+        ):
+            raise InvalidAssistantRoutingOperationContextError(
+                "Routing operation context requires active persisted request identities."
+            )
+        return principal_id, organization_id
+
+    def _resolve_authorized_context(
+        self,
+        *,
+        request: Any,
+        statement: str,
+        authorization_context: RegistryAuthorizationContext,
+        required_workspace_ids: frozenset[int] | None,
+        require_explicit_workspace_selection: bool,
+    ) -> AssistantNamespaceResolution:
+        """Resolve namespace state from a previously verified authorization context.
+
+        Args:
+            request: Authenticated request with a host-resolved Organization.
+            statement: Current user message, which may name an authorized Workspace.
+            authorization_context: Fresh or validated operation-local Registry authorization.
+            required_workspace_ids: Optional server-derived Workspace restriction.
+            require_explicit_workspace_selection: Ignore persisted and UI workspace hints.
+
+        Returns:
+            A selected, ambiguous, empty, or unavailable namespace result.
+        """
+        organization = getattr(request, "organization", None)
+        if organization is None:
+            self.clear_context(request)
+            return AssistantNamespaceResolution(status="unavailable", selection_changed=True)
         mappings = authorization_context.authorized_namespaces.mappings
         if not mappings:
             return self._clear_stale_namespace_context_and_return_no_namespace(request)

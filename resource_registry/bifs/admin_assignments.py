@@ -70,7 +70,7 @@ def _project_rejections(
     expansion: Mapping[int, list[int]], rejected: Sequence[CatalogRow], *, removing: bool
 ) -> list[CatalogRow]:
     by_id = {row["builtin_function"]: row for row in rejected}
-    projected = []
+    projected: list[CatalogRow] = []
     for requested, operation_ids in expansion.items():
         failures = [by_id[identifier] for identifier in operation_ids if identifier in by_id]
         if not operation_ids:

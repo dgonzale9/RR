@@ -7,14 +7,18 @@ from typing import ClassVar
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
-from django.db import models
+from django.db import models, transaction
 from django.db.models import Q
 from django.db.models.base import ModelBase
+from django.utils import timezone
+from django.utils.functional import Promise
 
 from resource_registry.exceptions import (
     RegistryNamespaceDeletionNotAllowedError,
     RegistryNamespaceImmutableFieldError,
 )
+from resource_registry.management_domain.errors import DatasetManagementError
+from resource_registry.management_domain.source_writes import require_source_write
 from resource_registry.utils.json_checksum import calculate_transformation_specification_checksum
 
 
@@ -371,6 +375,10 @@ class RegistryNamespace(models.Model):
     _persisted_organization_id: int | None = None
 
     class Meta:
+        permissions = (
+            ("create_datasets", "Can create datasets in this namespace"),
+            ("synchronize_dataset_sources", "Can synchronize external dataset sources"),
+        )
         constraints: ClassVar[list[models.BaseConstraint]] = [
             models.CheckConstraint(
                 condition=(
@@ -569,6 +577,9 @@ class StagedResourceIntake(models.Model):
     verified_checksum = models.CharField(max_length=128, blank=True, null=True)
     checksum_verification_status = models.CharField(max_length=16, default="NOT_PROVIDED")
     inspection_json = models.JSONField(default=dict, blank=True)
+    source_deleted_at = models.DateTimeField(null=True, blank=True, editable=False)
+    source_cleanup_started_at = models.DateTimeField(null=True, blank=True, editable=False)
+    source_last_used_at = models.DateTimeField(null=True, blank=True, editable=False)
     status = models.CharField(
         max_length=32,
         choices=StagedResourceIntakeStatus.choices,
@@ -672,7 +683,7 @@ class StagedResourcePublication(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     completed_at = models.DateTimeField(blank=True, null=True)
 
-    _persisted_destination: tuple[int, int, int, int | None, str] | None = None
+    _persisted_destination: tuple[uuid.UUID, uuid.UUID, int, int | None, str] | None = None
 
     class Meta:
         constraints: ClassVar[list[models.BaseConstraint]] = [
@@ -717,17 +728,28 @@ class StagedResourcePublication(models.Model):
         instance._persisted_destination = instance._destination_snapshot()
         return instance
 
-    def save(self, *args: object, **kwargs: object) -> None:
+    def save(
+        self,
+        force_insert: bool | tuple[ModelBase, ...] = False,
+        force_update: bool = False,
+        using: str | None = None,
+        update_fields: Iterable[str] | None = None,
+    ) -> None:
         """Persist linkage fields while rejecting destination reassignment."""
         if (
             self._persisted_destination is not None
             and self._persisted_destination != self._destination_snapshot()
         ):
             raise ValidationError("Staged resource publication destination is immutable.")
-        super().save(*args, **kwargs)
+        super().save(
+            force_insert=force_insert,
+            force_update=force_update,
+            using=using,
+            update_fields=update_fields,
+        )
         self._persisted_destination = self._destination_snapshot()
 
-    def _destination_snapshot(self) -> tuple[int, int, int, int | None, str]:
+    def _destination_snapshot(self) -> tuple[uuid.UUID, uuid.UUID, int, int | None, str]:
         return (
             self.intake_id,
             self.registry_namespace_id,
@@ -809,20 +831,6 @@ class RegistrationSubmission(models.Model):
         LargeFileUploadSession,
         on_delete=models.PROTECT,
         related_name="registration_submission",
-    )
-    replacement_dataset = models.ForeignKey(
-        "Dataset",
-        on_delete=models.PROTECT,
-        related_name="replacement_submissions",
-        null=True,
-        blank=True,
-    )
-    replacement_workbook_group = models.ForeignKey(
-        "WorkbookIngestionGroup",
-        on_delete=models.PROTECT,
-        related_name="replacement_submissions",
-        null=True,
-        blank=True,
     )
     organization = models.ForeignKey(
         "organization.Organization",
@@ -947,7 +955,17 @@ class WorkbookIngestionGroup(models.Model):
 
 
 class Dataset(models.Model):
+    """Store stable dataset identity and its explicitly selected published version."""
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    external_source = models.ForeignKey(
+        "DatasetExternalSource",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="datasets",
+        editable=False,
+    )
     tenant_id = models.UUIDField(db_index=True)
     organization = models.ForeignKey(
         "organization.Organization",
@@ -996,6 +1014,81 @@ class Dataset(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     archived_at = models.DateTimeField(blank=True, null=True)
+    purge_started_at = models.DateTimeField(blank=True, null=True, editable=False)
+    purged_at = models.DateTimeField(blank=True, null=True, editable=False)
+    current_version = models.ForeignKey(
+        "DatasetVersion",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="current_for_datasets",
+        editable=False,
+    )
+    responsible_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="datasets_responsible",
+    )
+    revision = models.PositiveBigIntegerField(default=0, editable=False)
+    archive_reason = models.CharField(max_length=32, blank=True, default="", editable=False)
+    workbook = models.ForeignKey(
+        "DatasetWorkbook",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="datasets",
+        editable=False,
+    )
+    workbook_sheet = models.CharField(max_length=255, blank=True, default="", editable=False)
+
+    def save(
+        self,
+        force_insert: bool | tuple[ModelBase, ...] = False,
+        force_update: bool = False,
+        using: str | None = None,
+        update_fields: Iterable[str] | None = None,
+    ) -> None:
+        """Persist dataset state without letting stale writers remove a deletion tombstone.
+
+        Args:
+            force_insert: Force insertion when requested by Django.
+            force_update: Force an update when requested by Django.
+            using: Database alias.
+            update_fields: Optional field names to persist.
+
+        Raises:
+            ValidationError: If a stale writer would reactivate deleted content.
+        """
+        with transaction.atomic(using=using):
+            stored = (
+                type(self).objects.select_for_update().filter(pk=self.pk).first()
+                if not self._state.adding
+                else None
+            )
+            if (
+                stored is not None
+                and stored.purge_started_at is not None
+                and (
+                    self.purge_started_at != stored.purge_started_at
+                    or self.status != "ARCHIVED"
+                    or self.archived_at is None
+                    or self.current_version_id != stored.current_version_id
+                )
+            ):
+                raise ValidationError("Deleted dataset state cannot be restored by a stale writer.")
+            if stored is not None and stored.external_source_id:
+                if self.external_source_id != stored.external_source_id:
+                    raise ValidationError("An external source association is immutable.")
+                if self.current_version_id != stored.current_version_id:
+                    require_source_write(stored.external_source_id)
+            super().save(
+                force_insert=force_insert,
+                force_update=force_update,
+                using=using,
+                update_fields=update_fields,
+            )
 
     class Meta:
         indexes: ClassVar[list[models.Index]] = [
@@ -1010,6 +1103,11 @@ class Dataset(models.Model):
             models.UniqueConstraint(
                 fields=["tenant_id", "slug"],
                 name="dataset_tenant_slug_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=["workbook", "workbook_sheet"],
+                name="dataset_workbook_sheet_unique",
+                deferrable=models.Deferrable.DEFERRED,
             ),
             models.CheckConstraint(
                 condition=Q(
@@ -1034,7 +1132,72 @@ class Dataset(models.Model):
         return f"{self.name} ({self.tenant_id})"
 
 
-class DatasetVersion(models.Model):
+class DatasetContentModel(models.Model):
+    """Serialize content writes against a dataset's irreversible deletion boundary."""
+
+    class Meta:
+        abstract = True
+
+    def save(
+        self,
+        force_insert: bool | tuple[ModelBase, ...] = False,
+        force_update: bool = False,
+        using: str | None = None,
+        update_fields: Iterable[str] | None = None,
+    ) -> None:
+        """Lock the owning dataset and reject writes after cleanup has started.
+
+        Args:
+            force_insert: Force an insert if requested by Django.
+            force_update: Force an update if requested by Django.
+            using: Database alias.
+            update_fields: Optional fields to persist.
+
+        Raises:
+            DatasetManagementError: If the owner is being deleted.
+        """
+        dataset_id = getattr(self, "dataset_id", None)
+        version_ids = [
+            getattr(self, field, None)
+            for field in (
+                "dataset_version_id",
+                "upstream_dataset_version_id",
+                "downstream_dataset_version_id",
+            )
+        ]
+        dataset_ids = (
+            [dataset_id]
+            if dataset_id
+            else list(
+                DatasetVersion.objects.filter(
+                    pk__in=[value for value in version_ids if value]
+                ).values_list("dataset_id", flat=True)
+            )
+        )
+        with transaction.atomic(using=using):
+            owners = list(
+                Dataset.objects.select_for_update().filter(pk__in=dataset_ids).order_by("pk")
+            )
+            owner = owners[0] if owners else None
+            if any(dataset.purge_started_at is not None for dataset in owners):
+                raise DatasetManagementError(
+                    "dataset_purging", "Dataset data is being deleted.", 410
+                )
+            super().save(
+                force_insert=force_insert,
+                force_update=force_update,
+                using=using,
+                update_fields=update_fields,
+            )
+            if owner is not None:
+                from resource_registry.cleanup.inventory import (  # noqa: PLC0415
+                    register_saved_content,
+                )
+
+                register_saved_content(self, owner)
+
+
+class DatasetVersion(DatasetContentModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     dataset = models.ForeignKey(Dataset, on_delete=models.CASCADE, related_name="versions")
     version_number = models.PositiveIntegerField()
@@ -1060,14 +1223,42 @@ class DatasetVersion(models.Model):
                 fields=["dataset", "version_number"],
                 name="dataset_version_number_uniq",
             ),
+            models.UniqueConstraint(
+                fields=["dataset", "content_hash"],
+                name="dataset_version_hash_uniq",
+            ),
         ]
 
-    def save(self, *args, **kwargs):
+    def save(
+        self,
+        force_insert: bool | tuple[ModelBase, ...] = False,
+        force_update: bool = False,
+        using: str | None = None,
+        update_fields: Iterable[str] | None = None,
+    ) -> None:
+        """Persist an unfinished DatasetVersion while protecting ready versions.
+
+        Args:
+            force_insert: Whether to force an insert operation.
+            force_update: Whether to force an update operation.
+            using: Optional database alias.
+            update_fields: Optional persisted field names.
+
+        Raises:
+            ValidationError: If a ready DatasetVersion would be modified.
+        """
         if not self._state.adding and self.pk:
             existing = DatasetVersion.objects.get(pk=self.pk)
             if existing.status == DatasetVersionStatus.READY:
                 raise ValidationError("DatasetVersion is immutable once status is READY.")
-        return super().save(*args, **kwargs)
+        if self._state.adding:
+            require_source_write(self.dataset.external_source_id)
+        super().save(
+            force_insert=force_insert,
+            force_update=force_update,
+            using=using,
+            update_fields=update_fields,
+        )
 
 
 class TransformationDefinition(models.Model):
@@ -1179,7 +1370,7 @@ class TransformationDefinitionVersion(models.Model):
         self.specification_checksum = self.calculate_specification_checksum()
 
 
-class DatasetArtifact(models.Model):
+class DatasetArtifact(DatasetContentModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     dataset_version = models.ForeignKey(
         DatasetVersion,
@@ -1235,7 +1426,7 @@ class DatasetArtifact(models.Model):
         ]
 
 
-class DatasetSchema(models.Model):
+class DatasetSchema(DatasetContentModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     dataset_version = models.ForeignKey(
         DatasetVersion,
@@ -1262,7 +1453,7 @@ class DatasetSchema(models.Model):
         ]
 
 
-class DatasetProfile(models.Model):
+class DatasetProfile(DatasetContentModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     dataset_version = models.ForeignKey(
         DatasetVersion,
@@ -1355,7 +1546,7 @@ class EventPublication(models.Model):
         ]
 
 
-class DatasetLineage(models.Model):
+class DatasetLineage(DatasetContentModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     downstream_dataset_version = models.ForeignKey(
         DatasetVersion,
@@ -1502,7 +1693,7 @@ class DatasetPolicyAssignment(models.Model):
         ]
 
 
-class ExternalDatasetJob(models.Model):
+class ExternalDatasetJob(DatasetContentModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     dataset = models.ForeignKey(Dataset, on_delete=models.CASCADE, related_name="external_jobs")
     job_type = models.CharField(max_length=20, choices=ExternalDatasetJobType.choices)
@@ -1544,7 +1735,7 @@ class ExternalDatasetJob(models.Model):
         ]
 
 
-class DatasetQueryRun(models.Model):
+class DatasetQueryRun(DatasetContentModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     tenant_id = models.UUIDField(db_index=True)
     dataset = models.ForeignKey(Dataset, on_delete=models.CASCADE, related_name="query_runs")
@@ -1585,7 +1776,7 @@ class DatasetQueryRun(models.Model):
         ]
 
 
-class DatasetQueryJob(models.Model):
+class DatasetQueryJob(DatasetContentModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     tenant_id = models.UUIDField(db_index=True)
     dataset = models.ForeignKey(Dataset, on_delete=models.CASCADE, related_name="query_jobs")
@@ -1648,7 +1839,7 @@ class DatasetQueryJob(models.Model):
         ]
 
 
-class DatasetIntelligenceJob(models.Model):
+class DatasetIntelligenceJob(DatasetContentModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     tenant_id = models.UUIDField(db_index=True)
     operation = models.CharField(
@@ -1793,7 +1984,7 @@ class WorkbookIngestionJob(models.Model):
         ]
 
 
-class DatasetAnalysisArtifact(models.Model):
+class DatasetAnalysisArtifact(DatasetContentModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     tenant_id = models.UUIDField(db_index=True)
     dataset = models.ForeignKey(
@@ -1837,7 +2028,7 @@ class DatasetAnalysisArtifact(models.Model):
         ]
 
 
-class DatasetChartArtifact(models.Model):
+class DatasetChartArtifact(DatasetContentModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     tenant_id = models.UUIDField(db_index=True)
     dataset = models.ForeignKey(
@@ -1880,7 +2071,7 @@ class DatasetChartArtifact(models.Model):
         ]
 
 
-class DatasetExportPlan(models.Model):
+class DatasetExportPlan(DatasetContentModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     tenant_id = models.UUIDField(db_index=True)
     dataset = models.ForeignKey(
@@ -1922,7 +2113,7 @@ class DatasetExportPlan(models.Model):
         ]
 
 
-class DatasetGeneratedArtifact(models.Model):
+class DatasetGeneratedArtifact(DatasetContentModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     tenant_id = models.UUIDField(db_index=True)
     dataset = models.ForeignKey(
@@ -2072,7 +2263,7 @@ class TransformationRun(models.Model):
     execution_ms = models.PositiveBigIntegerField(blank=True, null=True)
 
     class Meta:
-        permissions: ClassVar[list[tuple[str, str]]] = [
+        permissions: ClassVar[list[tuple[str, str | Promise]]] = [  # type: ignore[assignment]  # django-stubs exposes a private lazy-string subtype.
             ("execute_transformation", "Can execute a transformation"),
             ("cancel_transformationrun", "Can cancel a transformation run"),
             ("use_transformation_provider", "Can use transformation providers"),
@@ -2883,4 +3074,414 @@ class MetadataSchemaActiveSelectionRecord(models.Model):
         ]
         indexes: ClassVar[list[models.Index]] = [
             models.Index(fields=["schema_namespace", "schema_name"], name="msas_schema_idx"),
+        ]
+
+
+class DatasetManagementConfiguration(models.Model):
+    """Enable scoped dataset maintenance after compatible workers are deployed."""
+
+    organization = models.OneToOneField("organization.Organization", on_delete=models.PROTECT)
+    enabled = models.BooleanField(default=False)
+    legacy_updates_blocked = models.BooleanField(default=False, editable=False)
+    cleanup_mode = models.CharField(
+        max_length=12,
+        default="SIMULATE",
+        choices=[("DISABLED", "Disabled"), ("SIMULATE", "Simulation"), ("EXECUTE", "Execute")],
+    )
+    dataset_recovery_days = models.PositiveIntegerField(default=30)
+    intake_source_retention_days = models.PositiveIntegerField(default=30)
+    discarded_candidate_retention_days = models.PositiveIntegerField(default=7)
+
+
+class DatasetWorkbook(models.Model):
+    """Keep workbook identity stable across files, names, and ingestion attempts."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    namespace = models.ForeignKey(RegistryNamespace, on_delete=models.PROTECT)
+    name = models.CharField(max_length=255)
+    revision = models.PositiveBigIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class DatasetChangeStatus(models.TextChoices):
+    """Describe durable preparation and publication states."""
+
+    QUEUED = "QUEUED", "Queued"
+    PROCESSING = "PROCESSING", "Processing"
+    READY = "READY", "Ready to publish"
+    NEEDS_MANAGER = "NEEDS_MANAGER", "Manager publication required"
+    PUBLISHED = "PUBLISHED", "Published"
+    NO_CHANGES = "NO_CHANGES", "No changes"
+    FAILED = "FAILED", "Failed"
+    CANCELLED = "CANCELLED", "Cancelled"
+
+
+class DatasetChange(models.Model):
+    """Persist a private, revision-checked proposal without publishing candidate versions."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    external_source = models.ForeignKey(
+        "DatasetExternalSource",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="changes",
+        editable=False,
+    )
+    source_reference = models.JSONField(default=dict, blank=True, editable=False)
+    expected_source_revision = models.PositiveBigIntegerField(null=True, editable=False)
+    namespace = models.ForeignKey(RegistryNamespace, on_delete=models.PROTECT)
+    submitted_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    upload = models.ForeignKey(
+        LargeFileUploadSession, on_delete=models.PROTECT, null=True, blank=True
+    )
+    intake = models.ForeignKey(
+        StagedResourceIntake, on_delete=models.PROTECT, null=True, blank=True
+    )
+    publication = models.ForeignKey(
+        StagedResourcePublication,
+        on_delete=models.PROTECT,
+        related_name="dataset_changes",
+        null=True,
+        blank=True,
+        editable=False,
+    )
+    workbook = models.ForeignKey(DatasetWorkbook, on_delete=models.PROTECT, null=True, blank=True)
+    status = models.CharField(
+        max_length=24, choices=DatasetChangeStatus.choices, default=DatasetChangeStatus.QUEUED
+    )
+    revision = models.PositiveBigIntegerField(default=0)
+    idempotency_key = models.CharField(max_length=128)
+    request_fingerprint = models.CharField(max_length=64)
+    specification = models.JSONField(default=dict)
+    prepared = models.JSONField(default=dict)
+    result = models.JSONField(default=dict)
+    error_code = models.CharField(max_length=100, blank=True)
+    error_message = models.CharField(max_length=255, blank=True)
+    started_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(
+        self,
+        force_insert: bool | tuple[ModelBase, ...] = False,
+        force_update: bool = False,
+        using: str | None = None,
+        update_fields: Iterable[str] | None = None,
+    ) -> None:
+        """Preserve external proposal identity and verified file selection on updates.
+
+        Args:
+            force_insert: Whether to force insertion.
+            force_update: Whether to force an update.
+            using: Optional database alias.
+            update_fields: Optional persisted field names.
+
+        Raises:
+            ValidationError: If an existing proposal changes source or verified file identity.
+        """
+        if not self._state.adding:
+            stored = type(self).objects.get(pk=self.pk)
+            if stored.external_source_id != self.external_source_id or (
+                stored.external_source_id
+                and any(
+                    getattr(stored, field) != getattr(self, field)
+                    for field in ("source_reference", "intake_id", "upload_id")
+                )
+            ):
+                raise ValidationError("External proposal provenance is immutable.")
+        super().save(
+            force_insert=force_insert,
+            force_update=force_update,
+            using=using,
+            update_fields=update_fields,
+        )
+
+    class Meta:
+        constraints: ClassVar[list[models.BaseConstraint]] = [
+            models.UniqueConstraint(
+                fields=["external_source"],
+                condition=Q(status__in=["QUEUED", "PROCESSING", "READY", "NEEDS_MANAGER"]),
+                name="dataset_source_one_pending_change",
+            ),
+            models.UniqueConstraint(
+                fields=["namespace", "submitted_by", "idempotency_key"],
+                name="dataset_change_idempotency",
+            ),
+            models.CheckConstraint(
+                condition=Q(upload__isnull=False, intake__isnull=True)
+                | Q(upload__isnull=True, intake__isnull=False),
+                name="dataset_change_one_source",
+            ),
+        ]
+        indexes: ClassVar[list[models.Index]] = [
+            models.Index(fields=["status", "created_at"], name="dataset_change_queue_idx")
+        ]
+
+
+class DatasetActivity(models.Model):
+    """Record durable actor and revision evidence for dataset maintenance."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    dataset = models.ForeignKey(
+        Dataset, on_delete=models.PROTECT, related_name="management_activity"
+    )
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+    action = models.CharField(max_length=40)
+    reason = models.CharField(max_length=500, blank=True)
+    version = models.ForeignKey(DatasetVersion, on_delete=models.PROTECT, null=True, blank=True)
+    dataset_revision = models.PositiveBigIntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class DatasetExternalSource(models.Model):
+    """Reserve one opaque external file identity inside an authorized destination."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    namespace = models.ForeignKey(RegistryNamespace, on_delete=models.PROTECT)
+    provider = models.CharField(max_length=64)
+    external_id = models.CharField(max_length=512)
+    revision = models.PositiveBigIntegerField(default=0)
+    status = models.CharField(max_length=16, default="RESERVED")
+    last_applied_version = models.CharField(max_length=512, blank=True, default="")
+    workbook = models.OneToOneField(
+        DatasetWorkbook,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="external_source",
+    )
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(
+        self,
+        force_insert: bool | tuple[ModelBase, ...] = False,
+        force_update: bool = False,
+        using: str | None = None,
+        update_fields: Iterable[str] | None = None,
+    ) -> None:
+        """Keep the reserved destination/provider/file identity immutable.
+
+        Args:
+            force_insert: Whether to force insertion.
+            force_update: Whether to force an update.
+            using: Optional database alias.
+            update_fields: Optional persisted field names.
+
+        Raises:
+            ValidationError: If an existing source changes its identity.
+        """
+        if not self._state.adding:
+            stored = type(self).objects.get(pk=self.pk)
+            if any(
+                getattr(stored, field) != getattr(self, field)
+                for field in ("namespace_id", "provider", "external_id")
+            ):
+                raise ValidationError("External source identity is immutable.")
+        super().save(
+            force_insert=force_insert,
+            force_update=force_update,
+            using=using,
+            update_fields=update_fields,
+        )
+
+    class Meta:
+        constraints: ClassVar[list[models.BaseConstraint]] = [
+            models.UniqueConstraint(
+                fields=["namespace", "provider", "external_id"],
+                name="dataset_external_source_identity",
+            ),
+        ]
+
+
+class DatasetSourceOperation(models.Model):
+    """Retain immutable responses for idempotent source lifecycle operations."""
+
+    source = models.ForeignKey(
+        DatasetExternalSource, on_delete=models.PROTECT, related_name="operations"
+    )
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    idempotency_key = models.CharField(max_length=128)
+    request_fingerprint = models.CharField(max_length=64)
+    result = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints: ClassVar[list[models.BaseConstraint]] = [
+            models.UniqueConstraint(
+                fields=["source", "actor", "idempotency_key"], name="dataset_source_operation_key"
+            ),
+        ]
+
+
+class ResourceStorageObject(models.Model):
+    """Track exact managed object generations independently from audit references."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    identity = models.CharField(max_length=64, unique=True)
+    provider = models.CharField(max_length=64)
+    uri = models.CharField(max_length=2048)
+    generation = models.UUIDField(default=uuid.uuid4, editable=False)
+    location_fingerprint = models.CharField(max_length=64, blank=True)
+    deletion_token = models.UUIDField(null=True, blank=True, editable=False)
+    deletion_lease_expires_at = models.DateTimeField(null=True, blank=True, editable=False)
+    state = models.CharField(max_length=24, default="AVAILABLE")
+    ownership_verified = models.BooleanField(default=False)
+    size_bytes = models.PositiveBigIntegerField(default=0)
+    checksum = models.CharField(max_length=128, blank=True)
+    etag = models.CharField(max_length=255, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+
+
+class ResourceInventoryCursor(models.Model):
+    """Resume bounded read-only discovery of historical managed storage locations."""
+
+    identity = models.CharField(max_length=64, primary_key=True)
+    continuation = models.TextField(blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+class ResourceStorageReference(models.Model):
+    """Record content ownership; released references remain as provenance."""
+
+    storage_object = models.ForeignKey(
+        ResourceStorageObject, on_delete=models.PROTECT, related_name="references"
+    )
+    owner_kind = models.CharField(max_length=32)
+    owner_id = models.UUIDField()
+    owner_revision = models.PositiveBigIntegerField(default=0)
+    dataset = models.ForeignKey(Dataset, null=True, blank=True, on_delete=models.PROTECT)
+    namespace = models.ForeignKey(
+        RegistryNamespace, null=True, blank=True, on_delete=models.PROTECT
+    )
+    released_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["storage_object", "owner_kind", "owner_id", "owner_revision"],
+                name="rr_storage_reference_unique",
+            )
+        ]
+        indexes = [models.Index(fields=["owner_kind", "owner_id"], name="rr_reference_owner_idx")]
+
+
+class ResourceStorageLease(models.Model):
+    """Fence in-flight readers and writers against irreversible object cleanup."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    storage_object = models.ForeignKey(
+        ResourceStorageObject,
+        on_delete=models.PROTECT,
+        related_name="leases",
+        null=True,
+        blank=True,
+    )
+    dataset = models.ForeignKey(
+        Dataset, on_delete=models.PROTECT, related_name="content_leases", null=True, blank=True
+    )
+    expires_at = models.DateTimeField()
+    purpose = models.CharField(max_length=24, default="TRANSFER")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class ResourceCleanupRequest(models.Model):
+    """Persist reviewed cleanup intent, deadlines and resumable execution."""
+
+    class Status(models.TextChoices):
+        SCHEDULED = "SCHEDULED", "Scheduled"
+        NEEDS_REVIEW = "NEEDS_REVIEW", "Needs review"
+        BLOCKED = "BLOCKED", "Blocked"
+        RUNNING = "RUNNING", "Running"
+        PARTIAL = "PARTIAL", "Partial cleanup"
+        FAILED = "FAILED", "Failed"
+        COMPLETED = "COMPLETED", "Completed"
+        CANCELLED = "CANCELLED", "Cancelled"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    kind = models.CharField(max_length=24, default="DATASET")
+    dataset = models.ForeignKey(
+        Dataset, null=True, blank=True, on_delete=models.PROTECT, related_name="cleanup_requests"
+    )
+    intake = models.ForeignKey(
+        StagedResourceIntake,
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="cleanup_requests",
+    )
+    namespace = models.ForeignKey(
+        RegistryNamespace, null=True, blank=True, on_delete=models.PROTECT
+    )
+    requested_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.PROTECT
+    )
+    idempotency_key = models.CharField(max_length=128, unique=True)
+    reason = models.CharField(max_length=500)
+    status = models.CharField(max_length=24, choices=Status.choices, default=Status.SCHEDULED)
+    expected_revision = models.PositiveBigIntegerField(default=0)
+    inventory_fingerprint = models.CharField(max_length=64)
+    execute_after = models.DateTimeField()
+    next_attempt_at = models.DateTimeField(default=timezone.now)
+    lease_token = models.UUIDField(null=True, blank=True)
+    lease_expires_at = models.DateTimeField(null=True, blank=True)
+    started_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    error_code = models.CharField(max_length=100, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    @property
+    def error_message(self) -> str:
+        """Describe a persistent cleanup error without exposing another destination."""
+        from resource_registry.cleanup.messages import (  # noqa: PLC0415
+            describe_cleanup_reason,
+        )
+
+        return describe_cleanup_reason(self.error_code)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["dataset"],
+                condition=~Q(status__in=["CANCELLED", "COMPLETED"]),
+                name="rr_dataset_active_cleanup",
+            )
+        ]
+        indexes = [models.Index(fields=["status", "next_attempt_at"], name="rr_cleanup_due_idx")]
+
+
+class ResourceCleanupItem(models.Model):
+    """Record independent deletion outcomes so retries never lose partial progress."""
+
+    request = models.ForeignKey(
+        ResourceCleanupRequest, on_delete=models.PROTECT, related_name="items"
+    )
+    storage_object = models.ForeignKey(
+        ResourceStorageObject, on_delete=models.PROTECT, related_name="cleanup_items"
+    )
+    status = models.CharField(max_length=24, default="PENDING")
+    attempts = models.PositiveIntegerField(default=0)
+    block_reason = models.CharField(max_length=100, blank=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+
+    @property
+    def block_reason_display(self) -> str:
+        """Describe why this exact stored object remains protected."""
+        from resource_registry.cleanup.messages import (  # noqa: PLC0415
+            describe_cleanup_reason,
+        )
+
+        return describe_cleanup_reason(self.block_reason)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["request", "storage_object"], name="rr_cleanup_item_unique"
+            )
         ]

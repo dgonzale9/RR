@@ -13,6 +13,11 @@ from typing import cast
 from jsonschema import Draft202012Validator  # type: ignore[import-untyped]
 
 from resource_registry.bifs.transformation.registration import TRANSFORMATION_BIF_REGISTRY
+from resource_registry.performance.instrumentation import (
+    RegistryPerformanceOutcome,
+    RegistryPerformanceStage,
+    instrument_registry_function,
+)
 
 GROUPED_REGISTRY_ACTIONS: Mapping[str, tuple[str, ...]] = MappingProxyType(
     {
@@ -68,13 +73,25 @@ _GROUP_DESCRIPTIONS = {
     "resource_registry_query": (
         "Plan and execute queries, inspect query jobs and create filtered datasets."
     ),
-    "resource_registry_manage_outputs": (
-        "Create charts and exports, retrieve artifacts and manage intelligence jobs."
-    ),
+    "resource_registry_manage_outputs": "Manage dataset outputs using the assigned actions.",
     "resource_registry_manage_transformations": (
         "Submit transformations and inspect their runs, steps, outputs and diagnostics."
     ),
 }
+
+_VERSION_SELECTION_GUIDANCE = (
+    "Dataset version selection: default to current_version_id or the READY version with "
+    "is_current=true, even when a higher version_number exists. READY means readable, not current. "
+    "Version history is newest-first; never select its first entry merely because it is newest. "
+    "Use a historical version only when the user explicitly requests it. "
+    "If the current version is unknown or absent from the page, inspect dataset metadata; "
+    "if no current_version_id is assigned, resolve the schema without version_id. "
+    "Pin the resolved version for the operation requested by the user. "
+    "Offer only actions exposed in the currently available tools; never promise unavailable "
+    "capabilities. For version-listing requests, report the versions and current selection "
+    "without promising unrequested future work. "
+    "When the user restores or changes the current version, refresh metadata before selecting it."
+)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -163,6 +180,7 @@ def _get_operation_schema(tool: FunctionToolDefinition) -> dict[str, object]:
     return schema
 
 
+@instrument_registry_function(RegistryPerformanceStage.GROUPED_SCHEMA_BUILD)
 def build_grouped_registry_tools(
     tools: Sequence[FunctionToolDefinition],
     *,
@@ -188,7 +206,10 @@ def build_grouped_registry_tools(
         if not available:
             continue
         properties: dict[str, dict[str, object]] = {}
-        descriptions = [_GROUP_DESCRIPTIONS[group], "Choose exactly one action. Action arguments:"]
+        descriptions = [_GROUP_DESCRIPTIONS[group]]
+        if group != "resource_registry_manage_transformations":
+            descriptions.append(_VERSION_SELECTION_GUIDANCE)
+        descriptions.append("Choose exactly one action. Action arguments:")
         for action in available:
             tool = assigned[f"resource_registry_{action}"]
             schema = _get_operation_schema(tool)
@@ -227,6 +248,15 @@ def build_grouped_registry_tools(
     return result
 
 
+@instrument_registry_function(
+    RegistryPerformanceStage.GROUPED_SCHEMA_VALIDATION,
+    operation_parameter="definition",
+    outcome_classifier=lambda result: (
+        RegistryPerformanceOutcome.SUCCESS
+        if result is True
+        else RegistryPerformanceOutcome.REJECTED
+    ),
+)
 def is_valid_grouped_registry_arguments(
     definition: FunctionToolDefinition, arguments: Mapping[str, object]
 ) -> bool:
@@ -249,6 +279,7 @@ def is_valid_grouped_registry_arguments(
     return bool(Draft202012Validator(schema).is_valid(payload))
 
 
+@instrument_registry_function(RegistryPerformanceStage.GROUPED_RESULT_PROJECTION)
 def project_registry_tool_result(result: str) -> str:
     """Translate operation hints for grouped callers without altering business data.
 

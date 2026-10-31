@@ -17,14 +17,11 @@ from django.utils import timezone
 from BotServer.builtin_functions import resource_registry_functions
 from BotServer.util.user_group_management import UserGroupManagement
 from Organization.models import Organization, OrganizationMembership, Workspace
-from resource_registry.bifs.read_only_namespace_admission import (
-    TENANT_SELECTION_CONFLICT_MESSAGE,
-    TENANT_SELECTION_REQUIRED_MESSAGE,
-    WORKSPACE_SELECTION_REQUIRED_MESSAGE,
-    ReadOnlyBifNamespaceAdmissionService,
-)
 from resource_registry.assistant.persona_workspace_scope import (
     PERSONA_WORKSPACE_SELECTION_SESSION_KEY,
+)
+from resource_registry.bifs.read_only_namespace_admission import (
+    ReadOnlyBifNamespaceAdmissionService,
 )
 from resource_registry.models import (
     Dataset,
@@ -42,12 +39,12 @@ from resource_registry.models import (
 )
 from resource_registry.read_auth.context import ReadAuthorizationContext
 from resource_registry.read_auth.exceptions import DataRegistryAuthorizationError
+from resource_registry.services.dataset_query_executor import _SafeSqlValidator
 from resource_registry.services.registry_namespace_provisioning_service import (
     RegistryNamespaceProvisioningService,
 )
-from resource_registry.services.dataset_query_executor import _SafeSqlValidator
-from resource_registry.tests.workspace_permission_helpers import add_workspace_user
 from resource_registry.tests.bif_contract_helpers import FakePersonaBifRelationshipManager
+from resource_registry.tests.workspace_permission_helpers import add_workspace_user
 
 pytestmark = pytest.mark.django_db(transaction=True)
 
@@ -127,7 +124,7 @@ def admission_environment() -> _AdmissionEnvironment:
     )
 
 
-def _create_workspace_namespace(  # noqa: PLR0913 -- Explicit authorization fixture builder.
+def _create_workspace_namespace(
     *,
     organization: Organization,
     user: User,
@@ -201,11 +198,11 @@ def test_authorized_bif_argument_builds_existing_read_authorization_context(
     assert context.metadata == {"requested_tenant_id": str(admission_environment.namespace_id)}
 
 
-def test_scoped_persona_direct_bif_requires_workspace_selection(
+def test_scoped_persona_direct_bif_uses_request_workspace_without_selection(
     admission_environment: _AdmissionEnvironment,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Return a selection error instead of misreporting an unselected Workspace as unauthorized."""
+    """List datasets in request scope without requiring conversation selection."""
     second_workspace = _create_workspace_namespace(
         organization=admission_environment.organization,
         user=admission_environment.user,
@@ -226,18 +223,17 @@ def test_scoped_persona_direct_bif_requires_workspace_selection(
         )
     )
 
-    assert payload == {
-        "success": False,
-        "status": _HTTP_BAD_REQUEST,
-        "code": "workspace_selection_required",
-        "error": WORKSPACE_SELECTION_REQUIRED_MESSAGE,
-    }
+    assert payload["success"] is True
+    assert payload["data"]["datasets"] == []
+    assert admission_environment.request.resource_registry_tenant_id == str(
+        admission_environment.namespace_id
+    )
 
 
-def test_scoped_persona_direct_bif_uses_explicit_workspace_selection(
+def test_scoped_persona_direct_bif_uses_request_over_session_workspace(
     admission_environment: _AdmissionEnvironment,
 ) -> None:
-    """Admit the session-selected Workspace even when legacy Persona metadata differs."""
+    """Admit request scope even when the conversation selects another authorized Workspace."""
     second_namespace_id = uuid.UUID(int=102)
     second_workspace = _create_workspace_namespace(
         organization=admission_environment.organization,
@@ -259,7 +255,7 @@ def test_scoped_persona_direct_bif_uses_explicit_workspace_selection(
         requested_namespace_id="",
     )
 
-    assert admitted == str(second_namespace_id)
+    assert admitted == str(admission_environment.namespace_id)
 
 
 def test_scoped_persona_lists_only_datasets_in_explicitly_selected_workspace(
@@ -414,7 +410,7 @@ def test_dataset_listing_bif_returns_organization_global_dataset_from_another_wo
 ) -> None:
     """Expose an admitted Organization-global Dataset through the assistant listing BIF."""
     second_namespace_id = uuid.UUID(int=102)
-    _create_workspace_namespace(
+    selected_workspace = _create_workspace_namespace(
         organization=admission_environment.organization,
         user=admission_environment.user,
         namespace_id=second_namespace_id,
@@ -431,6 +427,7 @@ def test_dataset_listing_bif_returns_organization_global_dataset_from_another_wo
     )
     monkeypatch.setattr(resource_registry_functions, "_assert_capability", lambda *_args: None)
 
+    admission_environment.request.workspace = selected_workspace
     payload = json.loads(
         resource_registry_functions.resource_registry_list_datasets(  # type: ignore[no-untyped-call]
             admission_environment.request,
@@ -468,6 +465,7 @@ def test_scoped_persona_can_read_organization_global_dataset_from_selected_works
         status=DatasetStatus.ACTIVE,
     )
     request = admission_environment.request
+    request.workspace = selected_workspace
     request.persona = _registry_persona_for_workspaces(selected_workspace.pk)
     request.resource_registry_tenant_id = str(selected_namespace_id)
     request.session[PERSONA_WORKSPACE_SELECTION_SESSION_KEY] = str(selected_namespace_id)
@@ -504,6 +502,7 @@ def test_normal_workspace_member_can_query_authorized_dataset_without_privileged
             slug="qa-global-query-workspace",
         )
         request = admission_environment.request
+        request.workspace = selected_workspace
         request.persona = _registry_persona_for_workspaces(selected_workspace.pk)
         request.resource_registry_tenant_id = str(selected_namespace_id)
         request.session[PERSONA_WORKSPACE_SELECTION_SESSION_KEY] = str(selected_namespace_id)
@@ -651,7 +650,7 @@ def test_normal_workspace_member_can_analyze_and_chart_authorized_dataset(
         "persona_metadata",
     ),
 )
-def test_legacy_selector_compatibility(
+def test_legacy_selectors_cannot_replace_missing_request_workspace(
     admission_environment: _AdmissionEnvironment,
     selector_source: str,
 ) -> None:
@@ -681,12 +680,14 @@ def test_legacy_selector_compatibility(
         request.workspace = None
         request.persona = SimpleNamespace(metadata={"resource_registry_tenant_id": namespace_text})
 
-    admitted = ReadOnlyBifNamespaceAdmissionService().admit_namespace(
-        request=request,
-        requested_namespace_id=None,
-    )
-
-    assert admitted == namespace_text
+    service = ReadOnlyBifNamespaceAdmissionService()
+    if selector_source == "workspace_trusted":
+        assert (
+            service.admit_namespace(request=request, requested_namespace_id=None) == namespace_text
+        )
+    else:
+        with pytest.raises(DataRegistryAuthorizationError, match="interface"):
+            service.admit_namespace(request=request, requested_namespace_id=None)
 
 
 def test_single_authorized_namespace_is_auto_selected(
@@ -714,7 +715,7 @@ def test_submission_admission_returns_canonical_workspace_provenance(
     assert admitted.actor_id == admission_environment.user.pk
 
 
-def test_model_argument_overrides_trusted_workspace_selector_when_authorized(
+def test_model_argument_cannot_override_request_workspace(
     admission_environment: _AdmissionEnvironment,
 ) -> None:
     alternate_namespace_id = uuid.UUID(int=102)
@@ -725,22 +726,22 @@ def test_model_argument_overrides_trusted_workspace_selector_when_authorized(
         slug="requested-namespace-priority-workspace",
     )
 
-    admitted = ReadOnlyBifNamespaceAdmissionService().admit_namespace(
-        request=admission_environment.request,
-        requested_namespace_id=str(alternate_namespace_id),
-    )
+    with pytest.raises(DataRegistryAuthorizationError, match="interface"):
+        ReadOnlyBifNamespaceAdmissionService().admit_namespace(
+            request=admission_environment.request,
+            requested_namespace_id=str(alternate_namespace_id),
+        )
 
-    assert admitted == str(alternate_namespace_id)
 
-
-def test_malformed_model_argument_is_ignored_when_workspace_is_trusted(
+def test_malformed_model_argument_is_rejected_without_changing_workspace(
     admission_environment: _AdmissionEnvironment,
 ) -> None:
-    admitted = ReadOnlyBifNamespaceAdmissionService().admit_namespace(
-        request=admission_environment.request,
-        requested_namespace_id="not-a-uuid",
-    )
-    assert admitted == str(admission_environment.namespace_id)
+    with pytest.raises(DataRegistryAuthorizationError, match="interface"):
+        ReadOnlyBifNamespaceAdmissionService().admit_namespace(
+            request=admission_environment.request,
+            requested_namespace_id="not-a-uuid",
+        )
+    assert admission_environment.request.workspace == admission_environment.workspace
 
 
 def test_authenticated_user_with_zero_authorized_namespaces_fails_closed(
@@ -753,7 +754,7 @@ def test_authenticated_user_with_zero_authorized_namespaces_fails_closed(
         session={},
     )
 
-    with pytest.raises(DataRegistryAuthorizationError, match="not authorized"):
+    with pytest.raises(DataRegistryAuthorizationError, match="interface"):
         ReadOnlyBifNamespaceAdmissionService().admit_namespace(
             request=request,
             requested_namespace_id=None,
@@ -766,7 +767,7 @@ def test_unauthorized_and_unmapped_namespaces_fail_closed(
     admission_environment.request.workspace = None
     admission_environment.request.resource_registry_tenant_id = str(uuid.UUID(int=999))
 
-    with pytest.raises(DataRegistryAuthorizationError, match="not authorized"):
+    with pytest.raises(DataRegistryAuthorizationError, match="interface"):
         ReadOnlyBifNamespaceAdmissionService().admit_namespace(
             request=admission_environment.request,
             requested_namespace_id=None,
@@ -779,7 +780,7 @@ def test_malformed_namespace_fails_validation(
     admission_environment.request.workspace = None
     admission_environment.request.resource_registry_tenant_id = "not-a-uuid"
 
-    with pytest.raises(DataRegistryAuthorizationError, match="valid UUID"):
+    with pytest.raises(DataRegistryAuthorizationError, match="interface"):
         ReadOnlyBifNamespaceAdmissionService().admit_namespace(
             request=admission_environment.request,
             requested_namespace_id=None,
@@ -802,8 +803,8 @@ def test_malformed_bif_namespace_returns_existing_error_envelope(
     )
 
     assert payload["success"] is False
-    assert payload["status"] == _HTTP_BAD_REQUEST
-    assert payload["code"] == "invalid_tenant_id"
+    assert payload["status"] == 403
+    assert payload["code"] == "authorization_error"
 
 
 def test_multiple_authorized_namespaces_require_selection(
@@ -858,7 +859,7 @@ def test_conflicting_metadata_selectors_fail_deterministically(
 
     with pytest.raises(
         DataRegistryAuthorizationError,
-        match=TENANT_SELECTION_CONFLICT_MESSAGE,
+        match="interface",
     ):
         ReadOnlyBifNamespaceAdmissionService().admit_namespace(
             request=admission_environment.request,
@@ -874,8 +875,8 @@ def test_conflicting_metadata_selectors_fail_deterministically(
         )
     )
     assert payload["success"] is False
-    assert payload["status"] == _HTTP_BAD_REQUEST
-    assert payload["code"] == "tenant_selection_conflict"
+    assert payload["status"] == 403
+    assert payload["code"] == "authorization_error"
 
 
 @pytest.mark.parametrize(
@@ -927,10 +928,10 @@ def test_scoped_admin_resolves_workspace_namespace_from_trusted_context(
     assert admitted == str(admission_environment.namespace_id)
 
 
-def test_organization_member_admits_organization_namespace_without_workspace(
+def test_organization_member_cannot_bypass_missing_request_workspace(
     admission_environment: _AdmissionEnvironment,
 ) -> None:
-    """Allow an Organization member to list global datasets without Workspace membership."""
+    """Reject missing request scope even when the Organization namespace is authorized."""
     organization_member = User.objects.create_user(username="organization-global-reader")
     OrganizationMembership.objects.create(
         organization=admission_environment.organization,
@@ -946,12 +947,10 @@ def test_organization_member_admits_organization_namespace_without_workspace(
         session={},
     )
 
-    admitted = ReadOnlyBifNamespaceAdmissionService().admit_namespace(
-        request=request,
-        requested_namespace_id=None,
-    )
-
-    assert admitted == str(organization_namespace.id)
+    with pytest.raises(DataRegistryAuthorizationError, match="interface"):
+        ReadOnlyBifNamespaceAdmissionService().admit_namespace(
+            request=request, requested_namespace_id=None
+        )
 
 
 def test_anonymous_request_fails_closed(admission_environment: _AdmissionEnvironment) -> None:
@@ -995,7 +994,7 @@ def test_inactive_and_cross_organization_namespaces_fail_closed(
 
     inactive_workspace = Workspace.objects.get(slug="inactive-read-only-bif-workspace")
     admission_environment.request.workspace = inactive_workspace
-    with pytest.raises(DataRegistryAuthorizationError, match=TENANT_SELECTION_REQUIRED_MESSAGE):
+    with pytest.raises(DataRegistryAuthorizationError, match="interface"):
         service.admit_namespace(
             request=admission_environment.request,
             requested_namespace_id=None,
@@ -1003,14 +1002,14 @@ def test_inactive_and_cross_organization_namespaces_fail_closed(
 
     cross_workspace = Workspace.objects.get(slug="cross-organization-read-only-bif-workspace")
     admission_environment.request.workspace = cross_workspace
-    with pytest.raises(DataRegistryAuthorizationError, match=TENANT_SELECTION_REQUIRED_MESSAGE):
+    with pytest.raises(DataRegistryAuthorizationError, match="interface"):
         service.admit_namespace(
             request=admission_environment.request,
             requested_namespace_id=None,
         )
 
 
-def test_persona_metadata_fallback_selects_when_no_workspace_or_organization_namespace(
+def test_persona_metadata_cannot_replace_missing_request_workspace(
     admission_environment: _AdmissionEnvironment,
 ) -> None:
     admission_environment.request.workspace = None
@@ -1023,12 +1022,10 @@ def test_persona_metadata_fallback_selects_when_no_workspace_or_organization_nam
         }
     )
 
-    admitted = resource_registry_functions._resolve_read_only_tenant_id(
-        admission_environment.request,
-        context_manager,
-        None,
-    )
-    assert admitted == str(admission_environment.namespace_id)
+    with pytest.raises(DataRegistryAuthorizationError, match="interface"):
+        resource_registry_functions._resolve_read_only_tenant_id(
+            admission_environment.request, context_manager, None
+        )
 
 
 def test_only_approved_synchronous_bif_entry_points_use_namespace_admission() -> None:

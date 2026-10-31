@@ -19,6 +19,10 @@ from resource_registry.authorization.exceptions import (
     RegistryAuthorizationOrganizationDisabledError,
     RegistryAuthorizationOrganizationRequiredError,
 )
+from resource_registry.performance.instrumentation import (
+    RegistryPerformanceStage,
+    instrument_registry_function,
+)
 from resource_registry.services.registry_namespace_resolution_service import (
     RegistryNamespaceResolutionService,
 )
@@ -41,6 +45,7 @@ class RegistryAuthorizationContextService:
             namespace_resolution_service or RegistryNamespaceResolutionService()
         )
 
+    @instrument_registry_function(RegistryPerformanceStage.AUTHORIZATION_CONTEXT_BUILD)
     def build_context(
         self,
         *,
@@ -64,7 +69,11 @@ class RegistryAuthorizationContextService:
             RegistryAuthorizationOrganizationDisabledError: If Resource Registry access is disabled
                 for the Organization.
         """
-        user_id = getattr(user, "pk", None)
+        if not isinstance(user, User):
+            raise RegistryAuthorizationAuthenticationRequiredError(
+                "Registry authorization requires an authenticated persisted user.",
+            )
+        user_id = user.pk
         if (
             not getattr(user, "is_authenticated", False)
             or not getattr(user, "is_active", False)
@@ -73,7 +82,11 @@ class RegistryAuthorizationContextService:
             raise RegistryAuthorizationAuthenticationRequiredError(
                 "Registry authorization requires an authenticated persisted user.",
             )
-        if organization is None or not isinstance(organization.pk, int) or not organization.is_active:
+        if (
+            organization is None
+            or not isinstance(organization.pk, int)
+            or not organization.is_active
+        ):
             raise RegistryAuthorizationOrganizationRequiredError(
                 "Registry authorization requires a persisted Organization.",
             )
@@ -82,12 +95,13 @@ class RegistryAuthorizationContextService:
                 "Resource Registry access is disabled for the Organization.",
             )
 
-        authorized_workspaces = self._get_authorized_registry_workspaces(
+        authorized_workspace_queryset = self._get_authorized_registry_workspaces(
             user=user,
             organization=organization,
         )
         workspace_ids = frozenset(
-            int(workspace_id) for workspace_id in authorized_workspaces.values_list("pk", flat=True)
+            int(workspace_id)
+            for workspace_id in authorized_workspace_queryset.values_list("pk", flat=True)
         )
         authorized_workspaces = AuthorizedWorkspaceSet(
             organization_id=int(organization.pk),
@@ -129,9 +143,7 @@ class RegistryAuthorizationContextService:
         Organization access through memberships or Guardian admits OPEN Workspaces,
         matching the public Workspace ACL. Registry enablement remains mandatory.
         """
-        if user.is_superuser or UserGroupManagement.is_user_admin(
-            user
-        ):  # type: ignore[no-untyped-call]
+        if user.is_superuser or UserGroupManagement.is_user_admin(user):  # type: ignore[no-untyped-call]
             return Workspace.objects.filter(
                 organization=organization,
                 is_active=True,

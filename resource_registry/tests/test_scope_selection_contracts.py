@@ -25,6 +25,7 @@ from resource_registry.namespace_selection import (
     ScopeMode,
     select_registry_namespace,
 )
+from resource_registry.scope_adapters import get_request_scope_policy
 from resource_registry.scope_policy import RegistryScopePolicy, ScopePolicy
 
 
@@ -133,6 +134,33 @@ def test_rollout_selects_consistently_and_sanitizes_discrepancies(
     ]
     assert bool(events) == (mode == "observe" and not explicit_opt_in)
     assert all("sensitive-namespace" not in record.getMessage() for record in events)
+
+
+@pytest.mark.parametrize("mode", ("legacy", "observe", "strict"))
+@pytest.mark.parametrize("assistant", (False, True))
+def test_request_policy_enforces_assistant_scope_independently_of_rest_rollout(
+    mode: ScopePolicy,
+    assistant: bool,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Keep assistants on request scope while preserving the REST rollout.
+
+    Args:
+        mode: Configured REST rollout mode.
+        assistant: Whether the operation is an assistant or BIF invocation.
+        monkeypatch: Environment restoration fixture.
+    """
+    monkeypatch.setenv("RESOURCE_REGISTRY_SCOPE_POLICY", mode)
+    current = Mock(return_value="request-workspace")
+    legacy = Mock(return_value="conversation-workspace")
+
+    selected = get_request_scope_policy(
+        SimpleNamespace(headers={}), assistant=assistant
+    ).resolve_selection(select_current=current, select_legacy=legacy, surface="test")
+
+    enforced = assistant or mode == "strict"
+    assert selected == ("request-workspace" if enforced else "conversation-workspace")
+    assert legacy.call_count == (0 if enforced else 1)
 
 
 @pytest.mark.parametrize("mode", ("legacy", "observe", "strict"))

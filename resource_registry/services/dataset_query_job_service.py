@@ -18,6 +18,7 @@ from resource_registry.services.async_job_idempotency import (
     build_async_job_idempotency_key,
     build_async_job_request_fingerprint,
 )
+from resource_registry.services.dataset_version_pinning import pin_job_dataset_version
 from resource_registry.services.payload_sanitizer import sanitize_payload
 
 
@@ -44,7 +45,7 @@ class DatasetQueryJobService:
             0,
         )
 
-    def create_job(  # noqa: PLR0913
+    def create_job(
         self,
         *,
         tenant_id: str,
@@ -55,6 +56,12 @@ class DatasetQueryJobService:
         metadata: dict[str, Any] | None = None,
         submission_authority: SubmissionAuthorityEnvelope | None = None,
     ) -> DatasetQueryJob:
+        version_id, submission_authority = pin_job_dataset_version(
+            tenant_id=tenant_id,
+            dataset_id=dataset_id,
+            version_id=version_id,
+            submission_authority=submission_authority,
+        )
         normalized_sql = str(sql_text or "").strip()
         sanitized_metadata = self._sanitize_payload(metadata or {})
         sanitized_metadata.pop(SUBMISSION_AUTHORITY_METADATA_KEY, None)
@@ -233,8 +240,7 @@ class DatasetQueryJobService:
                 DatasetQueryJob.objects.filter(
                     id__in=candidate_ids,
                     status=DatasetQueryJobStatus.QUEUED,
-                )
-                .update(
+                ).update(
                     status=DatasetQueryJobStatus.RUNNING,
                     started_at=claimed_started_at,
                 )

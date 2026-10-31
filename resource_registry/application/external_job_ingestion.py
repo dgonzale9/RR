@@ -182,6 +182,10 @@ class ExternalJobResultIngestionFacade:
                 },
             )
 
+            if getattr(job.dataset, "archive_reason", "") != "MANUAL":
+                job.dataset.current_version = dataset_version
+                job.dataset.revision += 1
+                job.dataset.save(update_fields=["current_version", "revision"])
             job.output_dataset_version = dataset_version
             job.save(update_fields=["output_dataset_version", "updated_at"])
 

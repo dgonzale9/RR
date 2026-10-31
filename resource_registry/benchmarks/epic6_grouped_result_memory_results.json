@@ -1,0 +1,3656 @@
+{
+  "metadata": {
+    "artifact_set": "epic6_grouped_result_memory",
+    "concurrency_levels": [
+      1,
+      10,
+      25
+    ],
+    "cpu_architecture": "arm64",
+    "database_engine": "postgresql",
+    "dirty": true,
+    "django_version": "6.0.7",
+    "epic6_memory_canonical_attribution": "Traced current and peak values cover the complete guarded canonical dispatch boundary. They are not attributed to Registry projection or any individual request component.",
+    "epic6_memory_canonical_execution_status": "measured_guarded_isolated_postgresql",
+    "epic6_memory_canonical_limitation": "Canonical results remain placeholders until the guarded PostgreSQL benchmark test profiles the full inclusive dispatch boundary.",
+    "epic6_memory_canonical_trial_count": 3,
+    "epic6_memory_canonical_trial_method": "Three independent isolated PostgreSQL fixtures with 100 active visible datasets. Each dataset-list call is traced once per fixture with DEBUG=False, performance instrumentation disabled, and no SQL or latency capture. The boundary includes canonical dispatch, authorization, database access, and result projection.",
+    "epic6_memory_canonical_trials": [
+      {
+        "results": [
+          {
+            "name": "grouped_result.canonical.dataset_list.records_001",
+            "record_count": 1,
+            "trial": {
+              "canonical_dispatch_call_count": 1,
+              "output_included_during_measurement": true,
+              "output_parity": "exact",
+              "output_payload_bytes": 452,
+              "post_gc_current_bytes": 41285,
+              "post_gc_retained_delta_bytes": 41285,
+              "reason": null,
+              "stabilization_operation_count": 1,
+              "status": "measured",
+              "temporary_peak_amplification_bytes": 204876,
+              "traced_baseline_current_bytes": 0,
+              "traced_current_after_execution_bytes": 100565,
+              "traced_peak_bytes": 204876,
+              "trial": 1
+            }
+          },
+          {
+            "name": "grouped_result.canonical.dataset_list.records_050",
+            "record_count": 50,
+            "trial": {
+              "canonical_dispatch_call_count": 1,
+              "output_included_during_measurement": true,
+              "output_parity": "exact",
+              "output_payload_bytes": 16859,
+              "post_gc_current_bytes": 42220,
+              "post_gc_retained_delta_bytes": 42220,
+              "reason": null,
+              "stabilization_operation_count": 1,
+              "status": "measured",
+              "temporary_peak_amplification_bytes": 279759,
+              "traced_baseline_current_bytes": 0,
+              "traced_current_after_execution_bytes": 132485,
+              "traced_peak_bytes": 279759,
+              "trial": 1
+            }
+          },
+          {
+            "name": "grouped_result.canonical.dataset_list.records_100",
+            "record_count": 100,
+            "trial": {
+              "canonical_dispatch_call_count": 1,
+              "output_included_during_measurement": true,
+              "output_parity": "exact",
+              "output_payload_bytes": 33603,
+              "post_gc_current_bytes": 42744,
+              "post_gc_retained_delta_bytes": 42744,
+              "reason": null,
+              "stabilization_operation_count": 1,
+              "status": "measured",
+              "temporary_peak_amplification_bytes": 443171,
+              "traced_baseline_current_bytes": 0,
+              "traced_current_after_execution_bytes": 164553,
+              "traced_peak_bytes": 443171,
+              "trial": 1
+            }
+          }
+        ],
+        "trial": 1
+      },
+      {
+        "results": [
+          {
+            "name": "grouped_result.canonical.dataset_list.records_001",
+            "record_count": 1,
+            "trial": {
+              "canonical_dispatch_call_count": 1,
+              "output_included_during_measurement": true,
+              "output_parity": "exact",
+              "output_payload_bytes": 452,
+              "post_gc_current_bytes": 44129,
+              "post_gc_retained_delta_bytes": 44129,
+              "reason": null,
+              "stabilization_operation_count": 1,
+              "status": "measured",
+              "temporary_peak_amplification_bytes": 203791,
+              "traced_baseline_current_bytes": 0,
+              "traced_current_after_execution_bytes": 103301,
+              "traced_peak_bytes": 203791,
+              "trial": 2
+            }
+          },
+          {
+            "name": "grouped_result.canonical.dataset_list.records_050",
+            "record_count": 50,
+            "trial": {
+              "canonical_dispatch_call_count": 1,
+              "output_included_during_measurement": true,
+              "output_parity": "exact",
+              "output_payload_bytes": 16859,
+              "post_gc_current_bytes": 45189,
+              "post_gc_retained_delta_bytes": 45189,
+              "reason": null,
+              "stabilization_operation_count": 1,
+              "status": "measured",
+              "temporary_peak_amplification_bytes": 282418,
+              "traced_baseline_current_bytes": 0,
+              "traced_current_after_execution_bytes": 135400,
+              "traced_peak_bytes": 282418,
+              "trial": 2
+            }
+          },
+          {
+            "name": "grouped_result.canonical.dataset_list.records_100",
+            "record_count": 100,
+            "trial": {
+              "canonical_dispatch_call_count": 1,
+              "output_included_during_measurement": true,
+              "output_parity": "exact",
+              "output_payload_bytes": 33603,
+              "post_gc_current_bytes": 42005,
+              "post_gc_retained_delta_bytes": 42005,
+              "reason": null,
+              "stabilization_operation_count": 1,
+              "status": "measured",
+              "temporary_peak_amplification_bytes": 442322,
+              "traced_baseline_current_bytes": 0,
+              "traced_current_after_execution_bytes": 163814,
+              "traced_peak_bytes": 442322,
+              "trial": 2
+            }
+          }
+        ],
+        "trial": 2
+      },
+      {
+        "results": [
+          {
+            "name": "grouped_result.canonical.dataset_list.records_001",
+            "record_count": 1,
+            "trial": {
+              "canonical_dispatch_call_count": 1,
+              "output_included_during_measurement": true,
+              "output_parity": "exact",
+              "output_payload_bytes": 452,
+              "post_gc_current_bytes": 45578,
+              "post_gc_retained_delta_bytes": 45578,
+              "reason": null,
+              "stabilization_operation_count": 1,
+              "status": "measured",
+              "temporary_peak_amplification_bytes": 203458,
+              "traced_baseline_current_bytes": 0,
+              "traced_current_after_execution_bytes": 104804,
+              "traced_peak_bytes": 203458,
+              "trial": 3
+            }
+          },
+          {
+            "name": "grouped_result.canonical.dataset_list.records_050",
+            "record_count": 50,
+            "trial": {
+              "canonical_dispatch_call_count": 1,
+              "output_included_during_measurement": true,
+              "output_parity": "exact",
+              "output_payload_bytes": 16859,
+              "post_gc_current_bytes": 43824,
+              "post_gc_retained_delta_bytes": 43824,
+              "reason": null,
+              "stabilization_operation_count": 1,
+              "status": "measured",
+              "temporary_peak_amplification_bytes": 280933,
+              "traced_baseline_current_bytes": 0,
+              "traced_current_after_execution_bytes": 134035,
+              "traced_peak_bytes": 280933,
+              "trial": 3
+            }
+          },
+          {
+            "name": "grouped_result.canonical.dataset_list.records_100",
+            "record_count": 100,
+            "trial": {
+              "canonical_dispatch_call_count": 1,
+              "output_included_during_measurement": true,
+              "output_parity": "exact",
+              "output_payload_bytes": 33603,
+              "post_gc_current_bytes": 42884,
+              "post_gc_retained_delta_bytes": 42884,
+              "reason": null,
+              "stabilization_operation_count": 1,
+              "status": "measured",
+              "temporary_peak_amplification_bytes": 442987,
+              "traced_baseline_current_bytes": 0,
+              "traced_current_after_execution_bytes": 164639,
+              "traced_peak_bytes": 442987,
+              "trial": 3
+            }
+          }
+        ],
+        "trial": 3
+      }
+    ],
+    "epic6_memory_database_guard": {
+      "benchmark_opt_in": true,
+      "configured_database_host": "127.0.0.1",
+      "configured_database_name": "RegistryE14Isolated",
+      "django_database_alias": "default",
+      "read_database_host": "",
+      "validated": true
+    },
+    "epic6_memory_decision": {
+      "candidate_implementation_measured": false,
+      "classification": "A_NO_MEANINGFUL_REGISTRY_OWNED_MEMORY_PROBLEM",
+      "leak_claim": "not_made",
+      "optimization_savings_inferred": false,
+      "rationale": "The benchmark distinguishes temporary Python-traced allocations from signed post-GC retention deltas. Direct results are projection-only, while canonical results are inclusive dispatch measurements and are not attributed to projection.",
+      "rr_09_3": "BLOCKED_NO_MEASURED_CANDIDATE_IMPLEMENTATION"
+    },
+    "epic6_memory_trial_count": 3,
+    "epic6_memory_trial_method": "Three independent traced trials per single, repeated, and concurrent scenario. Inputs are prepared before each tracing boundary; returned output strings remain alive for current/peak readings and are released before GC.",
+    "git_revision": "eb5fc0315",
+    "iterations": 3,
+    "latency_measurements_included": false,
+    "main_instrumentation": {
+      "enabled": false,
+      "payload_enabled": false,
+      "reason": "RR-09.2 excludes Registry performance instrumentation.",
+      "sql_enabled": false
+    },
+    "methodology": "RR-09.2 profiles Python allocations with isolated tracemalloc boundaries. It is separate from RR-09.1 latency, SQL, and performance-event evidence.",
+    "operating_system": "Darwin",
+    "python_version": "3.12.8",
+    "sql_debug": false,
+    "tracing_configuration": {
+      "global_tracing_policy": "not_measured_when_already_active",
+      "input_fixture_prepared_before_tracing": true,
+      "library": "tracemalloc",
+      "output_string_included_in_current_and_peak": true,
+      "post_gc_delta_is_signed": true,
+      "traceback_frame_limit": 10,
+      "units": "bytes"
+    },
+    "warmups": 0
+  },
+  "results": [
+    {
+      "category": "direct_projection_memory",
+      "error_count": 0,
+      "execution_boundary": "synthetic_projection_only",
+      "input_payload_bytes": 127,
+      "kind": "tracemalloc_direct_production_function",
+      "name": "grouped_result.projection.unchanged.records_001",
+      "output_payload_bytes": 127,
+      "projection_changes_result": false,
+      "reason": null,
+      "record_count": 1,
+      "scenario_metadata": {
+        "fixture_kind": "unchanged_record_array",
+        "measurement_boundary": "direct_production_projection_function"
+      },
+      "status": "measured",
+      "tracing_configuration": {
+        "global_tracing_policy": "not_measured_when_already_active",
+        "input_fixture_prepared_before_tracing": true,
+        "library": "tracemalloc",
+        "output_string_included_in_current_and_peak": true,
+        "post_gc_delta_is_signed": true,
+        "traceback_frame_limit": 10,
+        "units": "bytes"
+      },
+      "trial_count": 3,
+      "trials": [
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 127,
+          "post_gc_current_bytes": 64,
+          "post_gc_retained_delta_bytes": 64,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 2777,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 1024,
+          "traced_peak_bytes": 2777,
+          "trial": 1
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 127,
+          "post_gc_current_bytes": 64,
+          "post_gc_retained_delta_bytes": 64,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 2777,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 1024,
+          "traced_peak_bytes": 2777,
+          "trial": 2
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 127,
+          "post_gc_current_bytes": 64,
+          "post_gc_retained_delta_bytes": 64,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 2777,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 1024,
+          "traced_peak_bytes": 2777,
+          "trial": 3
+        }
+      ]
+    },
+    {
+      "category": "direct_projection_memory",
+      "error_count": 0,
+      "execution_boundary": "synthetic_projection_only",
+      "input_payload_bytes": 267,
+      "kind": "tracemalloc_direct_production_function",
+      "name": "grouped_result.projection.rewritten.hint.records_001",
+      "output_payload_bytes": 289,
+      "projection_changes_result": true,
+      "reason": null,
+      "record_count": 1,
+      "scenario_metadata": {
+        "fixture_kind": "rewritten_hint",
+        "measurement_boundary": "direct_production_projection_function"
+      },
+      "status": "measured",
+      "tracing_configuration": {
+        "global_tracing_policy": "not_measured_when_already_active",
+        "input_fixture_prepared_before_tracing": true,
+        "library": "tracemalloc",
+        "output_string_included_in_current_and_peak": true,
+        "post_gc_delta_is_signed": true,
+        "traceback_frame_limit": 10,
+        "units": "bytes"
+      },
+      "trial_count": 3,
+      "trials": [
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 289,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 3693,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 1850,
+          "traced_peak_bytes": 3693,
+          "trial": 1
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 289,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 3693,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 1850,
+          "traced_peak_bytes": 3693,
+          "trial": 2
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 289,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 3693,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 1850,
+          "traced_peak_bytes": 3693,
+          "trial": 3
+        }
+      ]
+    },
+    {
+      "category": "direct_projection_memory",
+      "error_count": 0,
+      "execution_boundary": "synthetic_projection_only",
+      "input_payload_bytes": 270,
+      "kind": "tracemalloc_direct_production_function",
+      "name": "grouped_result.projection.rewritten.error.records_001",
+      "output_payload_bytes": 292,
+      "projection_changes_result": true,
+      "reason": null,
+      "record_count": 1,
+      "scenario_metadata": {
+        "fixture_kind": "rewritten_error",
+        "measurement_boundary": "direct_production_projection_function"
+      },
+      "status": "measured",
+      "tracing_configuration": {
+        "global_tracing_policy": "not_measured_when_already_active",
+        "input_fixture_prepared_before_tracing": true,
+        "library": "tracemalloc",
+        "output_string_included_in_current_and_peak": true,
+        "post_gc_delta_is_signed": true,
+        "traceback_frame_limit": 10,
+        "units": "bytes"
+      },
+      "trial_count": 3,
+      "trials": [
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 292,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 3703,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 1853,
+          "traced_peak_bytes": 3703,
+          "trial": 1
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 292,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 3703,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 1853,
+          "traced_peak_bytes": 3703,
+          "trial": 2
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 292,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 3703,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 1853,
+          "traced_peak_bytes": 3703,
+          "trial": 3
+        }
+      ]
+    },
+    {
+      "category": "direct_projection_memory",
+      "error_count": 0,
+      "execution_boundary": "synthetic_projection_only",
+      "input_payload_bytes": 242,
+      "kind": "tracemalloc_direct_production_function",
+      "name": "grouped_result.projection.rewritten.suggested_bif.records_001",
+      "output_payload_bytes": 273,
+      "projection_changes_result": true,
+      "reason": null,
+      "record_count": 1,
+      "scenario_metadata": {
+        "fixture_kind": "rewritten_suggested_bif",
+        "measurement_boundary": "direct_production_projection_function"
+      },
+      "status": "measured",
+      "tracing_configuration": {
+        "global_tracing_policy": "not_measured_when_already_active",
+        "input_fixture_prepared_before_tracing": true,
+        "library": "tracemalloc",
+        "output_string_included_in_current_and_peak": true,
+        "post_gc_delta_is_signed": true,
+        "traceback_frame_limit": 10,
+        "units": "bytes"
+      },
+      "trial_count": 3,
+      "trials": [
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 273,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 3529,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 1714,
+          "traced_peak_bytes": 3529,
+          "trial": 1
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 273,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 3529,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 1714,
+          "traced_peak_bytes": 3529,
+          "trial": 2
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 273,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 3529,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 1714,
+          "traced_peak_bytes": 3529,
+          "trial": 3
+        }
+      ]
+    },
+    {
+      "category": "direct_projection_memory",
+      "error_count": 0,
+      "execution_boundary": "synthetic_projection_only",
+      "input_payload_bytes": 248,
+      "kind": "tracemalloc_direct_production_function",
+      "name": "grouped_result.projection.rewritten.recommended_bif.records_001",
+      "output_payload_bytes": 279,
+      "projection_changes_result": true,
+      "reason": null,
+      "record_count": 1,
+      "scenario_metadata": {
+        "fixture_kind": "rewritten_recommended_bif",
+        "measurement_boundary": "direct_production_projection_function"
+      },
+      "status": "measured",
+      "tracing_configuration": {
+        "global_tracing_policy": "not_measured_when_already_active",
+        "input_fixture_prepared_before_tracing": true,
+        "library": "tracemalloc",
+        "output_string_included_in_current_and_peak": true,
+        "post_gc_delta_is_signed": true,
+        "traceback_frame_limit": 10,
+        "units": "bytes"
+      },
+      "trial_count": 3,
+      "trials": [
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 279,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 3607,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 1720,
+          "traced_peak_bytes": 3607,
+          "trial": 1
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 279,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 3607,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 1720,
+          "traced_peak_bytes": 3607,
+          "trial": 2
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 279,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 3607,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 1720,
+          "traced_peak_bytes": 3607,
+          "trial": 3
+        }
+      ]
+    },
+    {
+      "category": "direct_projection_memory",
+      "error_count": 0,
+      "execution_boundary": "synthetic_projection_only",
+      "input_payload_bytes": 4572,
+      "kind": "tracemalloc_direct_production_function",
+      "name": "grouped_result.projection.unchanged.records_050",
+      "output_payload_bytes": 4572,
+      "projection_changes_result": false,
+      "reason": null,
+      "record_count": 50,
+      "scenario_metadata": {
+        "fixture_kind": "unchanged_record_array",
+        "measurement_boundary": "direct_production_projection_function"
+      },
+      "status": "measured",
+      "tracing_configuration": {
+        "global_tracing_policy": "not_measured_when_already_active",
+        "input_fixture_prepared_before_tracing": true,
+        "library": "tracemalloc",
+        "output_string_included_in_current_and_peak": true,
+        "post_gc_delta_is_signed": true,
+        "traceback_frame_limit": 10,
+        "units": "bytes"
+      },
+      "trial_count": 3,
+      "trials": [
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 4572,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 25265,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 13960,
+          "traced_peak_bytes": 25265,
+          "trial": 1
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 4572,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 25265,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 13960,
+          "traced_peak_bytes": 25265,
+          "trial": 2
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 4572,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 25265,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 13960,
+          "traced_peak_bytes": 25265,
+          "trial": 3
+        }
+      ]
+    },
+    {
+      "category": "direct_projection_memory",
+      "error_count": 0,
+      "execution_boundary": "synthetic_projection_only",
+      "input_payload_bytes": 4712,
+      "kind": "tracemalloc_direct_production_function",
+      "name": "grouped_result.projection.rewritten.hint.records_050",
+      "output_payload_bytes": 4734,
+      "projection_changes_result": true,
+      "reason": null,
+      "record_count": 50,
+      "scenario_metadata": {
+        "fixture_kind": "rewritten_hint",
+        "measurement_boundary": "direct_production_projection_function"
+      },
+      "status": "measured",
+      "tracing_configuration": {
+        "global_tracing_policy": "not_measured_when_already_active",
+        "input_fixture_prepared_before_tracing": true,
+        "library": "tracemalloc",
+        "output_string_included_in_current_and_peak": true,
+        "post_gc_delta_is_signed": true,
+        "traceback_frame_limit": 10,
+        "units": "bytes"
+      },
+      "trial_count": 3,
+      "trials": [
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 4734,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 31755,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 19231,
+          "traced_peak_bytes": 31755,
+          "trial": 1
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 4734,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 31755,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 19231,
+          "traced_peak_bytes": 31755,
+          "trial": 2
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 4734,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 31755,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 19231,
+          "traced_peak_bytes": 31755,
+          "trial": 3
+        }
+      ]
+    },
+    {
+      "category": "direct_projection_memory",
+      "error_count": 0,
+      "execution_boundary": "synthetic_projection_only",
+      "input_payload_bytes": 4715,
+      "kind": "tracemalloc_direct_production_function",
+      "name": "grouped_result.projection.rewritten.error.records_050",
+      "output_payload_bytes": 4737,
+      "projection_changes_result": true,
+      "reason": null,
+      "record_count": 50,
+      "scenario_metadata": {
+        "fixture_kind": "rewritten_error",
+        "measurement_boundary": "direct_production_projection_function"
+      },
+      "status": "measured",
+      "tracing_configuration": {
+        "global_tracing_policy": "not_measured_when_already_active",
+        "input_fixture_prepared_before_tracing": true,
+        "library": "tracemalloc",
+        "output_string_included_in_current_and_peak": true,
+        "post_gc_delta_is_signed": true,
+        "traceback_frame_limit": 10,
+        "units": "bytes"
+      },
+      "trial_count": 3,
+      "trials": [
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 4737,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 31760,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 19234,
+          "traced_peak_bytes": 31760,
+          "trial": 1
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 4737,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 31760,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 19234,
+          "traced_peak_bytes": 31760,
+          "trial": 2
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 4737,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 31760,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 19234,
+          "traced_peak_bytes": 31760,
+          "trial": 3
+        }
+      ]
+    },
+    {
+      "category": "direct_projection_memory",
+      "error_count": 0,
+      "execution_boundary": "synthetic_projection_only",
+      "input_payload_bytes": 4687,
+      "kind": "tracemalloc_direct_production_function",
+      "name": "grouped_result.projection.rewritten.suggested_bif.records_050",
+      "output_payload_bytes": 4718,
+      "projection_changes_result": true,
+      "reason": null,
+      "record_count": 50,
+      "scenario_metadata": {
+        "fixture_kind": "rewritten_suggested_bif",
+        "measurement_boundary": "direct_production_projection_function"
+      },
+      "status": "measured",
+      "tracing_configuration": {
+        "global_tracing_policy": "not_measured_when_already_active",
+        "input_fixture_prepared_before_tracing": true,
+        "library": "tracemalloc",
+        "output_string_included_in_current_and_peak": true,
+        "post_gc_delta_is_signed": true,
+        "traceback_frame_limit": 10,
+        "units": "bytes"
+      },
+      "trial_count": 3,
+      "trials": [
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 4718,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 31679,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 19095,
+          "traced_peak_bytes": 31679,
+          "trial": 1
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 4718,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 31679,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 19095,
+          "traced_peak_bytes": 31679,
+          "trial": 2
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 4718,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 31679,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 19095,
+          "traced_peak_bytes": 31679,
+          "trial": 3
+        }
+      ]
+    },
+    {
+      "category": "direct_projection_memory",
+      "error_count": 0,
+      "execution_boundary": "synthetic_projection_only",
+      "input_payload_bytes": 4693,
+      "kind": "tracemalloc_direct_production_function",
+      "name": "grouped_result.projection.rewritten.recommended_bif.records_050",
+      "output_payload_bytes": 4724,
+      "projection_changes_result": true,
+      "reason": null,
+      "record_count": 50,
+      "scenario_metadata": {
+        "fixture_kind": "rewritten_recommended_bif",
+        "measurement_boundary": "direct_production_projection_function"
+      },
+      "status": "measured",
+      "tracing_configuration": {
+        "global_tracing_policy": "not_measured_when_already_active",
+        "input_fixture_prepared_before_tracing": true,
+        "library": "tracemalloc",
+        "output_string_included_in_current_and_peak": true,
+        "post_gc_delta_is_signed": true,
+        "traceback_frame_limit": 10,
+        "units": "bytes"
+      },
+      "trial_count": 3,
+      "trials": [
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 4724,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 31757,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 19101,
+          "traced_peak_bytes": 31757,
+          "trial": 1
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 4724,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 31757,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 19101,
+          "traced_peak_bytes": 31757,
+          "trial": 2
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 4724,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 31757,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 19101,
+          "traced_peak_bytes": 31757,
+          "trial": 3
+        }
+      ]
+    },
+    {
+      "category": "direct_projection_memory",
+      "error_count": 0,
+      "execution_boundary": "synthetic_projection_only",
+      "input_payload_bytes": 9142,
+      "kind": "tracemalloc_direct_production_function",
+      "name": "grouped_result.projection.unchanged.records_100",
+      "output_payload_bytes": 9142,
+      "projection_changes_result": false,
+      "reason": null,
+      "record_count": 100,
+      "scenario_metadata": {
+        "fixture_kind": "unchanged_record_array",
+        "measurement_boundary": "direct_production_projection_function"
+      },
+      "status": "measured",
+      "tracing_configuration": {
+        "global_tracing_policy": "not_measured_when_already_active",
+        "input_fixture_prepared_before_tracing": true,
+        "library": "tracemalloc",
+        "output_string_included_in_current_and_peak": true,
+        "post_gc_delta_is_signed": true,
+        "traceback_frame_limit": 10,
+        "units": "bytes"
+      },
+      "trial_count": 3,
+      "trials": [
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 9142,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 48238,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 21808,
+          "traced_peak_bytes": 48238,
+          "trial": 1
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 9142,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 48238,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 21808,
+          "traced_peak_bytes": 48238,
+          "trial": 2
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 9142,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 48238,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 21808,
+          "traced_peak_bytes": 48238,
+          "trial": 3
+        }
+      ]
+    },
+    {
+      "category": "direct_projection_memory",
+      "error_count": 0,
+      "execution_boundary": "synthetic_projection_only",
+      "input_payload_bytes": 9282,
+      "kind": "tracemalloc_direct_production_function",
+      "name": "grouped_result.projection.rewritten.hint.records_100",
+      "output_payload_bytes": 9304,
+      "projection_changes_result": true,
+      "reason": null,
+      "record_count": 100,
+      "scenario_metadata": {
+        "fixture_kind": "rewritten_hint",
+        "measurement_boundary": "direct_production_projection_function"
+      },
+      "status": "measured",
+      "tracing_configuration": {
+        "global_tracing_policy": "not_measured_when_already_active",
+        "input_fixture_prepared_before_tracing": true,
+        "library": "tracemalloc",
+        "output_string_included_in_current_and_peak": true,
+        "post_gc_delta_is_signed": true,
+        "traceback_frame_limit": 10,
+        "units": "bytes"
+      },
+      "trial_count": 3,
+      "trials": [
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 9304,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 60049,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 31505,
+          "traced_peak_bytes": 60049,
+          "trial": 1
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 9304,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 60049,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 31505,
+          "traced_peak_bytes": 60049,
+          "trial": 2
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 9304,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 60049,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 31505,
+          "traced_peak_bytes": 60049,
+          "trial": 3
+        }
+      ]
+    },
+    {
+      "category": "direct_projection_memory",
+      "error_count": 0,
+      "execution_boundary": "synthetic_projection_only",
+      "input_payload_bytes": 9285,
+      "kind": "tracemalloc_direct_production_function",
+      "name": "grouped_result.projection.rewritten.error.records_100",
+      "output_payload_bytes": 9307,
+      "projection_changes_result": true,
+      "reason": null,
+      "record_count": 100,
+      "scenario_metadata": {
+        "fixture_kind": "rewritten_error",
+        "measurement_boundary": "direct_production_projection_function"
+      },
+      "status": "measured",
+      "tracing_configuration": {
+        "global_tracing_policy": "not_measured_when_already_active",
+        "input_fixture_prepared_before_tracing": true,
+        "library": "tracemalloc",
+        "output_string_included_in_current_and_peak": true,
+        "post_gc_delta_is_signed": true,
+        "traceback_frame_limit": 10,
+        "units": "bytes"
+      },
+      "trial_count": 3,
+      "trials": [
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 9307,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 60054,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 31508,
+          "traced_peak_bytes": 60054,
+          "trial": 1
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 9307,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 60054,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 31508,
+          "traced_peak_bytes": 60054,
+          "trial": 2
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 9307,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 60054,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 31508,
+          "traced_peak_bytes": 60054,
+          "trial": 3
+        }
+      ]
+    },
+    {
+      "category": "direct_projection_memory",
+      "error_count": 0,
+      "execution_boundary": "synthetic_projection_only",
+      "input_payload_bytes": 9257,
+      "kind": "tracemalloc_direct_production_function",
+      "name": "grouped_result.projection.rewritten.suggested_bif.records_100",
+      "output_payload_bytes": 9288,
+      "projection_changes_result": true,
+      "reason": null,
+      "record_count": 100,
+      "scenario_metadata": {
+        "fixture_kind": "rewritten_suggested_bif",
+        "measurement_boundary": "direct_production_projection_function"
+      },
+      "status": "measured",
+      "tracing_configuration": {
+        "global_tracing_policy": "not_measured_when_already_active",
+        "input_fixture_prepared_before_tracing": true,
+        "library": "tracemalloc",
+        "output_string_included_in_current_and_peak": true,
+        "post_gc_delta_is_signed": true,
+        "traceback_frame_limit": 10,
+        "units": "bytes"
+      },
+      "trial_count": 3,
+      "trials": [
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 9288,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 59973,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 31425,
+          "traced_peak_bytes": 59973,
+          "trial": 1
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 9288,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 59973,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 31425,
+          "traced_peak_bytes": 59973,
+          "trial": 2
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 9288,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 59973,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 31425,
+          "traced_peak_bytes": 59973,
+          "trial": 3
+        }
+      ]
+    },
+    {
+      "category": "direct_projection_memory",
+      "error_count": 0,
+      "execution_boundary": "synthetic_projection_only",
+      "input_payload_bytes": 9263,
+      "kind": "tracemalloc_direct_production_function",
+      "name": "grouped_result.projection.rewritten.recommended_bif.records_100",
+      "output_payload_bytes": 9294,
+      "projection_changes_result": true,
+      "reason": null,
+      "record_count": 100,
+      "scenario_metadata": {
+        "fixture_kind": "rewritten_recommended_bif",
+        "measurement_boundary": "direct_production_projection_function"
+      },
+      "status": "measured",
+      "tracing_configuration": {
+        "global_tracing_policy": "not_measured_when_already_active",
+        "input_fixture_prepared_before_tracing": true,
+        "library": "tracemalloc",
+        "output_string_included_in_current_and_peak": true,
+        "post_gc_delta_is_signed": true,
+        "traceback_frame_limit": 10,
+        "units": "bytes"
+      },
+      "trial_count": 3,
+      "trials": [
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 9294,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 60051,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 31431,
+          "traced_peak_bytes": 60051,
+          "trial": 1
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 9294,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 60051,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 31431,
+          "traced_peak_bytes": 60051,
+          "trial": 2
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 9294,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 60051,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 31431,
+          "traced_peak_bytes": 60051,
+          "trial": 3
+        }
+      ]
+    },
+    {
+      "category": "direct_projection_memory",
+      "error_count": 0,
+      "execution_boundary": "synthetic_projection_only",
+      "input_payload_bytes": 9142,
+      "kind": "tracemalloc_direct_production_function",
+      "name": "grouped_result.projection.structured.large_array",
+      "output_payload_bytes": 9142,
+      "projection_changes_result": false,
+      "reason": null,
+      "record_count": 100,
+      "scenario_metadata": {
+        "fixture_kind": "large_record_array",
+        "measurement_boundary": "direct_production_projection_function"
+      },
+      "status": "measured",
+      "tracing_configuration": {
+        "global_tracing_policy": "not_measured_when_already_active",
+        "input_fixture_prepared_before_tracing": true,
+        "library": "tracemalloc",
+        "output_string_included_in_current_and_peak": true,
+        "post_gc_delta_is_signed": true,
+        "traceback_frame_limit": 10,
+        "units": "bytes"
+      },
+      "trial_count": 3,
+      "trials": [
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 9142,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 48238,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 21808,
+          "traced_peak_bytes": 48238,
+          "trial": 1
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 9142,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 48238,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 21808,
+          "traced_peak_bytes": 48238,
+          "trial": 2
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 9142,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 48238,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 21808,
+          "traced_peak_bytes": 48238,
+          "trial": 3
+        }
+      ]
+    },
+    {
+      "category": "direct_projection_memory",
+      "error_count": 0,
+      "execution_boundary": "synthetic_projection_only",
+      "input_payload_bytes": 371,
+      "kind": "tracemalloc_direct_production_function",
+      "name": "grouped_result.projection.structured.deep_nesting",
+      "output_payload_bytes": 371,
+      "projection_changes_result": false,
+      "reason": null,
+      "record_count": 1,
+      "scenario_metadata": {
+        "fixture_kind": "deeply_nested_object",
+        "measurement_boundary": "direct_production_projection_function"
+      },
+      "status": "measured",
+      "tracing_configuration": {
+        "global_tracing_policy": "not_measured_when_already_active",
+        "input_fixture_prepared_before_tracing": true,
+        "library": "tracemalloc",
+        "output_string_included_in_current_and_peak": true,
+        "post_gc_delta_is_signed": true,
+        "traceback_frame_limit": 10,
+        "units": "bytes"
+      },
+      "trial_count": 3,
+      "trials": [
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 371,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 7713,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 5120,
+          "traced_peak_bytes": 7713,
+          "trial": 1
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 371,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 7713,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 5120,
+          "traced_peak_bytes": 7713,
+          "trial": 2
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 371,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 7713,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 5120,
+          "traced_peak_bytes": 7713,
+          "trial": 3
+        }
+      ]
+    },
+    {
+      "category": "direct_projection_memory",
+      "error_count": 0,
+      "execution_boundary": "synthetic_projection_only",
+      "input_payload_bytes": 3633,
+      "kind": "tracemalloc_direct_production_function",
+      "name": "grouped_result.projection.structured.high_cardinality_metadata",
+      "output_payload_bytes": 3633,
+      "projection_changes_result": false,
+      "reason": null,
+      "record_count": 128,
+      "scenario_metadata": {
+        "fixture_kind": "high_cardinality_metadata",
+        "measurement_boundary": "direct_production_projection_function"
+      },
+      "status": "measured",
+      "tracing_configuration": {
+        "global_tracing_policy": "not_measured_when_already_active",
+        "input_fixture_prepared_before_tracing": true,
+        "library": "tracemalloc",
+        "output_string_included_in_current_and_peak": true,
+        "post_gc_delta_is_signed": true,
+        "traceback_frame_limit": 10,
+        "units": "bytes"
+      },
+      "trial_count": 3,
+      "trials": [
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 3633,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 20467,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 824,
+          "traced_peak_bytes": 20467,
+          "trial": 1
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 3633,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 20467,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 824,
+          "traced_peak_bytes": 20467,
+          "trial": 2
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 3633,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 20467,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 824,
+          "traced_peak_bytes": 20467,
+          "trial": 3
+        }
+      ]
+    },
+    {
+      "category": "direct_projection_memory",
+      "error_count": 0,
+      "execution_boundary": "synthetic_projection_only",
+      "input_payload_bytes": 10980,
+      "kind": "tracemalloc_direct_production_function",
+      "name": "grouped_result.projection.structured.schema_like",
+      "output_payload_bytes": 10980,
+      "projection_changes_result": false,
+      "reason": null,
+      "record_count": 100,
+      "scenario_metadata": {
+        "fixture_kind": "schema_like_columns",
+        "measurement_boundary": "direct_production_projection_function"
+      },
+      "status": "measured",
+      "tracing_configuration": {
+        "global_tracing_policy": "not_measured_when_already_active",
+        "input_fixture_prepared_before_tracing": true,
+        "library": "tracemalloc",
+        "output_string_included_in_current_and_peak": true,
+        "post_gc_delta_is_signed": true,
+        "traceback_frame_limit": 10,
+        "units": "bytes"
+      },
+      "trial_count": 3,
+      "trials": [
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 10980,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 38488,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 14984,
+          "traced_peak_bytes": 38488,
+          "trial": 1
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 10980,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 38488,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 14984,
+          "traced_peak_bytes": 38488,
+          "trial": 2
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 10980,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 38488,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 14984,
+          "traced_peak_bytes": 38488,
+          "trial": 3
+        }
+      ]
+    },
+    {
+      "category": "direct_projection_memory",
+      "error_count": 0,
+      "execution_boundary": "synthetic_projection_only",
+      "input_payload_bytes": 13409,
+      "kind": "tracemalloc_direct_production_function",
+      "name": "grouped_result.projection.structured.long_hint",
+      "output_payload_bytes": 13431,
+      "projection_changes_result": true,
+      "reason": null,
+      "record_count": 1,
+      "scenario_metadata": {
+        "fixture_kind": "long_rewritten_hint",
+        "measurement_boundary": "direct_production_projection_function"
+      },
+      "status": "measured",
+      "tracing_configuration": {
+        "global_tracing_policy": "not_measured_when_already_active",
+        "input_fixture_prepared_before_tracing": true,
+        "library": "tracemalloc",
+        "output_string_included_in_current_and_peak": true,
+        "post_gc_delta_is_signed": true,
+        "traceback_frame_limit": 10,
+        "units": "bytes"
+      },
+      "trial_count": 3,
+      "trials": [
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 13431,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 58995,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 14608,
+          "traced_peak_bytes": 58995,
+          "trial": 1
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 13431,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 58995,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 14608,
+          "traced_peak_bytes": 58995,
+          "trial": 2
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 13431,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 58995,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 14608,
+          "traced_peak_bytes": 58995,
+          "trial": 3
+        }
+      ]
+    },
+    {
+      "category": "direct_projection_memory",
+      "error_count": 0,
+      "execution_boundary": "synthetic_projection_only",
+      "input_payload_bytes": 14435,
+      "kind": "tracemalloc_direct_production_function",
+      "name": "grouped_result.projection.structured.long_error",
+      "output_payload_bytes": 14457,
+      "projection_changes_result": true,
+      "reason": null,
+      "record_count": 1,
+      "scenario_metadata": {
+        "fixture_kind": "long_rewritten_error",
+        "measurement_boundary": "direct_production_projection_function"
+      },
+      "status": "measured",
+      "tracing_configuration": {
+        "global_tracing_policy": "not_measured_when_already_active",
+        "input_fixture_prepared_before_tracing": true,
+        "library": "tracemalloc",
+        "output_string_included_in_current_and_peak": true,
+        "post_gc_delta_is_signed": true,
+        "traceback_frame_limit": 10,
+        "units": "bytes"
+      },
+      "trial_count": 3,
+      "trials": [
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 14457,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 63352,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 15634,
+          "traced_peak_bytes": 63352,
+          "trial": 1
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 14457,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 63352,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 15634,
+          "traced_peak_bytes": 63352,
+          "trial": 2
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 14457,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 63352,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 15634,
+          "traced_peak_bytes": 63352,
+          "trial": 3
+        }
+      ]
+    },
+    {
+      "category": "direct_projection_memory",
+      "error_count": 0,
+      "execution_boundary": "synthetic_projection_only",
+      "input_payload_bytes": 9263,
+      "kind": "tracemalloc_direct_production_function",
+      "name": "grouped_result.projection.structured.mixed_success_error",
+      "output_payload_bytes": 9285,
+      "projection_changes_result": true,
+      "reason": null,
+      "record_count": 100,
+      "scenario_metadata": {
+        "fixture_kind": "mixed_error_envelope",
+        "measurement_boundary": "direct_production_projection_function"
+      },
+      "status": "measured",
+      "tracing_configuration": {
+        "global_tracing_policy": "not_measured_when_already_active",
+        "input_fixture_prepared_before_tracing": true,
+        "library": "tracemalloc",
+        "output_string_included_in_current_and_peak": true,
+        "post_gc_delta_is_signed": true,
+        "traceback_frame_limit": 10,
+        "units": "bytes"
+      },
+      "trial_count": 3,
+      "trials": [
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 9285,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 59800,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 31486,
+          "traced_peak_bytes": 59800,
+          "trial": 1
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 9285,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 59800,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 31486,
+          "traced_peak_bytes": 59800,
+          "trial": 2
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 9285,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 59800,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 31486,
+          "traced_peak_bytes": 59800,
+          "trial": 3
+        }
+      ]
+    },
+    {
+      "category": "direct_projection_memory",
+      "error_count": 0,
+      "execution_boundary": "synthetic_projection_only",
+      "input_payload_bytes": 9,
+      "kind": "tracemalloc_direct_production_function",
+      "name": "grouped_result.projection.unusual.malformed_json",
+      "output_payload_bytes": 9,
+      "projection_changes_result": false,
+      "reason": null,
+      "record_count": 0,
+      "scenario_metadata": {
+        "fixture_kind": "malformed_json",
+        "measurement_boundary": "direct_production_projection_function"
+      },
+      "status": "measured",
+      "tracing_configuration": {
+        "global_tracing_policy": "not_measured_when_already_active",
+        "input_fixture_prepared_before_tracing": true,
+        "library": "tracemalloc",
+        "output_string_included_in_current_and_peak": true,
+        "post_gc_delta_is_signed": true,
+        "traceback_frame_limit": 10,
+        "units": "bytes"
+      },
+      "trial_count": 3,
+      "trials": [
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 9,
+          "post_gc_current_bytes": 64,
+          "post_gc_retained_delta_bytes": 64,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 2358,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 840,
+          "traced_peak_bytes": 2358,
+          "trial": 1
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 9,
+          "post_gc_current_bytes": 64,
+          "post_gc_retained_delta_bytes": 64,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 2358,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 840,
+          "traced_peak_bytes": 2358,
+          "trial": 2
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 9,
+          "post_gc_current_bytes": 64,
+          "post_gc_retained_delta_bytes": 64,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 2358,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 840,
+          "traced_peak_bytes": 2358,
+          "trial": 3
+        }
+      ]
+    },
+    {
+      "category": "direct_projection_memory",
+      "error_count": 0,
+      "execution_boundary": "synthetic_projection_only",
+      "input_payload_bytes": 15,
+      "kind": "tracemalloc_direct_production_function",
+      "name": "grouped_result.projection.unusual.scalar_json",
+      "output_payload_bytes": 15,
+      "projection_changes_result": false,
+      "reason": null,
+      "record_count": 0,
+      "scenario_metadata": {
+        "fixture_kind": "json_scalar",
+        "measurement_boundary": "direct_production_projection_function"
+      },
+      "status": "measured",
+      "tracing_configuration": {
+        "global_tracing_policy": "not_measured_when_already_active",
+        "input_fixture_prepared_before_tracing": true,
+        "library": "tracemalloc",
+        "output_string_included_in_current_and_peak": true,
+        "post_gc_delta_is_signed": true,
+        "traceback_frame_limit": 10,
+        "units": "bytes"
+      },
+      "trial_count": 3,
+      "trials": [
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 15,
+          "post_gc_current_bytes": 64,
+          "post_gc_retained_delta_bytes": 64,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 1604,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 336,
+          "traced_peak_bytes": 1604,
+          "trial": 1
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 15,
+          "post_gc_current_bytes": 64,
+          "post_gc_retained_delta_bytes": 64,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 1604,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 336,
+          "traced_peak_bytes": 1604,
+          "trial": 2
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 15,
+          "post_gc_current_bytes": 64,
+          "post_gc_retained_delta_bytes": 64,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 1604,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 336,
+          "traced_peak_bytes": 1604,
+          "trial": 3
+        }
+      ]
+    },
+    {
+      "category": "direct_projection_memory",
+      "error_count": 0,
+      "execution_boundary": "synthetic_projection_only",
+      "input_payload_bytes": 14,
+      "kind": "tracemalloc_direct_production_function",
+      "name": "grouped_result.projection.unusual.array_json",
+      "output_payload_bytes": 14,
+      "projection_changes_result": false,
+      "reason": null,
+      "record_count": 2,
+      "scenario_metadata": {
+        "fixture_kind": "json_array",
+        "measurement_boundary": "direct_production_projection_function"
+      },
+      "status": "measured",
+      "tracing_configuration": {
+        "global_tracing_policy": "not_measured_when_already_active",
+        "input_fixture_prepared_before_tracing": true,
+        "library": "tracemalloc",
+        "output_string_included_in_current_and_peak": true,
+        "post_gc_delta_is_signed": true,
+        "traceback_frame_limit": 10,
+        "units": "bytes"
+      },
+      "trial_count": 3,
+      "trials": [
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 14,
+          "post_gc_current_bytes": 64,
+          "post_gc_retained_delta_bytes": 64,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 1726,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 392,
+          "traced_peak_bytes": 1726,
+          "trial": 1
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 14,
+          "post_gc_current_bytes": 64,
+          "post_gc_retained_delta_bytes": 64,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 1726,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 392,
+          "traced_peak_bytes": 1726,
+          "trial": 2
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 14,
+          "post_gc_current_bytes": 64,
+          "post_gc_retained_delta_bytes": 64,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 1726,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 392,
+          "traced_peak_bytes": 1726,
+          "trial": 3
+        }
+      ]
+    },
+    {
+      "category": "direct_projection_memory",
+      "error_count": 0,
+      "execution_boundary": "synthetic_projection_only",
+      "input_payload_bytes": 0,
+      "kind": "tracemalloc_direct_production_function",
+      "name": "grouped_result.projection.unusual.empty_result",
+      "output_payload_bytes": 0,
+      "projection_changes_result": false,
+      "reason": null,
+      "record_count": 0,
+      "scenario_metadata": {
+        "fixture_kind": "empty_string",
+        "measurement_boundary": "direct_production_projection_function"
+      },
+      "status": "measured",
+      "tracing_configuration": {
+        "global_tracing_policy": "not_measured_when_already_active",
+        "input_fixture_prepared_before_tracing": true,
+        "library": "tracemalloc",
+        "output_string_included_in_current_and_peak": true,
+        "post_gc_delta_is_signed": true,
+        "traceback_frame_limit": 10,
+        "units": "bytes"
+      },
+      "trial_count": 3,
+      "trials": [
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 0,
+          "post_gc_current_bytes": 64,
+          "post_gc_retained_delta_bytes": 64,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 2258,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 712,
+          "traced_peak_bytes": 2258,
+          "trial": 1
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 0,
+          "post_gc_current_bytes": 64,
+          "post_gc_retained_delta_bytes": 64,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 2258,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 712,
+          "traced_peak_bytes": 2258,
+          "trial": 2
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 0,
+          "post_gc_current_bytes": 64,
+          "post_gc_retained_delta_bytes": 64,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 2258,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 712,
+          "traced_peak_bytes": 2258,
+          "trial": 3
+        }
+      ]
+    },
+    {
+      "category": "direct_projection_memory",
+      "error_count": 0,
+      "execution_boundary": "synthetic_projection_only",
+      "input_payload_bytes": 46,
+      "kind": "tracemalloc_direct_production_function",
+      "name": "grouped_result.projection.unusual.unknown_reference",
+      "output_payload_bytes": 46,
+      "projection_changes_result": false,
+      "reason": null,
+      "record_count": 0,
+      "scenario_metadata": {
+        "fixture_kind": "unknown_legacy_reference",
+        "measurement_boundary": "direct_production_projection_function"
+      },
+      "status": "measured",
+      "tracing_configuration": {
+        "global_tracing_policy": "not_measured_when_already_active",
+        "input_fixture_prepared_before_tracing": true,
+        "library": "tracemalloc",
+        "output_string_included_in_current_and_peak": true,
+        "post_gc_delta_is_signed": true,
+        "traceback_frame_limit": 10,
+        "units": "bytes"
+      },
+      "trial_count": 3,
+      "trials": [
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 46,
+          "post_gc_current_bytes": 64,
+          "post_gc_retained_delta_bytes": 64,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 1974,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 640,
+          "traced_peak_bytes": 1974,
+          "trial": 1
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 46,
+          "post_gc_current_bytes": 64,
+          "post_gc_retained_delta_bytes": 64,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 1974,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 640,
+          "traced_peak_bytes": 1974,
+          "trial": 2
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 46,
+          "post_gc_current_bytes": 64,
+          "post_gc_retained_delta_bytes": 64,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 1974,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 640,
+          "traced_peak_bytes": 1974,
+          "trial": 3
+        }
+      ]
+    },
+    {
+      "category": "direct_projection_memory",
+      "error_count": 0,
+      "execution_boundary": "synthetic_projection_only",
+      "input_payload_bytes": 46,
+      "kind": "tracemalloc_direct_production_function",
+      "name": "grouped_result.projection.unusual.already_canonical_reference",
+      "output_payload_bytes": 46,
+      "projection_changes_result": false,
+      "reason": null,
+      "record_count": 0,
+      "scenario_metadata": {
+        "fixture_kind": "grouped_reference",
+        "measurement_boundary": "direct_production_projection_function"
+      },
+      "status": "measured",
+      "tracing_configuration": {
+        "global_tracing_policy": "not_measured_when_already_active",
+        "input_fixture_prepared_before_tracing": true,
+        "library": "tracemalloc",
+        "output_string_included_in_current_and_peak": true,
+        "post_gc_delta_is_signed": true,
+        "traceback_frame_limit": 10,
+        "units": "bytes"
+      },
+      "trial_count": 3,
+      "trials": [
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 46,
+          "post_gc_current_bytes": 64,
+          "post_gc_retained_delta_bytes": 64,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 1974,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 640,
+          "traced_peak_bytes": 1974,
+          "trial": 1
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 46,
+          "post_gc_current_bytes": 64,
+          "post_gc_retained_delta_bytes": 64,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 1974,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 640,
+          "traced_peak_bytes": 1974,
+          "trial": 2
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 46,
+          "post_gc_current_bytes": 64,
+          "post_gc_retained_delta_bytes": 64,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 1974,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 640,
+          "traced_peak_bytes": 1974,
+          "trial": 3
+        }
+      ]
+    },
+    {
+      "category": "direct_projection_memory",
+      "error_count": 0,
+      "execution_boundary": "synthetic_projection_only",
+      "input_payload_bytes": 52,
+      "kind": "tracemalloc_direct_production_function",
+      "name": "grouped_result.projection.unusual.similar_name",
+      "output_payload_bytes": 52,
+      "projection_changes_result": false,
+      "reason": null,
+      "record_count": 0,
+      "scenario_metadata": {
+        "fixture_kind": "similar_name_reference",
+        "measurement_boundary": "direct_production_projection_function"
+      },
+      "status": "measured",
+      "tracing_configuration": {
+        "global_tracing_policy": "not_measured_when_already_active",
+        "input_fixture_prepared_before_tracing": true,
+        "library": "tracemalloc",
+        "output_string_included_in_current_and_peak": true,
+        "post_gc_delta_is_signed": true,
+        "traceback_frame_limit": 10,
+        "units": "bytes"
+      },
+      "trial_count": 3,
+      "trials": [
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 52,
+          "post_gc_current_bytes": 64,
+          "post_gc_retained_delta_bytes": 64,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 2335,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 760,
+          "traced_peak_bytes": 2335,
+          "trial": 1
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 52,
+          "post_gc_current_bytes": 64,
+          "post_gc_retained_delta_bytes": 64,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 2335,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 760,
+          "traced_peak_bytes": 2335,
+          "trial": 2
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 52,
+          "post_gc_current_bytes": 64,
+          "post_gc_retained_delta_bytes": 64,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 2335,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 760,
+          "traced_peak_bytes": 2335,
+          "trial": 3
+        }
+      ]
+    },
+    {
+      "category": "direct_projection_memory",
+      "error_count": 0,
+      "execution_boundary": "synthetic_projection_only",
+      "input_payload_bytes": 330,
+      "kind": "tracemalloc_direct_production_function",
+      "name": "grouped_result.projection.unusual.business_data_reference",
+      "output_payload_bytes": 330,
+      "projection_changes_result": false,
+      "reason": null,
+      "record_count": 2,
+      "scenario_metadata": {
+        "fixture_kind": "business_data_reference",
+        "measurement_boundary": "direct_production_projection_function"
+      },
+      "status": "measured",
+      "tracing_configuration": {
+        "global_tracing_policy": "not_measured_when_already_active",
+        "input_fixture_prepared_before_tracing": true,
+        "library": "tracemalloc",
+        "output_string_included_in_current_and_peak": true,
+        "post_gc_delta_is_signed": true,
+        "traceback_frame_limit": 10,
+        "units": "bytes"
+      },
+      "trial_count": 3,
+      "trials": [
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 330,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 3517,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 1288,
+          "traced_peak_bytes": 3517,
+          "trial": 1
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 330,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 3517,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 1288,
+          "traced_peak_bytes": 3517,
+          "trial": 2
+        },
+        {
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 330,
+          "post_gc_current_bytes": 92,
+          "post_gc_retained_delta_bytes": 92,
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 3517,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 1288,
+          "traced_peak_bytes": 3517,
+          "trial": 3
+        }
+      ]
+    },
+    {
+      "category": "repeated_projection_retention",
+      "error_count": 0,
+      "execution_boundary": "synthetic_projection_only",
+      "input_payload_bytes": 127,
+      "iterations_per_trial": 100,
+      "kind": "tracemalloc_repeated_direct_production_function",
+      "name": "grouped_result.memory.retention.records_001.iterations_0100",
+      "negative_control": true,
+      "output_payload_bytes": 127,
+      "output_retention": "none",
+      "projection_changes_result": false,
+      "reason": null,
+      "record_count": 1,
+      "retention_interpretation": "Signed post-GC deltas can reflect allocator or cache behavior and are not leak evidence without repeatable lifetime analysis.",
+      "scenario_metadata": {
+        "fixture_kind": "unchanged_record_array",
+        "measurement_boundary": "repeated_direct_production_projection_function"
+      },
+      "status": "measured",
+      "tracing_configuration": {
+        "global_tracing_policy": "not_measured_when_already_active",
+        "input_fixture_prepared_before_tracing": true,
+        "library": "tracemalloc",
+        "output_string_included_in_current_and_peak": true,
+        "post_gc_delta_is_signed": true,
+        "traceback_frame_limit": 10,
+        "units": "bytes"
+      },
+      "trial_count": 3,
+      "trials": [
+        {
+          "completed_operations": 100,
+          "error_count": 0,
+          "final_retained_delta_bytes": 1088,
+          "initial_retained_delta_bytes": 0,
+          "intermediate_retained_delta_bytes": 1064,
+          "output_retention": "none",
+          "post_gc_retained_delta_bytes": 128,
+          "reason": null,
+          "status": "measured",
+          "traced_peak_bytes": 2881,
+          "trial": 1
+        },
+        {
+          "completed_operations": 100,
+          "error_count": 0,
+          "final_retained_delta_bytes": 1088,
+          "initial_retained_delta_bytes": 0,
+          "intermediate_retained_delta_bytes": 1064,
+          "output_retention": "none",
+          "post_gc_retained_delta_bytes": 128,
+          "reason": null,
+          "status": "measured",
+          "traced_peak_bytes": 2881,
+          "trial": 2
+        },
+        {
+          "completed_operations": 100,
+          "error_count": 0,
+          "final_retained_delta_bytes": 1088,
+          "initial_retained_delta_bytes": 0,
+          "intermediate_retained_delta_bytes": 1064,
+          "output_retention": "none",
+          "post_gc_retained_delta_bytes": 128,
+          "reason": null,
+          "status": "measured",
+          "traced_peak_bytes": 2881,
+          "trial": 3
+        }
+      ]
+    },
+    {
+      "category": "repeated_projection_retention",
+      "error_count": 0,
+      "execution_boundary": "synthetic_projection_only",
+      "input_payload_bytes": 127,
+      "iterations_per_trial": 500,
+      "kind": "tracemalloc_repeated_direct_production_function",
+      "name": "grouped_result.memory.retention.records_001.iterations_0500",
+      "negative_control": true,
+      "output_payload_bytes": 127,
+      "output_retention": "none",
+      "projection_changes_result": false,
+      "reason": null,
+      "record_count": 1,
+      "retention_interpretation": "Signed post-GC deltas can reflect allocator or cache behavior and are not leak evidence without repeatable lifetime analysis.",
+      "scenario_metadata": {
+        "fixture_kind": "unchanged_record_array",
+        "measurement_boundary": "repeated_direct_production_projection_function"
+      },
+      "status": "measured",
+      "tracing_configuration": {
+        "global_tracing_policy": "not_measured_when_already_active",
+        "input_fixture_prepared_before_tracing": true,
+        "library": "tracemalloc",
+        "output_string_included_in_current_and_peak": true,
+        "post_gc_delta_is_signed": true,
+        "traceback_frame_limit": 10,
+        "units": "bytes"
+      },
+      "trial_count": 3,
+      "trials": [
+        {
+          "completed_operations": 500,
+          "error_count": 0,
+          "final_retained_delta_bytes": 1152,
+          "initial_retained_delta_bytes": 0,
+          "intermediate_retained_delta_bytes": 1064,
+          "output_retention": "none",
+          "post_gc_retained_delta_bytes": 192,
+          "reason": null,
+          "status": "measured",
+          "traced_peak_bytes": 2945,
+          "trial": 1
+        },
+        {
+          "completed_operations": 500,
+          "error_count": 0,
+          "final_retained_delta_bytes": 1152,
+          "initial_retained_delta_bytes": 0,
+          "intermediate_retained_delta_bytes": 1064,
+          "output_retention": "none",
+          "post_gc_retained_delta_bytes": 192,
+          "reason": null,
+          "status": "measured",
+          "traced_peak_bytes": 2945,
+          "trial": 2
+        },
+        {
+          "completed_operations": 500,
+          "error_count": 0,
+          "final_retained_delta_bytes": 1152,
+          "initial_retained_delta_bytes": 0,
+          "intermediate_retained_delta_bytes": 1064,
+          "output_retention": "none",
+          "post_gc_retained_delta_bytes": 192,
+          "reason": null,
+          "status": "measured",
+          "traced_peak_bytes": 2945,
+          "trial": 3
+        }
+      ]
+    },
+    {
+      "category": "repeated_projection_retention",
+      "error_count": 0,
+      "execution_boundary": "synthetic_projection_only",
+      "input_payload_bytes": 127,
+      "iterations_per_trial": 1000,
+      "kind": "tracemalloc_repeated_direct_production_function",
+      "name": "grouped_result.memory.retention.records_001.iterations_1000",
+      "negative_control": true,
+      "output_payload_bytes": 127,
+      "output_retention": "none",
+      "projection_changes_result": false,
+      "reason": null,
+      "record_count": 1,
+      "retention_interpretation": "Signed post-GC deltas can reflect allocator or cache behavior and are not leak evidence without repeatable lifetime analysis.",
+      "scenario_metadata": {
+        "fixture_kind": "unchanged_record_array",
+        "measurement_boundary": "repeated_direct_production_projection_function"
+      },
+      "status": "measured",
+      "tracing_configuration": {
+        "global_tracing_policy": "not_measured_when_already_active",
+        "input_fixture_prepared_before_tracing": true,
+        "library": "tracemalloc",
+        "output_string_included_in_current_and_peak": true,
+        "post_gc_delta_is_signed": true,
+        "traceback_frame_limit": 10,
+        "units": "bytes"
+      },
+      "trial_count": 3,
+      "trials": [
+        {
+          "completed_operations": 1000,
+          "error_count": 0,
+          "final_retained_delta_bytes": 1184,
+          "initial_retained_delta_bytes": 0,
+          "intermediate_retained_delta_bytes": 1160,
+          "output_retention": "none",
+          "post_gc_retained_delta_bytes": 224,
+          "reason": null,
+          "status": "measured",
+          "traced_peak_bytes": 2977,
+          "trial": 1
+        },
+        {
+          "completed_operations": 1000,
+          "error_count": 0,
+          "final_retained_delta_bytes": 1184,
+          "initial_retained_delta_bytes": 0,
+          "intermediate_retained_delta_bytes": 1160,
+          "output_retention": "none",
+          "post_gc_retained_delta_bytes": 224,
+          "reason": null,
+          "status": "measured",
+          "traced_peak_bytes": 2977,
+          "trial": 2
+        },
+        {
+          "completed_operations": 1000,
+          "error_count": 0,
+          "final_retained_delta_bytes": 1184,
+          "initial_retained_delta_bytes": 0,
+          "intermediate_retained_delta_bytes": 1160,
+          "output_retention": "none",
+          "post_gc_retained_delta_bytes": 224,
+          "reason": null,
+          "status": "measured",
+          "traced_peak_bytes": 2977,
+          "trial": 3
+        }
+      ]
+    },
+    {
+      "category": "repeated_projection_retention",
+      "error_count": 0,
+      "execution_boundary": "synthetic_projection_only",
+      "input_payload_bytes": 9282,
+      "iterations_per_trial": 100,
+      "kind": "tracemalloc_repeated_direct_production_function",
+      "name": "grouped_result.memory.retention.records_100.iterations_0100",
+      "negative_control": false,
+      "output_payload_bytes": 9304,
+      "output_retention": "none",
+      "projection_changes_result": true,
+      "reason": null,
+      "record_count": 100,
+      "retention_interpretation": "Signed post-GC deltas can reflect allocator or cache behavior and are not leak evidence without repeatable lifetime analysis.",
+      "scenario_metadata": {
+        "fixture_kind": "rewritten_hint",
+        "measurement_boundary": "repeated_direct_production_projection_function"
+      },
+      "status": "measured",
+      "tracing_configuration": {
+        "global_tracing_policy": "not_measured_when_already_active",
+        "input_fixture_prepared_before_tracing": true,
+        "library": "tracemalloc",
+        "output_string_included_in_current_and_peak": true,
+        "post_gc_delta_is_signed": true,
+        "traceback_frame_limit": 10,
+        "units": "bytes"
+      },
+      "trial_count": 3,
+      "trials": [
+        {
+          "completed_operations": 100,
+          "error_count": 0,
+          "final_retained_delta_bytes": 22224,
+          "initial_retained_delta_bytes": 0,
+          "intermediate_retained_delta_bytes": 22200,
+          "output_retention": "none",
+          "post_gc_retained_delta_bytes": 128,
+          "reason": null,
+          "status": "measured",
+          "traced_peak_bytes": 60153,
+          "trial": 1
+        },
+        {
+          "completed_operations": 100,
+          "error_count": 0,
+          "final_retained_delta_bytes": 22224,
+          "initial_retained_delta_bytes": 0,
+          "intermediate_retained_delta_bytes": 22200,
+          "output_retention": "none",
+          "post_gc_retained_delta_bytes": 128,
+          "reason": null,
+          "status": "measured",
+          "traced_peak_bytes": 60153,
+          "trial": 2
+        },
+        {
+          "completed_operations": 100,
+          "error_count": 0,
+          "final_retained_delta_bytes": 22224,
+          "initial_retained_delta_bytes": 0,
+          "intermediate_retained_delta_bytes": 22200,
+          "output_retention": "none",
+          "post_gc_retained_delta_bytes": 128,
+          "reason": null,
+          "status": "measured",
+          "traced_peak_bytes": 60153,
+          "trial": 3
+        }
+      ]
+    },
+    {
+      "category": "repeated_projection_retention",
+      "error_count": 0,
+      "execution_boundary": "synthetic_projection_only",
+      "input_payload_bytes": 9282,
+      "iterations_per_trial": 500,
+      "kind": "tracemalloc_repeated_direct_production_function",
+      "name": "grouped_result.memory.retention.records_100.iterations_0500",
+      "negative_control": false,
+      "output_payload_bytes": 9304,
+      "output_retention": "none",
+      "projection_changes_result": true,
+      "reason": null,
+      "record_count": 100,
+      "retention_interpretation": "Signed post-GC deltas can reflect allocator or cache behavior and are not leak evidence without repeatable lifetime analysis.",
+      "scenario_metadata": {
+        "fixture_kind": "rewritten_hint",
+        "measurement_boundary": "repeated_direct_production_projection_function"
+      },
+      "status": "measured",
+      "tracing_configuration": {
+        "global_tracing_policy": "not_measured_when_already_active",
+        "input_fixture_prepared_before_tracing": true,
+        "library": "tracemalloc",
+        "output_string_included_in_current_and_peak": true,
+        "post_gc_delta_is_signed": true,
+        "traceback_frame_limit": 10,
+        "units": "bytes"
+      },
+      "trial_count": 3,
+      "trials": [
+        {
+          "completed_operations": 500,
+          "error_count": 0,
+          "final_retained_delta_bytes": 22288,
+          "initial_retained_delta_bytes": 0,
+          "intermediate_retained_delta_bytes": 22200,
+          "output_retention": "none",
+          "post_gc_retained_delta_bytes": 192,
+          "reason": null,
+          "status": "measured",
+          "traced_peak_bytes": 60217,
+          "trial": 1
+        },
+        {
+          "completed_operations": 500,
+          "error_count": 0,
+          "final_retained_delta_bytes": 22288,
+          "initial_retained_delta_bytes": 0,
+          "intermediate_retained_delta_bytes": 22200,
+          "output_retention": "none",
+          "post_gc_retained_delta_bytes": 192,
+          "reason": null,
+          "status": "measured",
+          "traced_peak_bytes": 60217,
+          "trial": 2
+        },
+        {
+          "completed_operations": 500,
+          "error_count": 0,
+          "final_retained_delta_bytes": 22288,
+          "initial_retained_delta_bytes": 0,
+          "intermediate_retained_delta_bytes": 22200,
+          "output_retention": "none",
+          "post_gc_retained_delta_bytes": 192,
+          "reason": null,
+          "status": "measured",
+          "traced_peak_bytes": 60217,
+          "trial": 3
+        }
+      ]
+    },
+    {
+      "category": "repeated_projection_retention",
+      "error_count": 0,
+      "execution_boundary": "synthetic_projection_only",
+      "input_payload_bytes": 9282,
+      "iterations_per_trial": 1000,
+      "kind": "tracemalloc_repeated_direct_production_function",
+      "name": "grouped_result.memory.retention.records_100.iterations_1000",
+      "negative_control": false,
+      "output_payload_bytes": 9304,
+      "output_retention": "none",
+      "projection_changes_result": true,
+      "reason": null,
+      "record_count": 100,
+      "retention_interpretation": "Signed post-GC deltas can reflect allocator or cache behavior and are not leak evidence without repeatable lifetime analysis.",
+      "scenario_metadata": {
+        "fixture_kind": "rewritten_hint",
+        "measurement_boundary": "repeated_direct_production_projection_function"
+      },
+      "status": "measured",
+      "tracing_configuration": {
+        "global_tracing_policy": "not_measured_when_already_active",
+        "input_fixture_prepared_before_tracing": true,
+        "library": "tracemalloc",
+        "output_string_included_in_current_and_peak": true,
+        "post_gc_delta_is_signed": true,
+        "traceback_frame_limit": 10,
+        "units": "bytes"
+      },
+      "trial_count": 3,
+      "trials": [
+        {
+          "completed_operations": 1000,
+          "error_count": 0,
+          "final_retained_delta_bytes": 22320,
+          "initial_retained_delta_bytes": 0,
+          "intermediate_retained_delta_bytes": 22296,
+          "output_retention": "none",
+          "post_gc_retained_delta_bytes": 224,
+          "reason": null,
+          "status": "measured",
+          "traced_peak_bytes": 60249,
+          "trial": 1
+        },
+        {
+          "completed_operations": 1000,
+          "error_count": 0,
+          "final_retained_delta_bytes": 22320,
+          "initial_retained_delta_bytes": 0,
+          "intermediate_retained_delta_bytes": 22296,
+          "output_retention": "none",
+          "post_gc_retained_delta_bytes": 224,
+          "reason": null,
+          "status": "measured",
+          "traced_peak_bytes": 60249,
+          "trial": 2
+        },
+        {
+          "completed_operations": 1000,
+          "error_count": 0,
+          "final_retained_delta_bytes": 22320,
+          "initial_retained_delta_bytes": 0,
+          "intermediate_retained_delta_bytes": 22296,
+          "output_retention": "none",
+          "post_gc_retained_delta_bytes": 224,
+          "reason": null,
+          "status": "measured",
+          "traced_peak_bytes": 60249,
+          "trial": 3
+        }
+      ]
+    },
+    {
+      "category": "repeated_projection_retention",
+      "error_count": 0,
+      "execution_boundary": "synthetic_projection_only",
+      "input_payload_bytes": 13409,
+      "iterations_per_trial": 100,
+      "kind": "tracemalloc_repeated_direct_production_function",
+      "name": "grouped_result.memory.retention.long_hint.iterations_0100",
+      "negative_control": false,
+      "output_payload_bytes": 13431,
+      "output_retention": "none",
+      "projection_changes_result": true,
+      "reason": null,
+      "record_count": 1,
+      "retention_interpretation": "Signed post-GC deltas can reflect allocator or cache behavior and are not leak evidence without repeatable lifetime analysis.",
+      "scenario_metadata": {
+        "fixture_kind": "long_rewritten_hint",
+        "measurement_boundary": "repeated_direct_production_projection_function"
+      },
+      "status": "measured",
+      "tracing_configuration": {
+        "global_tracing_policy": "not_measured_when_already_active",
+        "input_fixture_prepared_before_tracing": true,
+        "library": "tracemalloc",
+        "output_string_included_in_current_and_peak": true,
+        "post_gc_delta_is_signed": true,
+        "traceback_frame_limit": 10,
+        "units": "bytes"
+      },
+      "trial_count": 3,
+      "trials": [
+        {
+          "completed_operations": 100,
+          "error_count": 0,
+          "final_retained_delta_bytes": 1200,
+          "initial_retained_delta_bytes": 0,
+          "intermediate_retained_delta_bytes": 1176,
+          "output_retention": "none",
+          "post_gc_retained_delta_bytes": 128,
+          "reason": null,
+          "status": "measured",
+          "traced_peak_bytes": 59099,
+          "trial": 1
+        },
+        {
+          "completed_operations": 100,
+          "error_count": 0,
+          "final_retained_delta_bytes": 1200,
+          "initial_retained_delta_bytes": 0,
+          "intermediate_retained_delta_bytes": 1176,
+          "output_retention": "none",
+          "post_gc_retained_delta_bytes": 128,
+          "reason": null,
+          "status": "measured",
+          "traced_peak_bytes": 59099,
+          "trial": 2
+        },
+        {
+          "completed_operations": 100,
+          "error_count": 0,
+          "final_retained_delta_bytes": 1200,
+          "initial_retained_delta_bytes": 0,
+          "intermediate_retained_delta_bytes": 1176,
+          "output_retention": "none",
+          "post_gc_retained_delta_bytes": 128,
+          "reason": null,
+          "status": "measured",
+          "traced_peak_bytes": 59099,
+          "trial": 3
+        }
+      ]
+    },
+    {
+      "category": "repeated_projection_retention",
+      "error_count": 0,
+      "execution_boundary": "synthetic_projection_only",
+      "input_payload_bytes": 13409,
+      "iterations_per_trial": 500,
+      "kind": "tracemalloc_repeated_direct_production_function",
+      "name": "grouped_result.memory.retention.long_hint.iterations_0500",
+      "negative_control": false,
+      "output_payload_bytes": 13431,
+      "output_retention": "none",
+      "projection_changes_result": true,
+      "reason": null,
+      "record_count": 1,
+      "retention_interpretation": "Signed post-GC deltas can reflect allocator or cache behavior and are not leak evidence without repeatable lifetime analysis.",
+      "scenario_metadata": {
+        "fixture_kind": "long_rewritten_hint",
+        "measurement_boundary": "repeated_direct_production_projection_function"
+      },
+      "status": "measured",
+      "tracing_configuration": {
+        "global_tracing_policy": "not_measured_when_already_active",
+        "input_fixture_prepared_before_tracing": true,
+        "library": "tracemalloc",
+        "output_string_included_in_current_and_peak": true,
+        "post_gc_delta_is_signed": true,
+        "traceback_frame_limit": 10,
+        "units": "bytes"
+      },
+      "trial_count": 3,
+      "trials": [
+        {
+          "completed_operations": 500,
+          "error_count": 0,
+          "final_retained_delta_bytes": 1264,
+          "initial_retained_delta_bytes": 0,
+          "intermediate_retained_delta_bytes": 1176,
+          "output_retention": "none",
+          "post_gc_retained_delta_bytes": 192,
+          "reason": null,
+          "status": "measured",
+          "traced_peak_bytes": 59163,
+          "trial": 1
+        },
+        {
+          "completed_operations": 500,
+          "error_count": 0,
+          "final_retained_delta_bytes": 1264,
+          "initial_retained_delta_bytes": 0,
+          "intermediate_retained_delta_bytes": 1176,
+          "output_retention": "none",
+          "post_gc_retained_delta_bytes": 192,
+          "reason": null,
+          "status": "measured",
+          "traced_peak_bytes": 59163,
+          "trial": 2
+        },
+        {
+          "completed_operations": 500,
+          "error_count": 0,
+          "final_retained_delta_bytes": 1264,
+          "initial_retained_delta_bytes": 0,
+          "intermediate_retained_delta_bytes": 1176,
+          "output_retention": "none",
+          "post_gc_retained_delta_bytes": 192,
+          "reason": null,
+          "status": "measured",
+          "traced_peak_bytes": 59163,
+          "trial": 3
+        }
+      ]
+    },
+    {
+      "category": "repeated_projection_retention",
+      "error_count": 0,
+      "execution_boundary": "synthetic_projection_only",
+      "input_payload_bytes": 13409,
+      "iterations_per_trial": 1000,
+      "kind": "tracemalloc_repeated_direct_production_function",
+      "name": "grouped_result.memory.retention.long_hint.iterations_1000",
+      "negative_control": false,
+      "output_payload_bytes": 13431,
+      "output_retention": "none",
+      "projection_changes_result": true,
+      "reason": null,
+      "record_count": 1,
+      "retention_interpretation": "Signed post-GC deltas can reflect allocator or cache behavior and are not leak evidence without repeatable lifetime analysis.",
+      "scenario_metadata": {
+        "fixture_kind": "long_rewritten_hint",
+        "measurement_boundary": "repeated_direct_production_projection_function"
+      },
+      "status": "measured",
+      "tracing_configuration": {
+        "global_tracing_policy": "not_measured_when_already_active",
+        "input_fixture_prepared_before_tracing": true,
+        "library": "tracemalloc",
+        "output_string_included_in_current_and_peak": true,
+        "post_gc_delta_is_signed": true,
+        "traceback_frame_limit": 10,
+        "units": "bytes"
+      },
+      "trial_count": 3,
+      "trials": [
+        {
+          "completed_operations": 1000,
+          "error_count": 0,
+          "final_retained_delta_bytes": 1296,
+          "initial_retained_delta_bytes": 0,
+          "intermediate_retained_delta_bytes": 1272,
+          "output_retention": "none",
+          "post_gc_retained_delta_bytes": 224,
+          "reason": null,
+          "status": "measured",
+          "traced_peak_bytes": 59195,
+          "trial": 1
+        },
+        {
+          "completed_operations": 1000,
+          "error_count": 0,
+          "final_retained_delta_bytes": 1296,
+          "initial_retained_delta_bytes": 0,
+          "intermediate_retained_delta_bytes": 1272,
+          "output_retention": "none",
+          "post_gc_retained_delta_bytes": 224,
+          "reason": null,
+          "status": "measured",
+          "traced_peak_bytes": 59195,
+          "trial": 2
+        },
+        {
+          "completed_operations": 1000,
+          "error_count": 0,
+          "final_retained_delta_bytes": 1296,
+          "initial_retained_delta_bytes": 0,
+          "intermediate_retained_delta_bytes": 1272,
+          "output_retention": "none",
+          "post_gc_retained_delta_bytes": 224,
+          "reason": null,
+          "status": "measured",
+          "traced_peak_bytes": 59195,
+          "trial": 3
+        }
+      ]
+    },
+    {
+      "category": "concurrent_projection_memory",
+      "completed_operations": 1,
+      "concurrency": 1,
+      "error_count": 0,
+      "execution_boundary": "synthetic_projection_only",
+      "gil_and_scheduling_limitation": "Python's GIL and local scheduling affect execution overlap. The start barrier and held output lifetime confirm concurrent operations, not simultaneous CPU execution.",
+      "input_payload_bytes": 9282,
+      "kind": "tracemalloc_threaded_direct_production_function",
+      "name": "grouped_result.memory.concurrency.workers_001",
+      "output_payload_bytes": 9304,
+      "per_request_attribution": "not_supported",
+      "process_rss_scope": "process_wide",
+      "projection_changes_result": true,
+      "reason": null,
+      "record_count": 100,
+      "scenario_metadata": {
+        "fixture_kind": "rewritten_hint",
+        "measurement_boundary": "synchronized_direct_projection_operation_lifetime",
+        "synchronization": "start_barrier_and_output_release_event"
+      },
+      "status": "measured",
+      "tracemalloc_scope": "process_wide",
+      "tracing_configuration": {
+        "global_tracing_policy": "not_measured_when_already_active",
+        "input_fixture_prepared_before_tracing": true,
+        "library": "tracemalloc",
+        "output_string_included_in_current_and_peak": true,
+        "post_gc_delta_is_signed": true,
+        "traceback_frame_limit": 10,
+        "units": "bytes"
+      },
+      "trial_count": 3,
+      "trials": [
+        {
+          "actual_peak_in_flight_operations": 1,
+          "completed_operations": 1,
+          "output_included_during_measurement": true,
+          "output_parity_failures": 0,
+          "post_gc_current_bytes": 248,
+          "post_gc_retained_delta_bytes": 248,
+          "process_rss_after_execution": {
+            "bytes": null,
+            "reason": "no_portable_current_rss_source_on_this_platform",
+            "status": "not_measured"
+          },
+          "process_rss_after_gc": {
+            "bytes": null,
+            "reason": "no_portable_current_rss_source_on_this_platform",
+            "status": "not_measured"
+          },
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 65876,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 37380,
+          "traced_peak_bytes": 65876,
+          "trial": 1,
+          "unexpected_error_count": 0
+        },
+        {
+          "actual_peak_in_flight_operations": 1,
+          "completed_operations": 1,
+          "output_included_during_measurement": true,
+          "output_parity_failures": 0,
+          "post_gc_current_bytes": 248,
+          "post_gc_retained_delta_bytes": 248,
+          "process_rss_after_execution": {
+            "bytes": null,
+            "reason": "no_portable_current_rss_source_on_this_platform",
+            "status": "not_measured"
+          },
+          "process_rss_after_gc": {
+            "bytes": null,
+            "reason": "no_portable_current_rss_source_on_this_platform",
+            "status": "not_measured"
+          },
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 65820,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 37324,
+          "traced_peak_bytes": 65820,
+          "trial": 2,
+          "unexpected_error_count": 0
+        },
+        {
+          "actual_peak_in_flight_operations": 1,
+          "completed_operations": 1,
+          "output_included_during_measurement": true,
+          "output_parity_failures": 0,
+          "post_gc_current_bytes": 504,
+          "post_gc_retained_delta_bytes": 504,
+          "process_rss_after_execution": {
+            "bytes": null,
+            "reason": "no_portable_current_rss_source_on_this_platform",
+            "status": "not_measured"
+          },
+          "process_rss_after_gc": {
+            "bytes": null,
+            "reason": "no_portable_current_rss_source_on_this_platform",
+            "status": "not_measured"
+          },
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 66028,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 37532,
+          "traced_peak_bytes": 66028,
+          "trial": 3,
+          "unexpected_error_count": 0
+        }
+      ],
+      "unexpected_error_count": 0
+    },
+    {
+      "category": "concurrent_projection_memory",
+      "completed_operations": 10,
+      "concurrency": 10,
+      "error_count": 0,
+      "execution_boundary": "synthetic_projection_only",
+      "gil_and_scheduling_limitation": "Python's GIL and local scheduling affect execution overlap. The start barrier and held output lifetime confirm concurrent operations, not simultaneous CPU execution.",
+      "input_payload_bytes": 9282,
+      "kind": "tracemalloc_threaded_direct_production_function",
+      "name": "grouped_result.memory.concurrency.workers_010",
+      "output_payload_bytes": 9304,
+      "per_request_attribution": "not_supported",
+      "process_rss_scope": "process_wide",
+      "projection_changes_result": true,
+      "reason": null,
+      "record_count": 100,
+      "scenario_metadata": {
+        "fixture_kind": "rewritten_hint",
+        "measurement_boundary": "synchronized_direct_projection_operation_lifetime",
+        "synchronization": "start_barrier_and_output_release_event"
+      },
+      "status": "measured",
+      "tracemalloc_scope": "process_wide",
+      "tracing_configuration": {
+        "global_tracing_policy": "not_measured_when_already_active",
+        "input_fixture_prepared_before_tracing": true,
+        "library": "tracemalloc",
+        "output_string_included_in_current_and_peak": true,
+        "post_gc_delta_is_signed": true,
+        "traceback_frame_limit": 10,
+        "units": "bytes"
+      },
+      "trial_count": 3,
+      "trials": [
+        {
+          "actual_peak_in_flight_operations": 10,
+          "completed_operations": 10,
+          "output_included_during_measurement": true,
+          "output_parity_failures": 0,
+          "post_gc_current_bytes": 2544,
+          "post_gc_retained_delta_bytes": 2544,
+          "process_rss_after_execution": {
+            "bytes": null,
+            "reason": "no_portable_current_rss_source_on_this_platform",
+            "status": "not_measured"
+          },
+          "process_rss_after_gc": {
+            "bytes": null,
+            "reason": "no_portable_current_rss_source_on_this_platform",
+            "status": "not_measured"
+          },
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 204888,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 176344,
+          "traced_peak_bytes": 204888,
+          "trial": 1,
+          "unexpected_error_count": 0
+        },
+        {
+          "actual_peak_in_flight_operations": 10,
+          "completed_operations": 10,
+          "output_included_during_measurement": true,
+          "output_parity_failures": 0,
+          "post_gc_current_bytes": 1720,
+          "post_gc_retained_delta_bytes": 1720,
+          "process_rss_after_execution": {
+            "bytes": null,
+            "reason": "no_portable_current_rss_source_on_this_platform",
+            "status": "not_measured"
+          },
+          "process_rss_after_gc": {
+            "bytes": null,
+            "reason": "no_portable_current_rss_source_on_this_platform",
+            "status": "not_measured"
+          },
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 200920,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 172376,
+          "traced_peak_bytes": 200920,
+          "trial": 2,
+          "unexpected_error_count": 0
+        },
+        {
+          "actual_peak_in_flight_operations": 10,
+          "completed_operations": 10,
+          "output_included_during_measurement": true,
+          "output_parity_failures": 0,
+          "post_gc_current_bytes": 1264,
+          "post_gc_retained_delta_bytes": 1264,
+          "process_rss_after_execution": {
+            "bytes": null,
+            "reason": "no_portable_current_rss_source_on_this_platform",
+            "status": "not_measured"
+          },
+          "process_rss_after_gc": {
+            "bytes": null,
+            "reason": "no_portable_current_rss_source_on_this_platform",
+            "status": "not_measured"
+          },
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 199800,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 171256,
+          "traced_peak_bytes": 199800,
+          "trial": 3,
+          "unexpected_error_count": 0
+        }
+      ],
+      "unexpected_error_count": 0
+    },
+    {
+      "category": "concurrent_projection_memory",
+      "completed_operations": 25,
+      "concurrency": 25,
+      "error_count": 0,
+      "execution_boundary": "synthetic_projection_only",
+      "gil_and_scheduling_limitation": "Python's GIL and local scheduling affect execution overlap. The start barrier and held output lifetime confirm concurrent operations, not simultaneous CPU execution.",
+      "input_payload_bytes": 9282,
+      "kind": "tracemalloc_threaded_direct_production_function",
+      "name": "grouped_result.memory.concurrency.workers_025",
+      "output_payload_bytes": 9304,
+      "per_request_attribution": "not_supported",
+      "process_rss_scope": "process_wide",
+      "projection_changes_result": true,
+      "reason": null,
+      "record_count": 100,
+      "scenario_metadata": {
+        "fixture_kind": "rewritten_hint",
+        "measurement_boundary": "synchronized_direct_projection_operation_lifetime",
+        "synchronization": "start_barrier_and_output_release_event"
+      },
+      "status": "measured",
+      "tracemalloc_scope": "process_wide",
+      "tracing_configuration": {
+        "global_tracing_policy": "not_measured_when_already_active",
+        "input_fixture_prepared_before_tracing": true,
+        "library": "tracemalloc",
+        "output_string_included_in_current_and_peak": true,
+        "post_gc_delta_is_signed": true,
+        "traceback_frame_limit": 10,
+        "units": "bytes"
+      },
+      "trial_count": 3,
+      "trials": [
+        {
+          "actual_peak_in_flight_operations": 25,
+          "completed_operations": 25,
+          "output_included_during_measurement": true,
+          "output_parity_failures": 0,
+          "post_gc_current_bytes": 6712,
+          "post_gc_retained_delta_bytes": 6712,
+          "process_rss_after_execution": {
+            "bytes": null,
+            "reason": "no_portable_current_rss_source_on_this_platform",
+            "status": "not_measured"
+          },
+          "process_rss_after_gc": {
+            "bytes": null,
+            "reason": "no_portable_current_rss_source_on_this_platform",
+            "status": "not_measured"
+          },
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 428387,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 399843,
+          "traced_peak_bytes": 428387,
+          "trial": 1,
+          "unexpected_error_count": 0
+        },
+        {
+          "actual_peak_in_flight_operations": 25,
+          "completed_operations": 25,
+          "output_included_during_measurement": true,
+          "output_parity_failures": 0,
+          "post_gc_current_bytes": 2872,
+          "post_gc_retained_delta_bytes": 2872,
+          "process_rss_after_execution": {
+            "bytes": null,
+            "reason": "no_portable_current_rss_source_on_this_platform",
+            "status": "not_measured"
+          },
+          "process_rss_after_gc": {
+            "bytes": null,
+            "reason": "no_portable_current_rss_source_on_this_platform",
+            "status": "not_measured"
+          },
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 424316,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 395772,
+          "traced_peak_bytes": 424316,
+          "trial": 2,
+          "unexpected_error_count": 0
+        },
+        {
+          "actual_peak_in_flight_operations": 25,
+          "completed_operations": 25,
+          "output_included_during_measurement": true,
+          "output_parity_failures": 0,
+          "post_gc_current_bytes": 3640,
+          "post_gc_retained_delta_bytes": 3640,
+          "process_rss_after_execution": {
+            "bytes": null,
+            "reason": "no_portable_current_rss_source_on_this_platform",
+            "status": "not_measured"
+          },
+          "process_rss_after_gc": {
+            "bytes": null,
+            "reason": "no_portable_current_rss_source_on_this_platform",
+            "status": "not_measured"
+          },
+          "reason": null,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 425340,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 396796,
+          "traced_peak_bytes": 425340,
+          "trial": 3,
+          "unexpected_error_count": 0
+        }
+      ],
+      "unexpected_error_count": 0
+    },
+    {
+      "category": "canonical_execution_memory",
+      "error_count": 0,
+      "execution_boundary": "canonical_dispatch_included",
+      "input_payload_bytes": null,
+      "kind": "isolated_postgresql_tracemalloc",
+      "name": "grouped_result.canonical.dataset_list.records_001",
+      "observed_result_metadata": {
+        "returned_record_count": 1
+      },
+      "output_payload_bytes": 452,
+      "projection_changes_result": false,
+      "reason": null,
+      "record_count": 1,
+      "scenario_metadata": {
+        "canonical_dispatch_call_count_per_trial": [
+          1,
+          1,
+          1
+        ],
+        "full_execution_boundary": true,
+        "input_payload_bytes_unavailable_reason": "Canonical dispatch receives structured request arguments rather than a serialized input result string.",
+        "measurement_boundary": "canonical_dispatch_included",
+        "stabilization_operation_count_per_trial": [
+          1,
+          1,
+          1
+        ]
+      },
+      "status": "measured",
+      "tracing_configuration": {
+        "global_tracing_policy": "not_measured_when_already_active",
+        "input_fixture_prepared_before_tracing": true,
+        "library": "tracemalloc",
+        "output_string_included_in_current_and_peak": true,
+        "post_gc_delta_is_signed": true,
+        "traceback_frame_limit": 10,
+        "units": "bytes"
+      },
+      "trial_count": 3,
+      "trials": [
+        {
+          "canonical_dispatch_call_count": 1,
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 452,
+          "post_gc_current_bytes": 41285,
+          "post_gc_retained_delta_bytes": 41285,
+          "reason": null,
+          "stabilization_operation_count": 1,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 204876,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 100565,
+          "traced_peak_bytes": 204876,
+          "trial": 1
+        },
+        {
+          "canonical_dispatch_call_count": 1,
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 452,
+          "post_gc_current_bytes": 44129,
+          "post_gc_retained_delta_bytes": 44129,
+          "reason": null,
+          "stabilization_operation_count": 1,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 203791,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 103301,
+          "traced_peak_bytes": 203791,
+          "trial": 2
+        },
+        {
+          "canonical_dispatch_call_count": 1,
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 452,
+          "post_gc_current_bytes": 45578,
+          "post_gc_retained_delta_bytes": 45578,
+          "reason": null,
+          "stabilization_operation_count": 1,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 203458,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 104804,
+          "traced_peak_bytes": 203458,
+          "trial": 3
+        }
+      ]
+    },
+    {
+      "category": "canonical_execution_memory",
+      "error_count": 0,
+      "execution_boundary": "canonical_dispatch_included",
+      "input_payload_bytes": null,
+      "kind": "isolated_postgresql_tracemalloc",
+      "name": "grouped_result.canonical.dataset_list.records_050",
+      "observed_result_metadata": {
+        "returned_record_count": 50
+      },
+      "output_payload_bytes": 16859,
+      "projection_changes_result": false,
+      "reason": null,
+      "record_count": 50,
+      "scenario_metadata": {
+        "canonical_dispatch_call_count_per_trial": [
+          1,
+          1,
+          1
+        ],
+        "full_execution_boundary": true,
+        "input_payload_bytes_unavailable_reason": "Canonical dispatch receives structured request arguments rather than a serialized input result string.",
+        "measurement_boundary": "canonical_dispatch_included",
+        "stabilization_operation_count_per_trial": [
+          1,
+          1,
+          1
+        ]
+      },
+      "status": "measured",
+      "tracing_configuration": {
+        "global_tracing_policy": "not_measured_when_already_active",
+        "input_fixture_prepared_before_tracing": true,
+        "library": "tracemalloc",
+        "output_string_included_in_current_and_peak": true,
+        "post_gc_delta_is_signed": true,
+        "traceback_frame_limit": 10,
+        "units": "bytes"
+      },
+      "trial_count": 3,
+      "trials": [
+        {
+          "canonical_dispatch_call_count": 1,
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 16859,
+          "post_gc_current_bytes": 42220,
+          "post_gc_retained_delta_bytes": 42220,
+          "reason": null,
+          "stabilization_operation_count": 1,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 279759,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 132485,
+          "traced_peak_bytes": 279759,
+          "trial": 1
+        },
+        {
+          "canonical_dispatch_call_count": 1,
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 16859,
+          "post_gc_current_bytes": 45189,
+          "post_gc_retained_delta_bytes": 45189,
+          "reason": null,
+          "stabilization_operation_count": 1,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 282418,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 135400,
+          "traced_peak_bytes": 282418,
+          "trial": 2
+        },
+        {
+          "canonical_dispatch_call_count": 1,
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 16859,
+          "post_gc_current_bytes": 43824,
+          "post_gc_retained_delta_bytes": 43824,
+          "reason": null,
+          "stabilization_operation_count": 1,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 280933,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 134035,
+          "traced_peak_bytes": 280933,
+          "trial": 3
+        }
+      ]
+    },
+    {
+      "category": "canonical_execution_memory",
+      "error_count": 0,
+      "execution_boundary": "canonical_dispatch_included",
+      "input_payload_bytes": null,
+      "kind": "isolated_postgresql_tracemalloc",
+      "name": "grouped_result.canonical.dataset_list.records_100",
+      "observed_result_metadata": {
+        "returned_record_count": 100
+      },
+      "output_payload_bytes": 33603,
+      "projection_changes_result": false,
+      "reason": null,
+      "record_count": 100,
+      "scenario_metadata": {
+        "canonical_dispatch_call_count_per_trial": [
+          1,
+          1,
+          1
+        ],
+        "full_execution_boundary": true,
+        "input_payload_bytes_unavailable_reason": "Canonical dispatch receives structured request arguments rather than a serialized input result string.",
+        "measurement_boundary": "canonical_dispatch_included",
+        "stabilization_operation_count_per_trial": [
+          1,
+          1,
+          1
+        ]
+      },
+      "status": "measured",
+      "tracing_configuration": {
+        "global_tracing_policy": "not_measured_when_already_active",
+        "input_fixture_prepared_before_tracing": true,
+        "library": "tracemalloc",
+        "output_string_included_in_current_and_peak": true,
+        "post_gc_delta_is_signed": true,
+        "traceback_frame_limit": 10,
+        "units": "bytes"
+      },
+      "trial_count": 3,
+      "trials": [
+        {
+          "canonical_dispatch_call_count": 1,
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 33603,
+          "post_gc_current_bytes": 42744,
+          "post_gc_retained_delta_bytes": 42744,
+          "reason": null,
+          "stabilization_operation_count": 1,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 443171,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 164553,
+          "traced_peak_bytes": 443171,
+          "trial": 1
+        },
+        {
+          "canonical_dispatch_call_count": 1,
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 33603,
+          "post_gc_current_bytes": 42005,
+          "post_gc_retained_delta_bytes": 42005,
+          "reason": null,
+          "stabilization_operation_count": 1,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 442322,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 163814,
+          "traced_peak_bytes": 442322,
+          "trial": 2
+        },
+        {
+          "canonical_dispatch_call_count": 1,
+          "output_included_during_measurement": true,
+          "output_parity": "exact",
+          "output_payload_bytes": 33603,
+          "post_gc_current_bytes": 42884,
+          "post_gc_retained_delta_bytes": 42884,
+          "reason": null,
+          "stabilization_operation_count": 1,
+          "status": "measured",
+          "temporary_peak_amplification_bytes": 442987,
+          "traced_baseline_current_bytes": 0,
+          "traced_current_after_execution_bytes": 164639,
+          "traced_peak_bytes": 442987,
+          "trial": 3
+        }
+      ]
+    }
+  ],
+  "schema_version": 1
+}

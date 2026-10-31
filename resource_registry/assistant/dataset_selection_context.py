@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping, Sequence
 
 from creative_assembly.application.campaign_output_contract import (
     is_persistent_campaign_preview_html,
@@ -11,25 +11,38 @@ from creative_assembly.application.campaign_output_contract import (
 from resource_registry.assistant.dataset_selection_store import (
     RegistryConversationSelectionScope,
     VerifiedDatasetSelection,
-    canonical_uuid as _canonical_uuid,
     delete_selections,
+)
+from resource_registry.assistant.dataset_selection_store import (
+    canonical_uuid as _canonical_uuid,
+)
+from resource_registry.assistant.dataset_selection_store import (
     load_selections as _load_selections,
+)
+from resource_registry.assistant.dataset_selection_store import (
     save_selections as _save_selections,
 )
 from resource_registry.assistant.persona_capabilities import DataRegistryPersonaCapabilityService
 from resource_registry.bifs.dataset_references import is_contextual_dataset_reference
 from resource_registry.bifs.manifest import RESOURCE_REGISTRY_BIF_MANIFEST
-from resource_registry.models import DatasetVersionStatus
+from resource_registry.dataset_visibility import build_dataset_visibility_filter
+from resource_registry.models import Dataset, DatasetStatus, DatasetVersion, DatasetVersionStatus
+from resource_registry.performance.instrumentation import (
+    RegistryPerformanceStage,
+    instrument_registry_function,
+)
 from resource_registry.read_auth.context import ReadAuthorizationContext
+from resource_registry.read_auth.permissions import ReadAuthorizationService, ReadPermission
 from resource_registry.read_auth.policy import AuthorizedDataRegistryReadFacade
 
 _SCOPE_ATTRIBUTE = "resource_registry_conversation_selection_scope"
 _ADMISSION_ATTRIBUTE = "resource_registry_admitted_namespace"
 _PROMPT_SELECTION_LIMIT = 50
+_SELECTION_REVALIDATION_BATCH_SIZE = 50
 _CAMPAIGN_RENDER_FUNCTION = "creative_assembly_create_campaign_asset"
 
 
-class RegistryDatasetSelectionRequired(ValueError):
+class RegistryDatasetSelectionRequired(ValueError):  # noqa: N818
     """Report an ambiguous dataset or version without choosing one implicitly."""
 
     def __init__(self, code: str, message: str) -> None:
@@ -83,17 +96,19 @@ def get_verified_registry_dataset_ids(request: object, namespace_id: str) -> tup
     admitted_namespace_id = _admit_current_namespace(request, namespace_id)
     if admitted_namespace_id != namespace_id:
         return ()
-    identifiers: list[str] = []
-    for selection in _selections_for_namespace(request, namespace_id):
-        try:
-            _validate_reused_selection(request, namespace_id, selection, check_version=True)
-        except RegistryDatasetSelectionRequired:
-            continue
-        if selection.dataset_id not in identifiers:
-            identifiers.append(selection.dataset_id)
-    return tuple(identifiers)
+    selections = _selections_for_namespace(request, namespace_id)
+    return tuple(
+        dict.fromkeys(
+            selection.dataset_id
+            for selection in _revalidate_cached_selections(request, namespace_id, selections)
+        )
+    )
 
 
+@instrument_registry_function(
+    RegistryPerformanceStage.SELECTION_ARGUMENT_RESOLUTION,
+    operation_parameter="function_name",
+)
 def resolve_registry_selection_tool_arguments(
     *,
     request: object,
@@ -118,8 +133,6 @@ def resolve_registry_selection_tool_arguments(
     arguments = dict(function_args)
     is_registry_function = function_name in RESOURCE_REGISTRY_BIF_MANIFEST
     if not is_registry_function and function_name != _CAMPAIGN_RENDER_FUNCTION:
-        return arguments
-    if function_name == "resource_registry_replace_dataset":
         return arguments
     if is_registry_function and "tenant_id" in parameter_names:
         arguments.setdefault("tenant_id", "")
@@ -212,7 +225,9 @@ def remember_verified_registry_tool_result(
         _admit_current_namespace(request, function_args.get("tenant_id"))
     else:
         return
-    from resource_registry.bifs.read_only_namespace_admission import AdmittedBifNamespace
+    from resource_registry.bifs.read_only_namespace_admission import (  # noqa: PLC0415
+        AdmittedBifNamespace,
+    )
 
     admission = getattr(request, _ADMISSION_ATTRIBUTE, None)
     if not isinstance(admission, AdmittedBifNamespace):
@@ -268,6 +283,7 @@ def remember_verified_registry_tool_result(
     _save_selections(scope, selections)
 
 
+@instrument_registry_function(RegistryPerformanceStage.SELECTION_PROMPT_CONTEXT)
 def get_registry_selection_prompt_context(request: object, persona: object) -> str:
     """Describe only selections still readable by this Persona in its Workspace.
 
@@ -303,7 +319,7 @@ def get_registry_selection_prompt_context(request: object, persona: object) -> s
         if not has_execute_agent and not has_delegation_rules:
             return ""
     previous_persona = getattr(request, "persona", None)
-    setattr(request, "persona", persona)
+    setattr(request, "persona", persona)  # noqa: B010
     try:
         namespace_id = _admit_current_namespace(request, "")
         if namespace_id is None:
@@ -311,30 +327,11 @@ def get_registry_selection_prompt_context(request: object, persona: object) -> s
         selections = _selections_for_namespace(request, namespace_id)
         if not selections:
             return ""
-        # Reuse the Registry's ordinary read authorization before exposing IDs to the model.
-        from BotServer.builtin_functions.resource_registry_functions import (
-            _build_authorization_context,
+        visible = _revalidate_cached_selections(
+            request,
+            namespace_id,
+            selections[-_PROMPT_SELECTION_LIMIT:],
         )
-
-        try:
-            facade = AuthorizedDataRegistryReadFacade()
-            authorization = _build_authorization_context(request, namespace_id)
-        except Exception:
-            return ""
-        visible: list[VerifiedDatasetSelection] = []
-        for selection in selections[-_PROMPT_SELECTION_LIMIT:]:
-            try:
-                _validate_reused_selection(
-                    request,
-                    namespace_id,
-                    selection,
-                    check_version=True,
-                    facade=facade,
-                    authorization=authorization,
-                )
-                visible.append(selection)
-            except RegistryDatasetSelectionRequired:
-                continue
         if not visible:
             return ""
         lines = [
@@ -352,7 +349,7 @@ def get_registry_selection_prompt_context(request: object, persona: object) -> s
         if previous_persona is None:
             delattr(request, "persona")
         else:
-            setattr(request, "persona", previous_persona)
+            setattr(request, "persona", previous_persona)  # noqa: B010
 
 
 def _get_selection_scope(
@@ -394,7 +391,7 @@ def _get_selection_scope(
 
 def _admit_current_namespace(request: object, selector: object) -> str | None:
     """Return the authorized current namespace, leaving errors to the called BIF."""
-    from resource_registry.bifs.read_only_namespace_admission import (
+    from resource_registry.bifs.read_only_namespace_admission import (  # noqa: PLC0415
         ReadOnlyBifNamespaceAdmissionService,
     )
 
@@ -417,7 +414,9 @@ def _selections_for_namespace(
     scope = _get_selection_scope(request)
     if scope is None:
         return ()
-    from resource_registry.bifs.read_only_namespace_admission import AdmittedBifNamespace
+    from resource_registry.bifs.read_only_namespace_admission import (  # noqa: PLC0415
+        AdmittedBifNamespace,
+    )
 
     admission = getattr(request, _ADMISSION_ATTRIBUTE, None)
     workspace_id = admission.workspace_id if isinstance(admission, AdmittedBifNamespace) else None
@@ -426,6 +425,147 @@ def _selections_for_namespace(
         for selection in _load_selections(scope)
         if selection.namespace_id == namespace_id and selection.workspace_id == workspace_id
     )
+
+
+def _revalidate_cached_selections(
+    request: object,
+    namespace_id: str,
+    selections: Sequence[VerifiedDatasetSelection],
+) -> tuple[VerifiedDatasetSelection, ...]:
+    """Return cached selections visible at the current database statement boundary.
+
+    This intentionally performs discovery-only revalidation. The returned rows are not retained
+    as authorization decisions: canonical BIF admission and handler reads perform their own
+    current authorization checks after this function returns, so a state change in that interval
+    remains a fail-closed TOCTOU boundary.
+
+    Args:
+        request: Current authenticated agent request.
+        namespace_id: Already admitted Registry namespace for this operation.
+        selections: Cache-scoped selections to revalidate in their existing order.
+
+    Returns:
+        Readable selections in original order, omitting only stale or unauthorized bindings.
+    """
+    if not selections:
+        return ()
+    from BotServer.builtin_functions.resource_registry_functions import (  # noqa: PLC0415
+        _build_authorization_context,
+    )
+
+    try:
+        authorization = _build_authorization_context(request, namespace_id)
+        authorization_service = ReadAuthorizationService()
+        if not authorization_service.has_permission(authorization, ReadPermission.DATASET_READ):
+            return ()
+        allowed_dataset_ids = authorization_service.get_effective_allowed_dataset_ids(authorization)
+    except Exception:
+        # The former per-selection resolver omitted every entry when this current authorization
+        # context could not read datasets; preserve that discovery behavior without leaking rows.
+        return ()
+    return _resolve_revalidated_cached_selections(
+        authorization=authorization,
+        selections=selections,
+        allowed_dataset_ids=allowed_dataset_ids,
+    )
+
+
+def _resolve_revalidated_cached_selections(
+    *,
+    authorization: ReadAuthorizationContext,
+    selections: Sequence[VerifiedDatasetSelection],
+    allowed_dataset_ids: frozenset[str] | None,
+) -> tuple[VerifiedDatasetSelection, ...]:
+    """Resolve visible cached selections with bounded Registry-local ID queries.
+
+    Args:
+        authorization: Fresh read authorization derived for this discovery operation.
+        selections: Cache entries to inspect, preserving their input order and duplicates.
+        allowed_dataset_ids: Effective Dataset scope resolved from the fresh authorization.
+
+    Returns:
+        Selections with a visible Dataset and, where pinned, the exact READY Version pair.
+    """
+    visible_dataset_ids: set[str] = set()
+    ready_version_pairs: set[tuple[str, str]] = set()
+    distinct_dataset_ids = tuple(dict.fromkeys(selection.dataset_id for selection in selections))
+    for dataset_id_batch in _iter_selection_identifier_batches(distinct_dataset_ids):
+        candidate_dataset_ids = dataset_id_batch
+        if allowed_dataset_ids is not None:
+            candidate_dataset_ids = tuple(
+                dataset_id for dataset_id in dataset_id_batch if dataset_id in allowed_dataset_ids
+            )
+        if not candidate_dataset_ids:
+            continue
+        try:
+            batch_visible_dataset_ids = {
+                str(dataset_id)
+                for dataset_id in Dataset.objects.filter(
+                    build_dataset_visibility_filter(tenant_id=authorization.tenant_id),
+                    id__in=candidate_dataset_ids,
+                    archived_at__isnull=True,
+                    status__in=(DatasetStatus.DRAFT, DatasetStatus.ACTIVE),
+                ).values_list("id", flat=True)
+            }
+        except Exception:
+            # A failed lookup formerly omitted just this selection's entries; retain the same
+            # mixed-validity behavior for a failed bounded chunk and continue with later chunks.
+            continue
+        visible_dataset_ids.update(batch_visible_dataset_ids)
+        requested_version_pairs = {
+            (selection.dataset_id, selection.version_id)
+            for selection in selections
+            if selection.dataset_id in batch_visible_dataset_ids
+            and selection.version_id is not None
+        }
+        if not requested_version_pairs:
+            continue
+        requested_version_ids = tuple(
+            dict.fromkeys(version_id for _dataset_id, version_id in requested_version_pairs)
+        )
+        try:
+            ready_version_pairs.update(
+                (str(dataset_id), str(version_id))
+                for dataset_id, version_id in DatasetVersion.objects.filter(
+                    build_dataset_visibility_filter(
+                        tenant_id=authorization.tenant_id,
+                        field_prefix="dataset__",
+                    ),
+                    dataset_id__in=batch_visible_dataset_ids,
+                    id__in=requested_version_ids,
+                    dataset__archived_at__isnull=True,
+                    dataset__status__in=(DatasetStatus.DRAFT, DatasetStatus.ACTIVE),
+                    status=DatasetVersionStatus.READY,
+                ).values_list("dataset_id", "id")
+            )
+        except Exception:
+            # Versionless selections stay valid when a pinned-version query fails; pinned entries
+            # in this chunk are omitted as the prior resolver would do after a failed version read.
+            continue
+    return tuple(
+        selection
+        for selection in selections
+        if selection.dataset_id in visible_dataset_ids
+        and (
+            selection.version_id is None
+            or (selection.dataset_id, selection.version_id) in ready_version_pairs
+        )
+    )
+
+
+def _iter_selection_identifier_batches(
+    identifiers: Sequence[str],
+) -> Iterator[tuple[str, ...]]:
+    """Yield all distinct Dataset identifiers in conservative bounded chunks.
+
+    Args:
+        identifiers: Ordered distinct Dataset identifiers to revalidate.
+
+    Yields:
+        Identifier chunks no larger than the local query-parameter safety limit.
+    """
+    for offset in range(0, len(identifiers), _SELECTION_REVALIDATION_BATCH_SIZE):
+        yield tuple(identifiers[offset : offset + _SELECTION_REVALIDATION_BATCH_SIZE])
 
 
 def _validate_reused_selection(
@@ -438,7 +578,7 @@ def _validate_reused_selection(
     authorization: ReadAuthorizationContext | None = None,
 ) -> None:
     """Reject a cached binding when current access or readiness has changed."""
-    from BotServer.builtin_functions.resource_registry_functions import (
+    from BotServer.builtin_functions.resource_registry_functions import (  # noqa: PLC0415
         _build_authorization_context,
     )
 

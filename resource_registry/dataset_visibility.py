@@ -35,17 +35,20 @@ def build_dataset_visibility_filter(*, tenant_id: str, field_prefix: str = "") -
     def field(name: str) -> str:
         return f"{field_prefix}{name}"
 
-    return Q(
-        **{
-            field("tenant_id"): namespace_id,
-            field("organization_id"): organization_id,
-            field("workspace_id"): workspace_id,
-            field("visibility_scope"): DatasetVisibilityScope.WORKSPACE,
-        },
-    ) | Q(
-        **{
-            field("organization_id"): organization_id,
-            field("workspace_id__isnull"): True,
-            field("visibility_scope"): DatasetVisibilityScope.ORGANIZATION,
-        },
-    )
+    return (
+        Q(
+            **{
+                field("tenant_id"): namespace_id,
+                field("organization_id"): organization_id,
+                field("workspace_id"): workspace_id,
+                field("visibility_scope"): DatasetVisibilityScope.WORKSPACE,
+            },
+        )
+        | Q(
+            **{
+                field("organization_id"): organization_id,
+                field("workspace_id__isnull"): True,
+                field("visibility_scope"): DatasetVisibilityScope.ORGANIZATION,
+            },
+        )
+    ) & Q(**{field("purge_started_at__isnull"): True})

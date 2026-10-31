@@ -1,85 +1,93 @@
 # Resource Registry dataset versioning
 
-## Purpose
+A Dataset is a stable identity. DatasetVersions are immutable materializations, and
+`Dataset.current_version` selects the version used by readers when no version is specified.
+A restoration can select an older version; the greatest version number is not necessarily current.
+`revision` is a concurrency counter on a resource, not a DatasetVersion number.
 
-Resource Registry treats a Dataset as a logical, durable data product and a DatasetVersion as
-one immutable materialized revision of that product. Operators do not select `v1`, `v2`, or any
-other version number in the upload UI. The registration pipeline assigns it.
+## Create and replace
 
-## How a new version is identified
+1. Upload and verify a supported file using an intake or upload session.
+2. Create a proposal with `POST dataset-changes/` and a persisted `Idempotency-Key`.
+3. For creation, specify the destination namespace and a name. For replacement, specify the
+   existing `dataset_id` and its `expected_revision`.
+4. Poll the proposal, review its differences and publish using the proposal's own revision.
+   Compatible changes can be published by an authorized editor; sensitive changes need a manager.
+5. Read the returned dataset/version IDs and current revision. A failure leaves the current
+   content unchanged.
 
-For an uploaded CSV, JSON, JSONL/NDJSON, or Parquet file, the registration worker slugifies the
-original filename stem and appends its extension. For example, `sales-report.csv` normally resolves
-to `sales-report-csv`; `sales-report.ndjson` resolves to `sales-report-ndjson`. An existing legacy
-Dataset with the stem-only slug (such as `sales-report`) is reused when its versions have the same
-source extension. This preserves versioning for datasets registered before the suffix rule.
-Registration then resolves the Dataset by **tenant ID and slug**:
+Admin provides the same workflow through **Datasets → Create from file / Update data**.
+The new file replaces the complete dataset; rows are not implicitly appended.
+Filename, display name and array order are not target identifiers. Renaming metadata through
+`PATCH datasets/{id}/` preserves identity and content version, while advancing dataset revision.
+See [request/response examples](DATASET_MANAGEMENT_API.md).
 
-| Existing Dataset with that tenant and slug | File content hash | Outcome |
-| --- | --- | --- |
-| No | Any | Create Dataset and version `v1`. |
-| Yes | Matches an existing version | Reuse the existing version; no new version is created. |
-| Yes | Does not match | Create the next integer version (`v2`, then `v3`, and so on). |
+## Content outcomes
 
-The content hash is SHA-256 over the source bytes. A filename or extension change normally creates
-a different slug and therefore a different Dataset, even when its data is related. Conversely,
-adding a label such as `sales-report-v2.csv` normally creates `sales-report-v2-csv`; it does not
-create `v2` of `sales-report-csv`.
+| Prepared content | Result |
+| --- | --- |
+| New dataset | Publication creates the dataset and first version. |
+| Changed content compatible with the current schema | `READY`; publication selects a new immutable version. |
+| Identical current content | `NO_CHANGES`; no duplicate version and no publication call needed. |
+| Removed columns or changed column types | `NEEDS_MANAGER`; manager reviews and publishes. |
+| Content matching a retained historical version | Requires manager review. Manual flows restore the existing version from the dataset; external proposals select it on approval. No duplicate historical version. |
+| Parsing/storage failure or stale revision | No replacement of the current version; inspect the error and recover or recalculate. |
 
-Dataset identity uses the Registry Namespace (`tenant_id`) and slug together. Each Workspace has
-its own Namespace, so the same filename in different Workspaces resolves to separate Datasets.
-Within one Workspace or Organization Namespace, reuse the same filename only for revisions of
-the same logical Dataset.
+Do not edit READY versions directly. Manual restoration uses `restore-version/` with `version_id`,
+dataset `expected_revision` and a reason. Retained artifacts must still exist. A new changed file
+after restoration creates the next version number without renumbering history.
 
-## Operator procedure: publish `v2`
+## Externally managed content
 
-1. Prepare the revised CSV, JSON, JSONL/NDJSON, Parquet, or XLSX with changed content and retain
-   the same filename, including its extension, as the Dataset being revised.
-2. In Django Admin, open **Resource Registry → Staged resource intakes → Upload resource** and
-   complete the upload.
-3. Wait until the intake status is **Ready for publication**.
-4. Select **Publish to destinations** and select the intended existing Organization or Workspace
-   destination.
-5. Wait for the dataset registration or workbook ingestion worker to complete. Confirm the generated
-   DatasetVersion is `v2` and is `READY`.
+An external source is unique by namespace, provider and stable external ID. Its opaque version
+is supplied by the connector; RR does not order provider versions. File renames preserve this
+identity. Distinct external IDs with equal filenames remain distinct sources.
 
-Publish to the same destination when revising an existing dataset. This preserves the expected
-access boundary for users and Personas. A successful intake publication only queues registration;
-the new version is available after the relevant worker completes.
+Use the same source identity, a new verified file and current source/dataset revisions to replace
+content. A verified no-op records the checked external version. Historical content goes through
+an external proposal and manager publication, which selects the retained version. Manual
+replacement and manual `restore-version/` are blocked, even for managers; metadata editing and
+manual archive retain their existing permissions. Source-backed datasets remain `FILE_UPLOAD`.
+See [the external contract](EXTERNAL_SOURCE_SYNC.md).
 
-## Tabular files and workbook behaviour
+## Excel mappings
 
-- CSV, JSON, JSONL/NDJSON, and Parquet each produce one Dataset whose slug is derived from the
-  filename stem and extension, subject to the legacy slug compatibility rule above.
-- JSON input must use a non-empty root array of objects; JSONL/NDJSON requires one object per line.
-  See the file-preparation guide for the complete contracts.
-- An XLSX workbook can produce one Dataset per accepted sheet. Each derived sheet slug is resolved
-  independently, so a revised workbook may produce `v2` for each matching sheet Dataset.
-- An identical upload is an intentional no-op at the DatasetVersion level. It may still create or
-  reuse publication processing records, but it does not duplicate immutable data versions.
+`DatasetWorkbook` is the stable workbook identity. Specify its revision and a mapping from each
+selected sheet name to an existing dataset ID/revision or to a new dataset. A renamed sheet
+retains its dataset when the caller supplies that mapping. New sheets need explicit selection.
+Omitted sheets are preserved unless explicitly listed for archive; removal requires a manager.
 
-## Constraints and troubleshooting
+Selected updates, historical restorations and approved archives commit together. An invalid
+selected sheet prevents publication of the entire proposal. The legacy ingestion result
+`completed_with_skips` is not a dataset-change proposal result. External proposal `result.items`
+provides exact sheet/dataset/version/revision/outcome mappings.
 
-- Do not create `DatasetVersion` rows directly in Django Admin, a shell, or SQL. Registration also
-  creates the schema, profile, artifacts, provenance, and (when enabled) publication event needed
-  for a valid version.
-- `READY` DatasetVersions are immutable. Correct data by publishing a new revision rather than
-  editing a ready version.
-- If `v2` did not appear, check that the full filename (including extension) maps to the existing
-  slug, the tenant is the same, the content hash differs, and the worker completed successfully.
-- If a different Dataset was created, correct the filename/slug strategy and publish the revised
-  source again. Do not rename a Dataset just to force versioning without assessing consumers.
+## Archive, disappearance and deletion
 
-## Developer notes
+- Manual archive hides content without deleting files or history. A later import does not
+  automatically undo a manual archive.
+- Source deactivation withdraws that source's assignments and archives unprotected datasets
+  with `SOURCE_REMOVED`. Reappearance can recover those outputs only after successful new
+  publication or verified identical content.
+- Independent assignment removal is not reversed by replaying an old publication.
+- Permanent deletion is a separate manager-reviewed [cleanup request](RESOURCE_CLEANUP.md),
+  with at least 30 days of recovery after archive. Purge start prevents restoration/recovery.
 
-The direct-upload JavaScript only creates a staged intake, uploads blocks to protected storage,
-and completes verification. It does not receive a Dataset ID or version number. The worker builds
-the registration command from the source filename, including the extension for new tabular Datasets;
-`DatasetRegistrationIdempotencyService` resolves
-the tenant/slug/hash combination and `get_next_version_number()` returns the latest version number
-plus one. The DatasetVersion database constraints prevent duplicate `(dataset, version_number)` and
-`(dataset, content_hash)` pairs.
+## Legacy compatibility
 
-Related guides: [Admin direct upload](RESOURCE_REGISTRY_ADMIN_DIRECT_UPLOAD.md),
-[Publishing datasets](RESOURCE_REGISTRY_DATASET_PUBLICATION.md), and
-[Worker operations](RESOURCE_REGISTRY_WORKER_OPERATIONS.md).
+The older registration service derives slugs from filenames. Once the organization has enabled
+Dataset Management, `legacy_updates_blocked` prevents implicit replacement of an existing slug.
+Legacy initial registrations remain available, but uploading the same filename is no longer the
+procedure for creating its next version. Disabling management preserves that protection.
+Existing datasets are not automatically assigned external sources by name.
+
+## Reads and verification
+
+`GET datasets/{id}/` returns `current_version_id`; `versions/` marks `is_current`. The catalogue,
+previews and readers resolve the selected current version. Asynchronous queries and export plans
+pin their chosen version and retain authorization checks. Historical records without a current
+pointer use the guarded compatibility resolver; ambiguous/unavailable content needs review.
+
+Use [maintenance QA](DATASET_MANAGEMENT_QA.md) and the [Postman sequence](POSTMAN_WALKTHROUGH.md)
+to verify that replacement preserves dataset ID and restoration changes the current pointer
+without duplicating versions.

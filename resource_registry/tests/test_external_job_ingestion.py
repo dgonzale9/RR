@@ -24,7 +24,9 @@ from resource_registry.security.exceptions import (
     UnsupportedArtifactFormatError,
 )
 from resource_registry.security.policies import ArtifactMaterializationPolicy
-from resource_registry.services.registry.dataset_registry_service import VersionContextPersistenceResult
+from resource_registry.services.registry.dataset_registry_service import (
+    VersionContextPersistenceResult,
+)
 from resource_registry.storage.exceptions import UnsupportedArtifactReadError
 from resource_registry.storage.local import LocalStorageProvider
 from resource_registry.storage.read_adapters import LocalArtifactReadAdapter
@@ -34,20 +36,16 @@ SELECT_RELATED_PATH = (
     "ExternalDatasetJob.objects.select_related"
 )
 ARTIFACT_FILTER_PATH = (
-    "resource_registry.application.external_job_ingestion."
-    "DatasetArtifact.objects.filter"
+    "resource_registry.application.external_job_ingestion." "DatasetArtifact.objects.filter"
 )
 SCHEMA_FILTER_PATH = (
-    "resource_registry.application.external_job_ingestion."
-    "DatasetSchema.objects.filter"
+    "resource_registry.application.external_job_ingestion." "DatasetSchema.objects.filter"
 )
 PROFILE_FILTER_PATH = (
-    "resource_registry.application.external_job_ingestion."
-    "DatasetProfile.objects.filter"
+    "resource_registry.application.external_job_ingestion." "DatasetProfile.objects.filter"
 )
 LINEAGE_FILTER_PATH = (
-    "resource_registry.application.external_job_ingestion."
-    "DatasetLineage.objects.filter"
+    "resource_registry.application.external_job_ingestion." "DatasetLineage.objects.filter"
 )
 
 
@@ -82,7 +80,7 @@ def allow_local_materialization_policy(monkeypatch: pytest.MonkeyPatch) -> None:
     )
 
 
-def _make_dataset(*, tenant_id: str = "11111111-1111-1111-1111-111111111111"):
+def _make_dataset(*, tenant_id: str = "11111111-1111-1111-1111-111111111111") -> SimpleNamespace:
     versions_manager = MagicMock()
     latest_query = MagicMock()
     latest_query.first.return_value = None
@@ -90,7 +88,15 @@ def _make_dataset(*, tenant_id: str = "11111111-1111-1111-1111-111111111111"):
     hash_query = MagicMock()
     hash_query.order_by.return_value.first.return_value = None
     versions_manager.filter.return_value = hash_query
-    return SimpleNamespace(id=str(uuid.uuid4()), tenant_id=tenant_id, versions=versions_manager)
+    return SimpleNamespace(
+        id=str(uuid.uuid4()),
+        tenant_id=tenant_id,
+        versions=versions_manager,
+        archive_reason="",
+        revision=0,
+        current_version=None,
+        save=MagicMock(),
+    )
 
 
 def _make_job(dataset, *, status: str = ExternalDatasetJobStatus.SUCCEEDED):
@@ -287,7 +293,9 @@ def test_minimal_ingestion_when_context_cannot_be_built() -> None:
     dataset = _make_dataset()
     job = _make_job(dataset)
     provider_service = MagicMock()
-    provider_service.fetch_job_result.return_value = _make_provider_result("local://remote/file.parquet")
+    provider_service.fetch_job_result.return_value = _make_provider_result(
+        "local://remote/file.parquet"
+    )
     registry_service = MagicMock()
     registry_service.create_dataset_version.return_value = SimpleNamespace(id="ver-min")
     registry_service.attach_artifact.return_value = SimpleNamespace(id="artifact-min")

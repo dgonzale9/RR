@@ -75,6 +75,11 @@ class ResourceRegistryPromptResultCompactor:
         columns = raw_columns if isinstance(raw_columns, list) else []
         compacted["data"] = {
             "schema": {
+                **(
+                    {"dataset_version_id": self._compact_value(schema["dataset_version_id"])}
+                    if schema.get("dataset_version_id") is not None
+                    else {}
+                ),
                 "column_count": self._compact_value(schema.get("column_count", len(columns))),
                 "schema_json": [
                     {
@@ -100,7 +105,15 @@ class ResourceRegistryPromptResultCompactor:
             "datasets": [
                 {
                     key: self._compact_value(dataset.get(key))
-                    for key in ("id", "dataset_id", "name", "display_name", "slug", "version_id")
+                    for key in (
+                        "id",
+                        "dataset_id",
+                        "name",
+                        "display_name",
+                        "slug",
+                        "version_id",
+                        "current_version_id",
+                    )
                     if dataset.get(key) is not None
                 }
                 for dataset in datasets[:_PROMPT_RESULT_ITEM_LIMIT]

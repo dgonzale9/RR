@@ -18,6 +18,7 @@ from resource_registry.models import (
     DatasetStatus,
     DatasetVersion,
 )
+from resource_registry.read.current_version import current_version_filter
 from resource_registry.read.dtos import DatasetDetails, DatasetSummary, to_iso
 from resource_registry.read.exceptions import DatasetNotFoundError
 
@@ -32,7 +33,7 @@ class DatasetReadService:
     TOKEN_MATCH_SCORE = 8
     EXPANDED_TOKEN_MATCH_SCORE = 16
 
-    def list_datasets(  # noqa: PLR0913
+    def list_datasets(
         self,
         *,
         tenant_id: str,
@@ -92,7 +93,7 @@ class DatasetReadService:
             raise DatasetNotFoundError("Dataset not found for tenant.")
         return self._to_details(dataset)
 
-    def search_datasets(  # noqa: PLR0913
+    def search_datasets(
         self,
         *,
         tenant_id: str,
@@ -159,9 +160,7 @@ class DatasetReadService:
             token_group_filter = Q()
             for token in token_group:
                 token_group_filter |= (
-                    Q(slug__icontains=token)
-                    | Q(name__icontains=token)
-                    | Q(tags__icontains=token)
+                    Q(slug__icontains=token) | Q(name__icontains=token) | Q(tags__icontains=token)
                 )
             token_filter &= token_group_filter
             token_fallback_filter |= token_group_filter
@@ -180,8 +179,7 @@ class DatasetReadService:
 
     def _search_token_groups(self, query: str) -> tuple[tuple[str, ...], ...]:
         return tuple(
-            tuple(self._expand_search_token(token))
-            for token in self._search_tokens(query)
+            tuple(self._expand_search_token(token)) for token in self._search_tokens(query)
         )
 
     def _expand_search_token(self, token: str) -> tuple[str, ...]:
@@ -226,7 +224,9 @@ class DatasetReadService:
             return queryset.order_by("slug", "id")
 
         latest_version_id = Subquery(
-            DatasetVersion.objects.filter(dataset_id=OuterRef("pk"))
+            DatasetVersion.objects.filter(
+                current_version_filter(), dataset_id=OuterRef("pk"), status="READY"
+            )
             .order_by("-version_number", "-created_at")
             .values("id")[:1],
         )
@@ -247,14 +247,10 @@ class DatasetReadService:
             token_group_match = Q()
             for token in token_group:
                 token_group_match |= (
-                    Q(slug__icontains=token)
-                    | Q(name__icontains=token)
-                    | Q(tags__icontains=token)
+                    Q(slug__icontains=token) | Q(name__icontains=token) | Q(tags__icontains=token)
                 )
             token_score = (
-                self.EXPANDED_TOKEN_MATCH_SCORE
-                if len(token_group) > 1
-                else self.TOKEN_MATCH_SCORE
+                self.EXPANDED_TOKEN_MATCH_SCORE if len(token_group) > 1 else self.TOKEN_MATCH_SCORE
             )
             token_match_score = token_match_score + Case(
                 When(token_group_match, then=Value(token_score)),
@@ -265,57 +261,61 @@ class DatasetReadService:
         recent_7d = now - timedelta(days=7)
         recent_30d = now - timedelta(days=30)
 
-        annotated = queryset.annotate(
-            _name_match_score=Case(
-                When(name__icontains=normalized_query, then=Value(40)),
-                default=Value(0),
-                output_field=IntegerField(),
-            ),
-            _slug_match_score=Case(
-                When(slug__icontains=normalized_query, then=Value(35)),
-                default=Value(0),
-                output_field=IntegerField(),
-            ),
-            _tag_match_score=Case(
-                When(tags__icontains=normalized_query, then=Value(20)),
-                default=Value(0),
-                output_field=IntegerField(),
-            ),
-            _sheet_match_score=Case(
-                When(has_sheet_match, then=Value(25)),
-                default=Value(0),
-                output_field=IntegerField(),
-            ),
-            _token_match_score=token_match_score,
-            _recency_score=Case(
-                When(updated_at__gte=recent_7d, then=Value(10)),
-                When(updated_at__gte=recent_30d, then=Value(5)),
-                default=Value(0),
-                output_field=IntegerField(),
-            ),
-            _row_count_value=Coalesce(
-                Cast(latest_row_count, output_field=IntegerField()),
-                Value(0),
-                output_field=IntegerField(),
-            ),
-        ).annotate(
-            _row_count_score=Case(
-                When(_row_count_value__gte=1_000_000, then=Value(8)),
-                When(_row_count_value__gte=100_000, then=Value(5)),
-                When(_row_count_value__gte=10_000, then=Value(2)),
-                default=Value(0),
-                output_field=IntegerField(),
-            ),
-        ).annotate(
-            _relevance_score=(
-                Coalesce(F("_name_match_score"), Value(0))
-                + Coalesce(F("_slug_match_score"), Value(0))
-                + Coalesce(F("_tag_match_score"), Value(0))
-                + Coalesce(F("_sheet_match_score"), Value(0))
-                + Coalesce(F("_token_match_score"), Value(0))
-                + Coalesce(F("_recency_score"), Value(0))
-                + Coalesce(F("_row_count_score"), Value(0))
-            ),
+        annotated = (
+            queryset.annotate(
+                _name_match_score=Case(
+                    When(name__icontains=normalized_query, then=Value(40)),
+                    default=Value(0),
+                    output_field=IntegerField(),
+                ),
+                _slug_match_score=Case(
+                    When(slug__icontains=normalized_query, then=Value(35)),
+                    default=Value(0),
+                    output_field=IntegerField(),
+                ),
+                _tag_match_score=Case(
+                    When(tags__icontains=normalized_query, then=Value(20)),
+                    default=Value(0),
+                    output_field=IntegerField(),
+                ),
+                _sheet_match_score=Case(
+                    When(has_sheet_match, then=Value(25)),
+                    default=Value(0),
+                    output_field=IntegerField(),
+                ),
+                _token_match_score=token_match_score,
+                _recency_score=Case(
+                    When(updated_at__gte=recent_7d, then=Value(10)),
+                    When(updated_at__gte=recent_30d, then=Value(5)),
+                    default=Value(0),
+                    output_field=IntegerField(),
+                ),
+                _row_count_value=Coalesce(
+                    Cast(latest_row_count, output_field=IntegerField()),
+                    Value(0),
+                    output_field=IntegerField(),
+                ),
+            )
+            .annotate(
+                _row_count_score=Case(
+                    When(_row_count_value__gte=1_000_000, then=Value(8)),
+                    When(_row_count_value__gte=100_000, then=Value(5)),
+                    When(_row_count_value__gte=10_000, then=Value(2)),
+                    default=Value(0),
+                    output_field=IntegerField(),
+                ),
+            )
+            .annotate(
+                _relevance_score=(
+                    Coalesce(F("_name_match_score"), Value(0))
+                    + Coalesce(F("_slug_match_score"), Value(0))
+                    + Coalesce(F("_tag_match_score"), Value(0))
+                    + Coalesce(F("_sheet_match_score"), Value(0))
+                    + Coalesce(F("_token_match_score"), Value(0))
+                    + Coalesce(F("_recency_score"), Value(0))
+                    + Coalesce(F("_row_count_score"), Value(0))
+                ),
+            )
         )
         return annotated.order_by("-_relevance_score", "-updated_at", "slug", "id")
 
@@ -327,6 +327,7 @@ class DatasetReadService:
     def _annotate_latest_sheet_name(self, queryset):
         latest_sheet_name = Subquery(
             DatasetArtifact.objects.filter(
+                current_version_filter(version_prefix="dataset_version__"),
                 dataset_version__dataset_id=OuterRef("pk"),
                 artifact_role=ArtifactRole.PRIMARY,
                 lifecycle_status=ArtifactLifecycleStatus.ACTIVE,
@@ -353,6 +354,9 @@ class DatasetReadService:
             created_at=str(to_iso(dataset.created_at)),
             updated_at=str(to_iso(dataset.updated_at)),
             sheet_name=str(getattr(dataset, "_latest_sheet_name", "") or "") or None,
+            current_version_id=(
+                str(dataset.current_version_id) if dataset.current_version_id else None
+            ),
         )
 
     def _to_details(self, dataset: Dataset) -> DatasetDetails:
@@ -369,4 +373,7 @@ class DatasetReadService:
             created_at=str(to_iso(dataset.created_at)),
             updated_at=str(to_iso(dataset.updated_at)),
             archived_at=to_iso(dataset.archived_at),
+            current_version_id=(
+                str(dataset.current_version_id) if dataset.current_version_id else None
+            ),
         )

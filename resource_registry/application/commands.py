@@ -26,7 +26,6 @@ class RegisterDatasetCommand:
     mime_type: str | None = None
     ingest_all_sheets: bool = True
     allow_low_confidence_schema: bool = False
-    replacement_dataset_id: str | None = None
 
 
 @dataclass(frozen=True)

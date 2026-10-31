@@ -1,5 +1,10 @@
 # QA Guide — Resource Registry Dataset Publication and Availability
 
+This guide tests the retained staged-intake **Publish to destinations** registration
+flow. Its job and skipped-sheet expectations do not apply to dataset-change proposals.
+For the current maintenance, synchronization and cleanup scenarios, use
+[maintenance QA](DATASET_MANAGEMENT_QA.md).
+
 ## Purpose
 
 Use this guide to verify that a ready staged intake is published to the intended

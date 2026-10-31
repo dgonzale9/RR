@@ -9,6 +9,7 @@ from unittest.mock import Mock, patch
 from uuid import UUID
 
 import pytest
+from django.contrib.auth.models import User
 
 from resource_registry.assistant.namespace_context import (
     AssistantNamespaceResolution,
@@ -53,6 +54,7 @@ def _build_request() -> SimpleNamespace:
     return SimpleNamespace(
         user=SimpleNamespace(pk=49, is_authenticated=True, is_active=True),
         organization=SimpleNamespace(pk=34, resource_registry_enabled=True, is_active=True),
+        workspace=SimpleNamespace(pk=7, organization_id=34, is_active=True),
         session={"unrelated_conversation": "keep me"},
     )
 
@@ -156,7 +158,7 @@ def test_workspace_failures_distinguish_configuration_from_unavailable_access(
         assert "Ask an administrator to assign an enabled Workspace" in result.response_text
         assert "Sign out" not in result.response_text
     assert result.tool_calls == ()
-    namespace_service.resolve.assert_not_called()
+    namespace_service._resolve_with_routing_operation_context.assert_not_called()
     client.callGenericFunction.assert_not_called()
     assert request.session["unrelated_conversation"] == "keep me"
     record = next(record for record in caplog.records if record.name == "app-logger")
@@ -199,7 +201,9 @@ def test_malformed_legacy_context_directs_recovery_to_the_correct_owner(source: 
     else:
         request.persona = SimpleNamespace(metadata=invalid_context)
     namespace_service = Mock()
-    namespace_service.resolve.return_value = AssistantNamespaceResolution(status="unavailable")
+    namespace_service._resolve_with_routing_operation_context.return_value = (
+        AssistantNamespaceResolution(status="unavailable")
+    )
     adapter = DataRegistryExplorationRoutingAdapter(namespace_context_service=namespace_service)
 
     with patch(_CONTEXT_BUILDER, return_value=_build_context()):
@@ -233,6 +237,7 @@ def test_organization_failures_explain_site_or_enablement_action(organization_st
     """
     request = _build_request()
     client = _build_client()
+    request.user = User(pk=49, is_active=True)
     request.session["resource_registry_active_dataset_id"] = str(UUID(int=7))
     if organization_state == "missing":
         request.organization = None
@@ -269,9 +274,11 @@ def test_authorized_listing_does_not_request_sign_in_for_an_unused_stale_legacy_
         {"success": True, "data": {"datasets": []}}
     )
     namespace_service = Mock()
-    namespace_service.resolve.return_value = AssistantNamespaceResolution(
-        status="selected",
-        selected=AssistantWorkspaceChoice(7, "Main", "main", str(UUID(int=7))),
+    namespace_service._resolve_with_routing_operation_context.return_value = (
+        AssistantNamespaceResolution(
+            status="selected",
+            selected=AssistantWorkspaceChoice(7, "Main", "main", str(UUID(int=7))),
+        )
     )
     adapter = DataRegistryExplorationRoutingAdapter(namespace_context_service=namespace_service)
 
@@ -289,17 +296,20 @@ def test_authorized_listing_does_not_request_sign_in_for_an_unused_stale_legacy_
     )
 
 
-def test_multiple_authorized_workspaces_request_selection_instead_of_session_recovery() -> None:
-    """Keep explicit Workspace selection separate from authentication failure."""
+def test_multiple_authorized_workspaces_use_resolved_request_workspace() -> None:
+    """List datasets directly after resolving the request Workspace among multiple choices."""
     request = _build_request()
     client = _build_client((7, 8))
+    client.callGenericFunction.side_effect = None
+    client.callGenericFunction.return_value = json.dumps(
+        {"success": True, "data": {"datasets": []}}
+    )
     namespace_service = Mock()
-    namespace_service.resolve.return_value = AssistantNamespaceResolution(
-        status="multiple",
-        choices=(
-            AssistantWorkspaceChoice(7, "First", "first", str(UUID(int=7))),
-            AssistantWorkspaceChoice(8, "Second", "second", str(UUID(int=8))),
-        ),
+    namespace_service._resolve_with_routing_operation_context.return_value = (
+        AssistantNamespaceResolution(
+            status="selected",
+            selected=AssistantWorkspaceChoice(7, "Main", "main", str(UUID(int=7))),
+        )
     )
     adapter = DataRegistryExplorationRoutingAdapter(namespace_context_service=namespace_service)
 
@@ -309,14 +319,11 @@ def test_multiple_authorized_workspaces_request_selection_instead_of_session_rec
         )
 
     assert result is not None
-    assert result.request_payload["status"] == "workspace_selection_required"
-    assert result.request_payload["workspace_ids"] == [7, 8]
-    assert "Which Workspace would you like to use?" in result.response_text
+    assert "Which Workspace" not in result.response_text
     assert "sign in" not in result.response_text
-    assert (
-        namespace_service.resolve.call_args.kwargs["require_explicit_workspace_selection"] is True
+    client.callGenericFunction.assert_called_once_with(
+        request, "resource_registry_list_datasets", {"tenant_id": str(UUID(int=7))}
     )
-    client.callGenericFunction.assert_not_called()
 
 
 def test_no_namespace_returns_access_guidance_without_requesting_a_tenant_identifier() -> None:
@@ -325,7 +332,9 @@ def test_no_namespace_returns_access_guidance_without_requesting_a_tenant_identi
     client = _build_client()
     del client.persona.workspaces
     namespace_service = Mock()
-    namespace_service.resolve.return_value = AssistantNamespaceResolution(status="none")
+    namespace_service._resolve_with_routing_operation_context.return_value = (
+        AssistantNamespaceResolution(status="none")
+    )
     adapter = DataRegistryExplorationRoutingAdapter(namespace_context_service=namespace_service)
 
     with patch(_CONTEXT_BUILDER, return_value=_build_context(())):

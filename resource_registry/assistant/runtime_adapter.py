@@ -32,6 +32,7 @@ from resource_registry.assistant.exploration_routing import (
 from resource_registry.assistant.namespace_context import (
     AssistantNamespaceContextService,
     AssistantNamespaceResolution,
+    InvalidAssistantRoutingOperationContextError,
 )
 from resource_registry.assistant.persona_capabilities import (
     DataRegistryPersonaCapabilityService,
@@ -39,15 +40,11 @@ from resource_registry.assistant.persona_capabilities import (
 from resource_registry.assistant.persona_workspace_scope import (
     PersonaWorkspaceNotConfiguredError,
     PersonaWorkspaceScopeError,
-    resolve_persona_workspace_scope,
+    resolve_persona_workspace_routing_setup,
 )
 from resource_registry.assistant.prompt_result_compactor import (
     PromptResultCompactor,
     ResourceRegistryPromptResultCompactor,
-)
-from resource_registry.conversation_state import (
-    clear_registry_manager_context,
-    read_validated_registry_state,
 )
 from resource_registry.authorization.exceptions import (
     RegistryAuthorizationAuthenticationRequiredError,
@@ -56,6 +53,15 @@ from resource_registry.authorization.exceptions import (
 )
 from resource_registry.authorization.registry_authorization_context_service import (
     RegistryAuthorizationContextService,
+)
+from resource_registry.conversation_state import (
+    clear_registry_manager_context,
+    read_validated_registry_state,
+)
+from resource_registry.performance.instrumentation import (
+    RegistryPerformanceOutcome,
+    RegistryPerformanceStage,
+    instrument_registry_function,
 )
 
 _DATASET_VERSION_CONTEXT_KEYS = (
@@ -89,6 +95,10 @@ _AUTHENTICATION_REQUIRED_RESPONSE = (
     "Your sign-in could not be verified for Resource Registry. "
     "Sign out, then sign in again on your organization's site. "
     "If the problem continues, clear cookies for this site and sign in again."
+)
+_INVALID_ROUTING_OPERATION_CONTEXT_RESPONSE = (
+    "Resource Registry could not safely verify this routing operation. "
+    "Please retry from your organization's site after signing in again."
 )
 _PERSONA_WORKSPACE_NOT_CONFIGURED_RESPONSE = (
     "This Persona has no Workspace configured for Resource Registry. "
@@ -213,8 +223,6 @@ _UUID_PATTERN = re.compile(
     r"\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-" r"[0-9a-fA-F]{12}\b",
 )
 _PENDING_DERIVED_DATASET_PLAN_KEY = "resource_registry_pending_derived_dataset_plan"
-_CHAT_DATASET_IMPORT_TOOL_NAME = "resource_registry_replace_dataset"
-_CHAT_DATASET_IMPORT_STATUS_TOOL_NAME = "resource_registry_get_replacement_status"
 
 
 class InvalidTrustedDataRegistryTenantError(ValueError):
@@ -241,6 +249,32 @@ class DataRegistryExplorationRoutingResult:
     request_payload: dict[str, object]
 
 
+def _classify_routing_performance_outcome(result: object) -> RegistryPerformanceOutcome:
+    """Classify a routing return using fixed outcomes without emitting response content.
+
+    Args:
+        result: Completed routing result or None for the normal model fallback.
+
+    Returns:
+        A bounded outcome matching the visible routing decision.
+    """
+    if result is None:
+        return RegistryPerformanceOutcome.FALLBACK
+    if not isinstance(result, DataRegistryExplorationRoutingResult):
+        return RegistryPerformanceOutcome.FAILED
+    if "error_code" in result.request_payload:
+        return RegistryPerformanceOutcome.REJECTED
+    if result.response_text in {
+        _FAILED_EXPLORATION_RESPONSE,
+        _UNUSABLE_EVIDENCE_RESPONSE,
+        _FAILED_DATASET_LISTING_RESPONSE,
+        _CAMPAIGN_DATASET_UNAVAILABLE_RESPONSE,
+        _TRANSFORMATION_PLANNING_MISSING_SCHEMA_RESPONSE,
+    }:
+        return RegistryPerformanceOutcome.FAILED
+    return RegistryPerformanceOutcome.ROUTED
+
+
 @dataclass(frozen=True)
 class _DatasetListingItem:
     dataset_id: str | None
@@ -259,6 +293,7 @@ class DataRegistryExplorationRoutingAdapter:
         reasoner: DatasetExplorationReasoner | None = None,
         evidence_mapper: DatasetExplorationEvidenceMapper | None = None,
         namespace_context_service: AssistantNamespaceContextService | None = None,
+        authorization_context_service: RegistryAuthorizationContextService | None = None,
         persona_capability_service: DataRegistryPersonaCapabilityService | None = None,
         prompt_result_compactor: PromptResultCompactor | None = None,
     ) -> None:
@@ -268,6 +303,9 @@ class DataRegistryExplorationRoutingAdapter:
         self._namespace_context_service = (
             namespace_context_service or AssistantNamespaceContextService()
         )
+        self._authorization_context_service = (
+            authorization_context_service or RegistryAuthorizationContextService()
+        )
         self._persona_capability_service = (
             persona_capability_service or DataRegistryPersonaCapabilityService()
         )
@@ -276,6 +314,10 @@ class DataRegistryExplorationRoutingAdapter:
         )
         self._campaign_rendering_intent_policy = CampaignRenderingIntentPolicy()
 
+    @instrument_registry_function(
+        RegistryPerformanceStage.DETERMINISTIC_ROUTING,
+        outcome_classifier=_classify_routing_performance_outcome,
+    )
     def try_route(
         self,
         *,
@@ -305,18 +347,12 @@ class DataRegistryExplorationRoutingAdapter:
                 statement=statement,
             )
         )
-        is_chat_dataset_import = bool(
-            not is_campaign_rendering_intent
-            and self._routing_policy.is_explicit_dataset_import_command(statement)
-            and self._has_current_chat_attachment(request)
-        )
-
         try:
-            authorization_context = RegistryAuthorizationContextService().build_context(
+            authorization_context = self._authorization_context_service.build_context(
                 user=getattr(request, "user", None),
                 organization=getattr(request, "organization", None),
             )
-            persona_scope = resolve_persona_workspace_scope(
+            persona_routing_setup = resolve_persona_workspace_routing_setup(
                 request=request,
                 authorization_context=authorization_context,
                 persona=getattr(client, "persona", None),
@@ -338,7 +374,6 @@ class DataRegistryExplorationRoutingAdapter:
         except RegistryAuthorizationOrganizationRequiredError:
             if (
                 is_campaign_rendering_intent
-                or is_chat_dataset_import
                 or self._routing_policy.is_dataset_listing_intent(statement)
                 or self._has_pending_dataset_listing(request)
             ):
@@ -374,25 +409,54 @@ class DataRegistryExplorationRoutingAdapter:
                     "Select an authorized Workspace supported by this Persona in the interface, then retry."
                 ),
             )
-        persona_workspace_manager = getattr(getattr(client, "persona", None), "workspaces", None)
-        workspace_values_list = getattr(persona_workspace_manager, "values_list", None)
-        required_workspace_ids = (
-            frozenset(int(value) for value in workspace_values_list("pk", flat=True))
-            if persona_scope is not None and callable(workspace_values_list)
-            else None
-        )
-        if persona_scope is not None:
+        try:
+            operation_context = self._namespace_context_service._create_routing_operation_context(
+                request=request,
+                authorization_context=authorization_context,
+                persona_workspace_scope=persona_routing_setup.scope,
+                configured_persona_workspace_ids=persona_routing_setup.configured_workspace_ids,
+            )
+        except InvalidAssistantRoutingOperationContextError:
+            self._namespace_context_service.clear_context(request)
+            self._clear_context_manager_namespace_selection(
+                request=request,
+                context_manager=client.context_mgr,
+            )
+            return self._access_failure_result(
+                request=request,
+                persona=getattr(client, "persona", None),
+                error_code="invalid_resource_registry_routing_context",
+                message=_INVALID_ROUTING_OPERATION_CONTEXT_RESPONSE,
+            )
+        required_workspace_ids = persona_routing_setup.configured_workspace_ids
+        if persona_routing_setup.scope is not None:
             request.persona = getattr(client, "persona", None)
 
         had_pending_dataset_listing = self._has_pending_dataset_listing(request)
-        namespace_resolution = self._namespace_context_service.resolve(
-            request=request,
-            statement=statement,
-            required_workspace_ids=required_workspace_ids,
-            require_explicit_workspace_selection=bool(
-                required_workspace_ids is not None and len(required_workspace_ids) > 1
-            ),
-        )
+        try:
+            namespace_resolution = (
+                self._namespace_context_service._resolve_with_routing_operation_context(
+                    request=request,
+                    statement=statement,
+                    operation_context=operation_context,
+                    required_workspace_ids=required_workspace_ids,
+                    require_explicit_workspace_selection=bool(
+                        required_workspace_ids is not None and len(required_workspace_ids) > 1
+                    ),
+                )
+            )
+        except InvalidAssistantRoutingOperationContextError:
+            self._namespace_context_service.clear_context(request)
+            self._clear_context_manager_namespace_selection(
+                request=request,
+                context_manager=client.context_mgr,
+            )
+            return self._access_failure_result(
+                request=request,
+                persona=getattr(client, "persona", None),
+                error_code="invalid_resource_registry_routing_context",
+                message=_INVALID_ROUTING_OPERATION_CONTEXT_RESPONSE,
+            )
         if namespace_resolution.selection_changed:
             self._clear_context_manager_namespace_selection(
                 request=request,
@@ -421,7 +485,6 @@ class DataRegistryExplorationRoutingAdapter:
                 self._store_pending_workspace_intent(request)
             if (
                 is_campaign_rendering_intent
-                or is_chat_dataset_import
                 or self._has_pending_dataset_listing(request)
             ):
                 return self._workspace_selection_result(
@@ -432,11 +495,10 @@ class DataRegistryExplorationRoutingAdapter:
         if namespace_resolution.status == "none":
             if (
                 is_campaign_rendering_intent
-                or is_chat_dataset_import
                 or self._routing_policy.is_dataset_listing_intent(statement)
                 or self._has_pending_dataset_listing(request)
             ):
-                if not is_campaign_rendering_intent and not is_chat_dataset_import:
+                if not is_campaign_rendering_intent:
                     self._store_pending_workspace_intent(request)
                 return self._missing_authorized_namespace_result(
                     request=request, persona=getattr(client, "persona", None)
@@ -467,20 +529,9 @@ class DataRegistryExplorationRoutingAdapter:
             if legacy_tenant_id is None:
                 if (
                     is_campaign_rendering_intent
-                    or is_chat_dataset_import
                     or self._routing_policy.is_dataset_listing_intent(statement)
                     or self._has_pending_dataset_listing(request)
                 ):
-                    if is_chat_dataset_import:
-                        return self._access_failure_result(
-                            request=request,
-                            persona=getattr(client, "persona", None),
-                            error_code="resource_registry_workspace_unavailable",
-                            message=(
-                                "I could not verify an active authorized Workspace for this "
-                                "attachment. Select one in the interface and retry."
-                            ),
-                        )
                     return self._organization_context_unavailable_result(
                         request=request, persona=getattr(client, "persona", None)
                     )
@@ -519,13 +570,7 @@ class DataRegistryExplorationRoutingAdapter:
         if tenant_id is None:
             return None
 
-        if is_chat_dataset_import:
-            return self._route_chat_dataset_import(client=client, request=request)
-
         if self._routing_policy.is_creative_workflow_intent(routing_statement):
-            return None
-
-        if self._routing_policy.is_dataset_import_intent(routing_statement):
             return None
 
         comparison_result = self._try_route_multi_dataset_comparison(
@@ -597,113 +642,6 @@ class DataRegistryExplorationRoutingAdapter:
             statement=routing_statement,
             tenant_id=tenant_id,
             decision=initial_decision,
-        )
-
-    @staticmethod
-    def _has_current_chat_attachment(request: Any) -> bool:
-        """Return whether this request carries a current-turn chat attachment.
-
-        Args:
-            request: Active chat request.
-
-        Returns:
-            True when at least one multipart content file is present.
-        """
-        request_files = getattr(request, "FILES", None)
-        getlist = getattr(request_files, "getlist", None)
-        return bool(getlist("content")) if callable(getlist) else False
-
-    @staticmethod
-    def _has_assigned_function(persona: Any, function_name: str) -> bool:
-        """Return whether the active Persona explicitly owns one Registry BIF.
-
-        Args:
-            persona: Active Persona or compatible test double.
-            function_name: Catalogued function to check.
-
-        Returns:
-            True only for an assigned Persona relationship.
-        """
-        relationships = getattr(persona, "builtinfunctionpersonarelationship_set", None)
-        return bool(
-            relationships is not None
-            and relationships.filter(builtin_function__name__in=(function_name,)).exists()
-        )
-
-    def _route_chat_dataset_import(
-        self, *, client: Any, request: Any
-    ) -> DataRegistryExplorationRoutingResult:
-        """Submit one attached file through the admitted BIF and read its current status.
-
-        Args:
-            client: Active AI client with the normal BIF dispatcher.
-            request: Authenticated request carrying the current attachment.
-
-        Returns:
-            Safe submission or failure guidance without requiring user-supplied IDs.
-        """
-        persona = getattr(client, "persona", None)
-        if not self._has_assigned_function(persona, _CHAT_DATASET_IMPORT_TOOL_NAME):
-            return self._access_failure_result(
-                request=request,
-                persona=persona,
-                error_code="resource_registry_import_tool_not_assigned",
-                message="This Persona does not have permission to import Resource Registry files.",
-            )
-        import_call = AssistantToolCall(name=_CHAT_DATASET_IMPORT_TOOL_NAME, arguments={})
-        import_payload = self._execute_tool_call(
-            client=client, request=request, tool_call=import_call
-        )
-        executed_calls = [import_call]
-        if import_payload.get("success") is not True:
-            error_code = str(import_payload.get("code") or "import_failed")
-            error_message = str(import_payload.get("error") or "The import was not submitted.")
-            return DataRegistryExplorationRoutingResult(
-                response_text=f"I could not submit the attached file ({error_code}). {error_message}",
-                tool_calls=tuple(executed_calls),
-                request_payload=self._request_payload(executed_calls),
-            )
-        data = import_payload.get("data")
-        import_data = data if isinstance(data, dict) else {}
-        registration_id = self._valid_uuid(import_data.get("registration_id"))
-        if registration_id is None:
-            return DataRegistryExplorationRoutingResult(
-                response_text="The Registry did not return a valid registration ID for this import.",
-                tool_calls=tuple(executed_calls),
-                request_payload=self._request_payload(executed_calls),
-            )
-        action = "replacement" if import_data.get("action") == "replace" else "registration"
-        status = str(import_data.get("status") or "submitted").lower()
-        result_payload: dict[str, Any] = {}
-        if self._has_assigned_function(persona, _CHAT_DATASET_IMPORT_STATUS_TOOL_NAME):
-            status_call = AssistantToolCall(
-                name=_CHAT_DATASET_IMPORT_STATUS_TOOL_NAME,
-                arguments={"registration_id": registration_id},
-            )
-            status_payload = self._execute_tool_call(
-                client=client, request=request, tool_call=status_call
-            )
-            executed_calls.append(status_call)
-            if status_payload.get("success") is True:
-                status_data = status_payload.get("data")
-                if isinstance(status_data, dict):
-                    status = str(status_data.get("status") or status).lower()
-                    result = status_data.get("result")
-                    result_payload = result if isinstance(result, dict) else {}
-        if status == "completed" and result_payload.get("no_changes_detected") is True:
-            outcome = "No changes were detected; no new version was created."
-        elif status == "completed":
-            outcome = f"The {action} completed."
-        elif status in {"failed", "cancelled"}:
-            outcome = f"The {action} {status}."
-        else:
-            outcome = (
-                f"The {action} was submitted and is currently {status}. Completion is pending."
-            )
-        return DataRegistryExplorationRoutingResult(
-            response_text=f"{outcome} Registration ID: {registration_id}.",
-            tool_calls=tuple(executed_calls),
-            request_payload=self._request_payload(executed_calls),
         )
 
     @staticmethod
@@ -1710,6 +1648,7 @@ class DataRegistryExplorationRoutingAdapter:
             f"{row_count} rows)."
         )
 
+    @instrument_registry_function(RegistryPerformanceStage.DETERMINISTIC_DECISION_EXECUTION)
     def _execute_decision_flow(
         self,
         *,
@@ -2343,6 +2282,7 @@ class DataRegistryExplorationRoutingAdapter:
             return f"- {item.name}\n  Slug: {item.slug}"
         return f"- {item.name}"
 
+    @instrument_registry_function(RegistryPerformanceStage.DETERMINISTIC_RETRY_FLOW)
     def _execute_with_retry(
         self,
         *,
@@ -2369,6 +2309,10 @@ class DataRegistryExplorationRoutingAdapter:
             return payload
         return self._execute_tool_call(client=client, request=request, tool_call=tool_call)
 
+    @instrument_registry_function(
+        RegistryPerformanceStage.CANONICAL_BIF_DISPATCH_BRIDGE,
+        operation_parameter="tool_call",
+    )
     def _execute_tool_call(
         self,
         *,

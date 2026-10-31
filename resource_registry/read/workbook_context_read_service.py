@@ -10,6 +10,7 @@ from resource_registry.models import (
     DatasetVersion,
     WorkbookIngestionGroup,
 )
+from resource_registry.read.current_version import current_version_filter
 from resource_registry.read.dtos import WorkbookContextSummary, WorkbookSheetContextSummary, to_iso
 from resource_registry.read.exceptions import DataRegistryReadError
 
@@ -85,15 +86,11 @@ class WorkbookContextReadService:
                 (latest_profile.metrics_json or {}).get("row_count") if latest_profile else None,
             )
             column_count = self._as_int(
-                (latest_profile.metrics_json or {}).get("column_count")
-                if latest_profile
-                else None,
+                (latest_profile.metrics_json or {}).get("column_count") if latest_profile else None,
             )
             schema_columns = self._schema_column_names(latest_schema)
             sheet_name = (
-                sheet_names_by_version.get(latest_version.id, None)
-                if latest_version
-                else None
+                sheet_names_by_version.get(latest_version.id, None) if latest_version else None
             )
             sheets.append(
                 WorkbookSheetContextSummary(
@@ -129,7 +126,9 @@ class WorkbookContextReadService:
         if not dataset_ids:
             return {}
         versions = list(
-            DatasetVersion.objects.filter(dataset_id__in=dataset_ids).order_by(
+            DatasetVersion.objects.filter(
+                current_version_filter(), dataset_id__in=dataset_ids, status="READY"
+            ).order_by(
                 "dataset_id",
                 "-version_number",
                 "-created_at",

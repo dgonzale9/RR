@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from resource_registry.dataset_visibility import build_dataset_visibility_filter
 from resource_registry.models import ArtifactLifecycleStatus, DatasetArtifact, DatasetStatus
+from resource_registry.read.current_version import current_version_filter
 from resource_registry.read.dtos import DatasetArtifactSummary, sanitize_json, sanitize_uri, to_iso
 from resource_registry.read.exceptions import ArtifactNotFoundError
 
@@ -26,14 +27,20 @@ class DatasetArtifactReadService:
                 field_prefix="dataset_version__dataset__",
             ),
             dataset_version__dataset_id=dataset_id,
+            dataset_version__status="READY",
             dataset_version__dataset__archived_at__isnull=True,
             dataset_version__dataset__status__in=[DatasetStatus.DRAFT, DatasetStatus.ACTIVE],
             lifecycle_status=ArtifactLifecycleStatus.ACTIVE,
         )
         if version_id:
             queryset = queryset.filter(dataset_version_id=version_id)
-        ordered = queryset.order_by("-created_at", "-id")
-        artifacts = self._paginate(list(ordered), limit=limit, offset=offset)
+        else:
+            queryset = queryset.filter(
+                current_version_filter(version_prefix="dataset_version__"),
+            )
+        ordered = queryset.select_related("dataset_version__dataset").order_by("-created_at", "-id")
+        safe_offset = max(offset, 0)
+        artifacts = ordered[safe_offset : safe_offset + min(max(limit, 1), self.MAX_LIMIT)]
         return [self._to_summary(artifact) for artifact in artifacts]
 
     def get_artifact(
@@ -50,6 +57,7 @@ class DatasetArtifactReadService:
             ),
             id=artifact_id,
             dataset_version__dataset_id=dataset_id,
+            dataset_version__status="READY",
             dataset_version__dataset__archived_at__isnull=True,
             dataset_version__dataset__status__in=[DatasetStatus.DRAFT, DatasetStatus.ACTIVE],
             lifecycle_status=ArtifactLifecycleStatus.ACTIVE,

@@ -79,7 +79,8 @@ Without a Persona scope, `enforced_dataset_ids` is `None` and generic visibility
 | `resource_registry_functions.py` | Derive enforced Dataset IDs. |
 | `read_auth/permissions.py` | Filter listings and direct Dataset reads. |
 
-Creative Assembly receives inventory through `resource_registry_query_dataset`.
+Creative Assembly receives inventory through `resource_registry_query` with
+`action="query_dataset"` (the canonical operation is `resource_registry_query_dataset`).
 Registry scope denial stops provider retrieval and SVG rendering.
 
-See [reader access](../READER_ACCESS.md) for `OPEN`/`PRIVATE` Workspace and Main examples.
+See [reader access](READER_ACCESS.md) for `OPEN`/`PRIVATE` Workspace and Main examples.

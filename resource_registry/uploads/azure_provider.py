@@ -179,18 +179,48 @@ class AzureBlockBlobLargeFileUploadProvider:
 
     def delete_object(self, *, object_key: str) -> None:
         """Delete only the server-selected blob and tolerate absence."""
+        from resource_registry.cleanup.storage import (  # noqa: PLC0415
+            guarded_deletion,
+        )
+
         blob_client = self._blob_service_client.get_blob_client(
             container=str(self._container_name),
             blob=object_key,
         )
-        try:
-            blob_client.delete_blob()
-        except ResourceNotFoundError:
-            return
-        except AzureError as error:
-            raise UploadApplicationError("UPLOAD_PROVIDER_CLEANUP_FAILED", 503) from error
+        with guarded_deletion("azure_blob", f"azure://{self._container_name}/{object_key}"):
+            try:
+                blob_client.delete_blob(timeout=60)
+            except ResourceNotFoundError:
+                pass
+            except AzureError as error:
+                raise UploadApplicationError("UPLOAD_PROVIDER_CLEANUP_FAILED", 503) from error
 
     def copy_object(
+        self, *, source_object_key: str, destination_object_key: str
+    ) -> UploadedObjectMetadata:
+        """Reserve the source and a new managed generation for a server-side copy."""
+        from resource_registry.cleanup.storage import (  # noqa: PLC0415
+            complete_object_write,
+            lease_object,
+        )
+
+        source_uri = f"azure://{self._container_name}/{source_object_key}"
+        destination_uri = f"azure://{self._container_name}/{destination_object_key}"
+        with (
+            lease_object("azure_blob", source_uri),
+            lease_object(
+                "azure_blob", destination_uri, writing=True, location=str(self._account_name)
+            ) as stored,
+        ):
+            metadata = self._copy_object(
+                source_object_key=source_object_key, destination_object_key=destination_object_key
+            )
+            complete_object_write(
+                stored, size_bytes=metadata.size_bytes, checksum=None, etag=metadata.etag
+            )
+            return metadata
+
+    def _copy_object(
         self,
         *,
         source_object_key: str,

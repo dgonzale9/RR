@@ -1,0 +1,14 @@
+<details data-filter-title="{{ title }}" open>
+  <summary>{{ title }}</summary>
+  {% for choice in choices %}
+    <form method="get" id="dataset-date-range-form">
+      {% for name, value in choice.preserved_parameters %}
+        <input type="hidden" name="{{ name }}" value="{{ value }}">
+      {% endfor %}
+      {{ choice.form.as_p }}
+      <p class="help">Includes both dates. Time zone: {{ choice.timezone }}.</p>
+      <button type="submit" class="button">Apply dates</button>
+      <a href="{{ choice.clear_url }}">Clear dates</a>
+    </form>
+  {% endfor %}
+</details>

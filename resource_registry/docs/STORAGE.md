@@ -1,5 +1,11 @@
 # Resource Registry storage architecture
 
+Dataset Management adds private preparation candidates, explicit current-version selection,
+external-source provenance and controlled cleanup. The [cleanup runbook](RESOURCE_CLEANUP.md)
+is the operational contract for permanent deletion: inventory, shared-reference protection,
+renewable read/write leases, retention, confirmation and resumable execution. Low-level
+artifact lifecycle methods below are not a replacement for that reviewed workflow.
+
 ## Purpose
 
 Resource Registry separates relational metadata from physical file content. Django models store
@@ -56,8 +62,10 @@ Artifact storage uses `RESOURCE_REGISTRY_STORAGE_PROVIDER`. Its application defa
 `BASE_DIR/resource_registry_storage`.
 
 Intake transfer uses the separate `RESOURCE_REGISTRY_UPLOAD_PROVIDER` setting. Azure and Azurite
-support backend block transfer. The development-only `local` upload provider does not implement
-that protocol, even though the local artifact provider supports server-file operations.
+support backend block transfer. The development-only `local` upload provider also supports
+backend blocks: it stages server-owned fragments, verifies their sizes and assembles the file.
+Use `RESOURCE_REGISTRY_STORAGE_PROVIDER=local` and `RESOURCE_REGISTRY_UPLOAD_PROVIDER=local`
+with a writable `RESOURCE_REGISTRY_LOCAL_STORAGE_DIR` for an isolated local-file walkthrough.
 
 ## Supported intake formats
 
@@ -109,13 +117,14 @@ Browser or API client
    Completion checks size, optional ETag, content type, and relevant file signatures.
 6. Inspection calculates SHA-256, checks a declared checksum, and validates source content.
    Completion alone does not verify a declared SHA-256 or make the Dataset available.
-7. After `READY_FOR_PUBLICATION`, publish to an authorized Organization or Workspace. Publication
-   copies the verified source and submits durable registration work. `PUBLISHED` means the
-   submission exists; the registration or workbook worker still needs to finish.
+7. After `READY_FOR_PUBLICATION`, create a dataset-change proposal for an authorized destination
+   and publish after preparation/review. This records publication and selects the current version
+   atomically. Only the retained legacy intake publish path submits registration/workbook jobs.
 
 The corresponding API routes also exist under `/auth/api/v1/resource-registry/`. Every block
-requires authentication; session requests require CSRF. Admin routes enforce the global intake
-operator permission, while the HTTP API enforces uploader ownership. Publication applies its
+requires authentication; session requests require CSRF. The legacy staged-intake Admin enforces
+global operator permission; the new Dataset Management Admin uses destination creation/edit
+authority. The private HTTP intake API enforces uploader ownership. Publication applies its
 destination authorization checks.
 
 The protocol permits at most 50000 blocks and advertises one concurrent transfer per intake.

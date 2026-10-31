@@ -2,13 +2,40 @@
 
 ## How to read this catalog
 
-Each BIF receives trusted request and context-manager objects from BotServer. `tenant_id` is a
-Registry namespace identifier resolved by the platform, not an identifier the LLM can use to
-expand access. Dataset, version, job, run, and artifact IDs are validated and re-authorized by
-the relevant BIF.
+Each canonical BIF receives trusted request and context-manager objects from BotServer. `tenant_id`
+is a Registry namespace identifier resolved by the platform, not an identifier the LLM can use to
+expand access. Dataset, version, job, run, and artifact IDs are validated and re-authorized by the
+relevant BIF.
 
 All BIFs return structured, sanitized JSON. The LLM uses that JSON to form an answer or select a
-next BIF. It does not call Registry storage or providers directly.
+next action. It does not call Registry storage or providers directly.
+
+## Model-facing grouped tools
+
+The rows below describe canonical operations. They remain the unit of Persona assignment,
+capability policy, and handler dispatch, but are not independently advertised to a model. The
+model receives no more than four group tools, and invokes an assigned canonical operation using
+`{"action": "<canonical name without resource_registry_>", "arguments": {...}}`.
+
+| Model-facing tool | Actions available when assigned |
+| --- | --- |
+| `resource_registry_inspect` | `list_datasets`, `get_dataset`, `get_dataset_context`, `get_dataset_schema`, `get_dataset_profile`, `list_dataset_versions`, `list_external_jobs`, `explore_dataset`, `analyze_dataset` |
+| `resource_registry_query` | `plan_query`, `query_dataset`, `create_filtered_dataset`, `get_query_run`, `start_query_job`, `get_query_job_status`, `get_query_job_result` |
+| `resource_registry_manage_outputs` | `create_chart`, `plan_export`, `generate_artifact`, `get_analysis_artifact`, `get_chart_artifact`, `get_export_plan`, `start_intelligence_job`, `get_intelligence_job_status`, `get_intelligence_job_result` |
+| `resource_registry_manage_transformations` | `start_transformation_run`, `get_transformation_run`, `list_transformation_runs`, `list_transformation_steps`, `list_transformation_outputs`, `get_transformation_diagnostics` |
+
+Each group exposes only actions assigned to the active Persona. Selecting one action never grants
+the other actions in its group; the dispatcher resolves and authorizes the original canonical BIF
+on every call. Result recommendations use the group name plus `suggested_action` or
+`recommended_action` when they point to a Registry action.
+
+The administrative catalog also projects these as virtual groups. Their stable API IDs are
+`inspect=-4101`, `query=-4102`, `manage_outputs=-4103`, and
+`manage_transformations=-4104`; they are not database primary keys. Current catalog discovery
+temporarily shows only Inspect and Query, while existing output/transformation assignments remain
+visible in Persona relationship lists and continue to be published to models when assigned.
+
+## Canonical operations
 
 ## 1. Discovery and metadata
 
@@ -17,7 +44,7 @@ next BIF. It does not call Registry storage or providers directly.
 | `resource_registry_list_datasets` | Lists datasets available in the current Registry context; used to discover candidates. | Applies search, status, source-type, limit, and offset filters through the authorized read facade. An empty result distinguishes `no_visible_datasets` from `no_matching_datasets`. The LLM normally calls it first when the user asks what data is available. |
 | `resource_registry_get_dataset` | Returns one dataset's identity and summary metadata; used to confirm the dataset selected for a task. | Validates and authorizes the dataset ID, then reads it through the facade. The LLM uses its result before asking detailed questions. |
 | `resource_registry_get_dataset_context` | Returns contextual information for a dataset; used to understand provenance and usable context. | Reads the authorized context and can include controlled explanation/diagnostics. The LLM uses it to ground a response without reading storage directly. |
-| `resource_registry_get_dataset_schema` | Returns columns and types for a dataset version; used to choose valid fields and prevent invented columns. | Reads the selected/latest version's schema through the facade, optionally with explainability. The LLM should use it before structured exploration, query, charts, or exports. |
+| `resource_registry_get_dataset_schema` | Returns columns and types for a dataset version; used to choose valid fields and prevent invented columns. | Reads the explicitly selected/current version's schema through the facade, optionally with explainability. The LLM should use it before structured exploration, query, charts, or exports. |
 | `resource_registry_get_dataset_profile` | Returns quality and statistical profile information; used to understand distributions and data condition. | Reads the authorized profile for a dataset/version, optionally with explainability. The LLM uses it for high-level data-quality answers. |
 | `resource_registry_list_dataset_versions` | Lists dataset versions; used to select or explain historical versus current data. | Validates pagination and returns only authorized versions. The LLM uses a returned version ID in later version-aware calls. |
 | `resource_registry_list_external_jobs` | Lists external processing jobs associated with datasets; used for operational visibility. | Applies dataset, status, provider, and job-type filters through the read facade. It needs the corresponding capability and is normally a reader/admin operation. |

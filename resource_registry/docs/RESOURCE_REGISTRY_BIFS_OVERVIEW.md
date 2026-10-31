@@ -9,6 +9,39 @@ direct database, storage, namespace, or provider access.
 
 The complete per-BIF reference is [Resource Registry BIF catalog](RESOURCE_REGISTRY_BIF_CATALOG.md).
 
+## Published tool contract
+
+The platform keeps 31 canonical Registry BIF records for Persona assignment, authorization, policy,
+and handler dispatch. It advertises those operations to every supported model provider as at most
+four stable, grouped tools instead of 31 independent tool definitions. A group is advertised only
+when the Persona has at least one of its canonical actions; its `action` enum contains only the
+actions that Persona is assigned.
+
+| Model-facing tool | Canonical actions exposed through `action` |
+| --- | --- |
+| `resource_registry_inspect` | `list_datasets`, `get_dataset`, `get_dataset_context`, `get_dataset_schema`, `get_dataset_profile`, `list_dataset_versions`, `list_external_jobs`, `explore_dataset`, `analyze_dataset` |
+| `resource_registry_query` | `plan_query`, `query_dataset`, `create_filtered_dataset`, `get_query_run`, `start_query_job`, `get_query_job_status`, `get_query_job_result` |
+| `resource_registry_manage_outputs` | `create_chart`, `plan_export`, `generate_artifact`, `get_analysis_artifact`, `get_chart_artifact`, `get_export_plan`, `start_intelligence_job`, `get_intelligence_job_status`, `get_intelligence_job_result` |
+| `resource_registry_manage_transformations` | `start_transformation_run`, `get_transformation_run`, `list_transformation_runs`, `list_transformation_steps`, `list_transformation_outputs`, `get_transformation_diagnostics` |
+
+Every call uses exactly this envelope. Its `action` is the canonical BIF name without the
+`resource_registry_` prefix; `arguments` preserve that action's original parameters and defaults.
+
+```json
+{
+  "action": "analyze_dataset",
+  "arguments": {
+    "dataset_id": "<dataset UUID>",
+    "analysis_type": "summary"
+  }
+}
+```
+
+The grouped adapter resolves the action to its canonical BIF before execution and repeats its
+normal Persona-assignment, namespace, capability, Dataset, and job-ownership checks. A group is a
+transport projection, not an authorization grant. Canonical calls remain supported for saved calls
+and internal consumers, but are never advertised to the model.
+
 ## The model does not authorize itself
 
 The LLM can propose a tool call, but the platform supplies and verifies the trusted context:
@@ -18,22 +51,24 @@ flowchart LR
     U[User message] --> R[Assistant runtime adapter]
     R --> N[Resolve Organization, user, Persona, and Workspace]
     N --> P[Routing policy / LLM tool selection]
-    P --> B[Resource Registry BIF]
+    P --> G[Grouped Registry tool and action]
+    G --> B[Canonical Registry BIF]
     B --> A[Namespace admission and capability policy]
     A --> D[Authorized Registry services]
     D --> S[Sanitized tool result]
     S --> L[LLM response]
 ```
 
-1. The runtime first confirms that the active Persona has at least one Registry BIF.
+1. The runtime first confirms that the active Persona has at least one canonical Registry BIF.
 2. It builds authorization from the host-resolved Organization, authenticated user, enabled
    Workspaces, Registry namespaces, Persona configuration, and capability policy.
 3. With the default `observe` scope policy, a Registry-capable Persona with one authorized Workspace
    uses it; with multiple authorized Workspaces, the user selects one in chat. Under `strict`, assistant and BIF calls
    use the active authorized Persona Workspace from the interface, regardless of how many the
    Persona has. A chat request to change Workspaces requires an interface switch.
-4. The BIF validates its identifiers, checks its capability, builds a read/execution context,
-   and invokes a Registry service. It returns JSON with sanitized metadata or results.
+4. The grouped dispatcher validates the `action`/`arguments` envelope, then the canonical BIF
+   validates its identifiers, checks its capability, builds a read/execution context, and invokes
+   a Registry service. It returns JSON with sanitized metadata or results.
 5. The LLM uses that result as evidence for its answer; it never receives direct credentials or
    broad data-store authority.
 
@@ -58,40 +93,42 @@ eligible role. See [User permissions](RESOURCE_REGISTRY_USER_PERMISSIONS.md).
 
 ## BIF families
 
-| Family | Main question answered | Typical BIFs |
+| Family | Model-facing group | Typical actions |
 | --- | --- | --- |
-| Discovery and metadata | What data is available and what does it contain? | List datasets, get dataset, schema, profile, versions, context. |
-| Exploration and query | What values or aggregates answer the user's question? | Explore dataset, plan/query dataset, query jobs, analysis jobs. |
-| Derived data and presentation | Can the result be preserved, visualized, or exported? | Create filtered dataset, chart, export plan, artifact generation. |
-| Durable evidence | How can a prior result be retrieved safely? | Query run, analysis artifact, chart artifact, export plan. |
-| Operations and transformations | What background or transformation work occurred? | External jobs and transformation run/step/output functions. |
+| Discovery and metadata | `resource_registry_inspect` | List datasets, get dataset, schema, profile, versions, and context. |
+| Exploration and analysis | `resource_registry_inspect` | Explore dataset and analyze dataset. |
+| Query and derived data | `resource_registry_query` | Plan/query dataset, query jobs, create filtered dataset, and get query run. |
+| Durable outputs | `resource_registry_manage_outputs` | Charts, export plans, artifacts, and intelligence jobs. |
+| Operations and transformations | `resource_registry_inspect` / `resource_registry_manage_transformations` | External jobs and transformation run/step/output actions. |
 
 ## How the LLM uses the catalog
 
 The assistant runtime supports deterministic routes for common data questions, then calls the
 existing BIF dispatch mechanism. It can also leave unrelated messages to the normal model flow.
-The exact BIFs available to the model are the Registry BIFs assigned to its Persona and allowed
-by the request capability context.
+The exact actions available to the model are the canonical Registry BIFs assigned to its Persona
+and allowed by the request capability context.
 
-Common tool sequences are:
+Common grouped-tool sequences are:
 
 ```text
-Discovery:    list_datasets → get_dataset → get_schema / get_profile
-Exploration:  get_schema → explore_dataset OR plan_query → query_dataset
-Async query:  start_query_job → get_query_job_status → get_query_job_result
-Analysis:     start_intelligence_job → get_intelligence_job_status → get_intelligence_job_result
-Output:       query/analyze → create_chart OR plan_export → generate_artifact
-Transform:    start_transformation_run → get_transformation_run → list_steps / list_outputs
+Discovery:    inspect/list_datasets → inspect/get_dataset → inspect/get_dataset_schema
+Exploration:  inspect/get_dataset_schema → inspect/explore_dataset OR query/plan_query → query/query_dataset
+Async query:  query/start_query_job → query/get_query_job_status → query/get_query_job_result
+Analysis:     manage_outputs/start_intelligence_job → manage_outputs/get_intelligence_job_status
+Output:       query/query_dataset or inspect/analyze_dataset → manage_outputs/create_chart
+Transform:    manage_transformations/start_transformation_run → manage_transformations/get_transformation_run
 ```
 
-These are guidance patterns, not permission grants. Each individual BIF repeats capability and
+These are guidance patterns, not permission grants. Each canonical BIF repeats capability and
 scope checks, so a later call cannot inherit broader access from an earlier result.
 
 ## Side effects and risk
 
-Most metadata BIFs are read-only. A subset has durable effects, such as submitting a job,
+Most metadata actions are read-only. A subset has durable effects, such as submitting a job,
 creating a filtered dataset, producing a chart/export artifact, or starting a transformation.
-Those BIFs are marked `is_read_only=False` in the manifest and commonly have HIGH risk.
+Those canonical BIFs are marked `is_read_only=False` in the manifest and commonly have HIGH risk.
+`resource_registry_inspect` is therefore not a read-only permission: its `analyze_dataset` action
+may persist analysis artifacts.
 
 `resource_registry_query_dataset` is also classified as non-read-only because it executes a
 controlled data operation, even though it is expected to use read-only SQL. The query service
@@ -107,6 +144,8 @@ execution rechecks current access; ordinary users can read only their own job st
   `BotServer/builtin_functions/resource_registry_functions.py`
 - Transformation BIF handlers:
   `resource_registry/bifs/transformation/handlers.py`
+- Grouped publication, schemas, and dispatch:
+  `resource_registry/bifs/grouped_publication.py`, `grouped_tools.py`, and `grouped_runtime.py`
 - Persona capability detection and deterministic routing:
   `resource_registry/assistant/persona_capabilities.py` and
   `resource_registry/assistant/runtime_adapter.py`

@@ -1,0 +1,2340 @@
+{
+  "metadata": {
+    "adapter_routing_trial_count": 3,
+    "adapter_routing_trial_method": "Three sequential trials with separate persisted fixtures in one isolated pytest process.",
+    "adapter_routing_trials": [
+      {
+        "results": [
+          {
+            "authorization_context_build_count_per_operation": 2.0,
+            "category": "routing",
+            "error_count": 0,
+            "execution_boundary": "shared_dispatch_stubbed_before_bif",
+            "iterations": 120,
+            "kind": "isolated_database",
+            "latency": {
+              "max_ms": 132.186583,
+              "mean_ms": 60.6443851,
+              "min_ms": 30.928334,
+              "p50_ms": 59.140291,
+              "p95_ms": 86.138791,
+              "p99_ms": 107.784166,
+              "sample_count": 120,
+              "stddev_ms": 16.295336934654582,
+              "tail_percentiles_unstable": false
+            },
+            "name": "routing.adapter_listing_authorized",
+            "outcomes": {
+              "success": 120
+            },
+            "reason": null,
+            "sample_count": 120,
+            "shared_dispatch_stubbed": true,
+            "stages": {
+              "assistant_namespace_resolution": {
+                "event_count": 120,
+                "mean_db_alias_count": 1.0,
+                "mean_db_duration_ms": 16.618765483333334,
+                "mean_db_query_count": 16.0,
+                "mean_duration_ms": 28.4886639
+              },
+              "authorization_context_build": {
+                "event_count": 240,
+                "mean_db_alias_count": 1.0,
+                "mean_db_duration_ms": 15.361680945833333,
+                "mean_db_query_count": 15.0,
+                "mean_duration_ms": 26.084385558333334
+              },
+              "canonical_bif_dispatch_bridge": {
+                "event_count": 120,
+                "mean_db_alias_count": 0.0,
+                "mean_db_duration_ms": 0.0,
+                "mean_db_query_count": 0.0,
+                "mean_duration_ms": 0.048687466666666665
+              },
+              "deterministic_decision_execution": {
+                "event_count": 120,
+                "mean_db_alias_count": 0.0,
+                "mean_db_duration_ms": 0.0,
+                "mean_db_query_count": 0.0,
+                "mean_duration_ms": 0.15904585000000002
+              },
+              "deterministic_routing": {
+                "event_count": 120,
+                "mean_db_alias_count": 1.0,
+                "mean_db_duration_ms": 35.65988453333333,
+                "mean_db_query_count": 35.0,
+                "mean_duration_ms": 60.601002724999994
+              }
+            },
+            "status": "measured",
+            "warmups": 5
+          },
+          {
+            "authorization_context_build_count_per_operation": 2.0,
+            "category": "routing",
+            "error_count": 0,
+            "execution_boundary": "shared_dispatch_stubbed_before_bif",
+            "iterations": 120,
+            "kind": "isolated_database",
+            "latency": {
+              "max_ms": 120.554708,
+              "mean_ms": 63.37410795833333,
+              "min_ms": 25.747292,
+              "p50_ms": 60.885583,
+              "p95_ms": 89.932209,
+              "p99_ms": 99.170125,
+              "sample_count": 120,
+              "stddev_ms": 14.122439531432484,
+              "tail_percentiles_unstable": false
+            },
+            "name": "routing.adapter_schema_authorized",
+            "outcomes": {
+              "success": 120
+            },
+            "reason": null,
+            "sample_count": 120,
+            "shared_dispatch_stubbed": true,
+            "stages": {
+              "assistant_namespace_resolution": {
+                "event_count": 120,
+                "mean_db_alias_count": 1.0,
+                "mean_db_duration_ms": 16.35759435,
+                "mean_db_query_count": 16.0,
+                "mean_duration_ms": 28.933530566666665
+              },
+              "authorization_context_build": {
+                "event_count": 240,
+                "mean_db_alias_count": 1.0,
+                "mean_db_duration_ms": 15.672355191666666,
+                "mean_db_query_count": 15.0,
+                "mean_duration_ms": 27.046344270833334
+              },
+              "canonical_bif_dispatch_bridge": {
+                "event_count": 240,
+                "mean_db_alias_count": 0.0,
+                "mean_db_duration_ms": 0.0,
+                "mean_db_query_count": 0.0,
+                "mean_duration_ms": 0.05725882916666667
+              },
+              "deterministic_decision_execution": {
+                "event_count": 120,
+                "mean_db_alias_count": 0.0,
+                "mean_db_duration_ms": 0.0,
+                "mean_db_query_count": 0.0,
+                "mean_duration_ms": 0.5112367833333333
+              },
+              "deterministic_retry_flow": {
+                "event_count": 120,
+                "mean_db_alias_count": 0.0,
+                "mean_db_duration_ms": 0.0,
+                "mean_db_query_count": 0.0,
+                "mean_duration_ms": 0.13037638333333332
+              },
+              "deterministic_routing": {
+                "event_count": 120,
+                "mean_db_alias_count": 1.0,
+                "mean_db_duration_ms": 36.68281555,
+                "mean_db_query_count": 35.0,
+                "mean_duration_ms": 63.32596665833333
+              }
+            },
+            "status": "measured",
+            "warmups": 5
+          },
+          {
+            "authorization_context_build_count_per_operation": 2.0,
+            "category": "routing",
+            "error_count": 0,
+            "execution_boundary": "pre_dispatch_registry_execution_only",
+            "iterations": 120,
+            "kind": "isolated_database",
+            "latency": {
+              "max_ms": 90.848333,
+              "mean_ms": 58.211056641666666,
+              "min_ms": 29.634,
+              "p50_ms": 57.621584,
+              "p95_ms": 74.532209,
+              "p99_ms": 89.841334,
+              "sample_count": 120,
+              "stddev_ms": 10.904464825613866,
+              "tail_percentiles_unstable": false
+            },
+            "name": "routing.adapter_workspace_ambiguous",
+            "outcomes": {
+              "success": 120
+            },
+            "reason": null,
+            "sample_count": 120,
+            "shared_dispatch_stubbed": false,
+            "stages": {
+              "assistant_namespace_resolution": {
+                "event_count": 120,
+                "mean_db_alias_count": 1.0,
+                "mean_db_duration_ms": 14.666779625,
+                "mean_db_query_count": 16.0,
+                "mean_duration_ms": 26.970832266666665
+              },
+              "authorization_context_build": {
+                "event_count": 240,
+                "mean_db_alias_count": 1.0,
+                "mean_db_duration_ms": 13.815975429166667,
+                "mean_db_query_count": 15.0,
+                "mean_duration_ms": 25.180376929166666
+              },
+              "deterministic_routing": {
+                "event_count": 120,
+                "mean_db_alias_count": 1.0,
+                "mean_db_duration_ms": 32.187329016666666,
+                "mean_db_query_count": 35.0,
+                "mean_duration_ms": 58.145319433333334
+              }
+            },
+            "status": "measured",
+            "warmups": 5
+          },
+          {
+            "authorization_context_build_count_per_operation": 1.0,
+            "category": "routing",
+            "error_count": 0,
+            "execution_boundary": "pre_dispatch_registry_execution_only",
+            "iterations": 120,
+            "kind": "isolated_database",
+            "latency": {
+              "max_ms": 53.913416,
+              "mean_ms": 35.91868196666667,
+              "min_ms": 22.234208,
+              "p50_ms": 36.437417,
+              "p95_ms": 42.708375,
+              "p99_ms": 50.855667,
+              "sample_count": 120,
+              "stddev_ms": 4.978935591599647,
+              "tail_percentiles_unstable": false
+            },
+            "name": "routing.adapter_revoked_before_bif",
+            "outcomes": {
+              "rejected": 120
+            },
+            "reason": null,
+            "sample_count": 120,
+            "shared_dispatch_stubbed": false,
+            "stages": {
+              "authorization_context_build": {
+                "event_count": 120,
+                "mean_db_alias_count": 1.0,
+                "mean_db_duration_ms": 17.508287133333333,
+                "mean_db_query_count": 16.0,
+                "mean_duration_ms": 31.2682024
+              },
+              "deterministic_routing": {
+                "event_count": 120,
+                "mean_db_alias_count": 1.0,
+                "mean_db_duration_ms": 20.462755291666667,
+                "mean_db_query_count": 19.0,
+                "mean_duration_ms": 35.836469075
+              }
+            },
+            "status": "measured",
+            "warmups": 5
+          }
+        ],
+        "trial": 1
+      },
+      {
+        "results": [
+          {
+            "authorization_context_build_count_per_operation": 2.0,
+            "category": "routing",
+            "error_count": 0,
+            "execution_boundary": "shared_dispatch_stubbed_before_bif",
+            "iterations": 120,
+            "kind": "isolated_database",
+            "latency": {
+              "max_ms": 100.042208,
+              "mean_ms": 60.37008228333333,
+              "min_ms": 25.883375,
+              "p50_ms": 59.374083,
+              "p95_ms": 81.00175,
+              "p99_ms": 88.147208,
+              "sample_count": 120,
+              "stddev_ms": 11.584806165018685,
+              "tail_percentiles_unstable": false
+            },
+            "name": "routing.adapter_listing_authorized",
+            "outcomes": {
+              "success": 120
+            },
+            "reason": null,
+            "sample_count": 120,
+            "shared_dispatch_stubbed": true,
+            "stages": {
+              "assistant_namespace_resolution": {
+                "event_count": 120,
+                "mean_db_alias_count": 1.0,
+                "mean_db_duration_ms": 14.473123941666667,
+                "mean_db_query_count": 16.0,
+                "mean_duration_ms": 27.45553784166667
+              },
+              "authorization_context_build": {
+                "event_count": 240,
+                "mean_db_alias_count": 1.0,
+                "mean_db_duration_ms": 14.038659554166665,
+                "mean_db_query_count": 15.0,
+                "mean_duration_ms": 25.7342404625
+              },
+              "canonical_bif_dispatch_bridge": {
+                "event_count": 120,
+                "mean_db_alias_count": 0.0,
+                "mean_db_duration_ms": 0.0,
+                "mean_db_query_count": 0.0,
+                "mean_duration_ms": 0.05948885833333333
+              },
+              "deterministic_decision_execution": {
+                "event_count": 120,
+                "mean_db_alias_count": 0.0,
+                "mean_db_duration_ms": 0.0,
+                "mean_db_query_count": 0.0,
+                "mean_duration_ms": 0.1977399333333333
+              },
+              "deterministic_routing": {
+                "event_count": 120,
+                "mean_db_alias_count": 1.0,
+                "mean_db_duration_ms": 32.969770675,
+                "mean_db_query_count": 35.0,
+                "mean_duration_ms": 60.32172536666667
+              }
+            },
+            "status": "measured",
+            "warmups": 5
+          },
+          {
+            "authorization_context_build_count_per_operation": 2.0,
+            "category": "routing",
+            "error_count": 0,
+            "execution_boundary": "shared_dispatch_stubbed_before_bif",
+            "iterations": 120,
+            "kind": "isolated_database",
+            "latency": {
+              "max_ms": 100.881334,
+              "mean_ms": 59.79935416666667,
+              "min_ms": 36.85475,
+              "p50_ms": 59.8315,
+              "p95_ms": 83.439833,
+              "p99_ms": 92.835541,
+              "sample_count": 120,
+              "stddev_ms": 12.772994917579009,
+              "tail_percentiles_unstable": false
+            },
+            "name": "routing.adapter_schema_authorized",
+            "outcomes": {
+              "success": 120
+            },
+            "reason": null,
+            "sample_count": 120,
+            "shared_dispatch_stubbed": true,
+            "stages": {
+              "assistant_namespace_resolution": {
+                "event_count": 120,
+                "mean_db_alias_count": 1.0,
+                "mean_db_duration_ms": 15.428738616666667,
+                "mean_db_query_count": 16.0,
+                "mean_duration_ms": 27.417774650000002
+              },
+              "authorization_context_build": {
+                "event_count": 240,
+                "mean_db_alias_count": 1.0,
+                "mean_db_duration_ms": 14.841723429166667,
+                "mean_db_query_count": 15.0,
+                "mean_duration_ms": 25.790489937500002
+              },
+              "canonical_bif_dispatch_bridge": {
+                "event_count": 240,
+                "mean_db_alias_count": 0.0,
+                "mean_db_duration_ms": 0.0,
+                "mean_db_query_count": 0.0,
+                "mean_duration_ms": 0.053076033333333335
+              },
+              "deterministic_decision_execution": {
+                "event_count": 120,
+                "mean_db_alias_count": 0.0,
+                "mean_db_duration_ms": 0.0,
+                "mean_db_query_count": 0.0,
+                "mean_duration_ms": 0.47103225833333334
+              },
+              "deterministic_retry_flow": {
+                "event_count": 120,
+                "mean_db_alias_count": 0.0,
+                "mean_db_duration_ms": 0.0,
+                "mean_db_query_count": 0.0,
+                "mean_duration_ms": 0.11832463333333335
+              },
+              "deterministic_routing": {
+                "event_count": 120,
+                "mean_db_alias_count": 1.0,
+                "mean_db_duration_ms": 34.29192494166667,
+                "mean_db_query_count": 35.0,
+                "mean_duration_ms": 59.75464723333334
+              }
+            },
+            "status": "measured",
+            "warmups": 5
+          },
+          {
+            "authorization_context_build_count_per_operation": 2.0,
+            "category": "routing",
+            "error_count": 0,
+            "execution_boundary": "pre_dispatch_registry_execution_only",
+            "iterations": 120,
+            "kind": "isolated_database",
+            "latency": {
+              "max_ms": 103.080333,
+              "mean_ms": 66.47725616666666,
+              "min_ms": 32.949708,
+              "p50_ms": 64.620458,
+              "p95_ms": 93.700542,
+              "p99_ms": 99.688916,
+              "sample_count": 120,
+              "stddev_ms": 14.95803843421447,
+              "tail_percentiles_unstable": false
+            },
+            "name": "routing.adapter_workspace_ambiguous",
+            "outcomes": {
+              "success": 120
+            },
+            "reason": null,
+            "sample_count": 120,
+            "shared_dispatch_stubbed": false,
+            "stages": {
+              "assistant_namespace_resolution": {
+                "event_count": 120,
+                "mean_db_alias_count": 1.0,
+                "mean_db_duration_ms": 17.077647233333334,
+                "mean_db_query_count": 16.0,
+                "mean_duration_ms": 30.680408008333334
+              },
+              "authorization_context_build": {
+                "event_count": 240,
+                "mean_db_alias_count": 1.0,
+                "mean_db_duration_ms": 16.370183716666666,
+                "mean_db_query_count": 15.0,
+                "mean_duration_ms": 28.836670829166668
+              },
+              "deterministic_routing": {
+                "event_count": 120,
+                "mean_db_alias_count": 1.0,
+                "mean_db_duration_ms": 37.960831641666665,
+                "mean_db_query_count": 35.0,
+                "mean_duration_ms": 66.41758721666666
+              }
+            },
+            "status": "measured",
+            "warmups": 5
+          },
+          {
+            "authorization_context_build_count_per_operation": 1.0,
+            "category": "routing",
+            "error_count": 0,
+            "execution_boundary": "pre_dispatch_registry_execution_only",
+            "iterations": 120,
+            "kind": "isolated_database",
+            "latency": {
+              "max_ms": 54.86075,
+              "mean_ms": 36.210990025,
+              "min_ms": 21.82775,
+              "p50_ms": 35.82725,
+              "p95_ms": 46.665292,
+              "p99_ms": 53.249417,
+              "sample_count": 120,
+              "stddev_ms": 5.92918166510055,
+              "tail_percentiles_unstable": false
+            },
+            "name": "routing.adapter_revoked_before_bif",
+            "outcomes": {
+              "rejected": 120
+            },
+            "reason": null,
+            "sample_count": 120,
+            "shared_dispatch_stubbed": false,
+            "stages": {
+              "authorization_context_build": {
+                "event_count": 120,
+                "mean_db_alias_count": 1.0,
+                "mean_db_duration_ms": 17.931551341666665,
+                "mean_db_query_count": 16.0,
+                "mean_duration_ms": 31.510259341666664
+              },
+              "deterministic_routing": {
+                "event_count": 120,
+                "mean_db_alias_count": 1.0,
+                "mean_db_duration_ms": 20.98880535,
+                "mean_db_query_count": 19.0,
+                "mean_duration_ms": 36.12700280833334
+              }
+            },
+            "status": "measured",
+            "warmups": 5
+          }
+        ],
+        "trial": 2
+      },
+      {
+        "results": [
+          {
+            "authorization_context_build_count_per_operation": 2.0,
+            "category": "routing",
+            "error_count": 0,
+            "execution_boundary": "shared_dispatch_stubbed_before_bif",
+            "iterations": 120,
+            "kind": "isolated_database",
+            "latency": {
+              "max_ms": 124.348292,
+              "mean_ms": 69.92548060833333,
+              "min_ms": 32.317667,
+              "p50_ms": 68.205333,
+              "p95_ms": 106.019125,
+              "p99_ms": 119.416333,
+              "sample_count": 120,
+              "stddev_ms": 17.104464299066745,
+              "tail_percentiles_unstable": false
+            },
+            "name": "routing.adapter_listing_authorized",
+            "outcomes": {
+              "success": 120
+            },
+            "reason": null,
+            "sample_count": 120,
+            "shared_dispatch_stubbed": true,
+            "stages": {
+              "assistant_namespace_resolution": {
+                "event_count": 120,
+                "mean_db_alias_count": 1.0,
+                "mean_db_duration_ms": 18.43448105,
+                "mean_db_query_count": 16.0,
+                "mean_duration_ms": 32.36536911666666
+              },
+              "authorization_context_build": {
+                "event_count": 240,
+                "mean_db_alias_count": 1.0,
+                "mean_db_duration_ms": 17.3920324625,
+                "mean_db_query_count": 15.0,
+                "mean_duration_ms": 29.96491459583333
+              },
+              "canonical_bif_dispatch_bridge": {
+                "event_count": 120,
+                "mean_db_alias_count": 0.0,
+                "mean_db_duration_ms": 0.0,
+                "mean_db_query_count": 0.0,
+                "mean_duration_ms": 0.07476905
+              },
+              "deterministic_decision_execution": {
+                "event_count": 120,
+                "mean_db_alias_count": 0.0,
+                "mean_db_duration_ms": 0.0,
+                "mean_db_query_count": 0.0,
+                "mean_duration_ms": 0.19844825833333332
+              },
+              "deterministic_routing": {
+                "event_count": 120,
+                "mean_db_alias_count": 1.0,
+                "mean_db_duration_ms": 40.72693353333333,
+                "mean_db_query_count": 35.0,
+                "mean_duration_ms": 69.875616675
+              }
+            },
+            "status": "measured",
+            "warmups": 5
+          },
+          {
+            "authorization_context_build_count_per_operation": 2.0,
+            "category": "routing",
+            "error_count": 0,
+            "execution_boundary": "shared_dispatch_stubbed_before_bif",
+            "iterations": 120,
+            "kind": "isolated_database",
+            "latency": {
+              "max_ms": 116.807125,
+              "mean_ms": 70.00033120833334,
+              "min_ms": 22.673917,
+              "p50_ms": 68.690916,
+              "p95_ms": 105.697709,
+              "p99_ms": 116.547458,
+              "sample_count": 120,
+              "stddev_ms": 22.139915987713483,
+              "tail_percentiles_unstable": false
+            },
+            "name": "routing.adapter_schema_authorized",
+            "outcomes": {
+              "success": 120
+            },
+            "reason": null,
+            "sample_count": 120,
+            "shared_dispatch_stubbed": true,
+            "stages": {
+              "assistant_namespace_resolution": {
+                "event_count": 120,
+                "mean_db_alias_count": 1.0,
+                "mean_db_duration_ms": 18.709147233333333,
+                "mean_db_query_count": 16.0,
+                "mean_duration_ms": 32.461189625
+              },
+              "authorization_context_build": {
+                "event_count": 240,
+                "mean_db_alias_count": 1.0,
+                "mean_db_duration_ms": 17.42258974583333,
+                "mean_db_query_count": 15.0,
+                "mean_duration_ms": 29.94836335
+              },
+              "canonical_bif_dispatch_bridge": {
+                "event_count": 240,
+                "mean_db_alias_count": 0.0,
+                "mean_db_duration_ms": 0.0,
+                "mean_db_query_count": 0.0,
+                "mean_duration_ms": 0.0558028125
+              },
+              "deterministic_decision_execution": {
+                "event_count": 120,
+                "mean_db_alias_count": 0.0,
+                "mean_db_duration_ms": 0.0,
+                "mean_db_query_count": 0.0,
+                "mean_duration_ms": 0.496101375
+              },
+              "deterministic_retry_flow": {
+                "event_count": 120,
+                "mean_db_alias_count": 0.0,
+                "mean_db_duration_ms": 0.0,
+                "mean_db_query_count": 0.0,
+                "mean_duration_ms": 0.121537525
+              },
+              "deterministic_routing": {
+                "event_count": 120,
+                "mean_db_alias_count": 1.0,
+                "mean_db_duration_ms": 40.81618719166667,
+                "mean_db_query_count": 35.0,
+                "mean_duration_ms": 69.95343959166667
+              }
+            },
+            "status": "measured",
+            "warmups": 5
+          },
+          {
+            "authorization_context_build_count_per_operation": 2.0,
+            "category": "routing",
+            "error_count": 0,
+            "execution_boundary": "pre_dispatch_registry_execution_only",
+            "iterations": 120,
+            "kind": "isolated_database",
+            "latency": {
+              "max_ms": 112.233917,
+              "mean_ms": 73.537746875,
+              "min_ms": 41.846375,
+              "p50_ms": 73.028083,
+              "p95_ms": 99.13025,
+              "p99_ms": 110.429625,
+              "sample_count": 120,
+              "stddev_ms": 14.422908158101361,
+              "tail_percentiles_unstable": false
+            },
+            "name": "routing.adapter_workspace_ambiguous",
+            "outcomes": {
+              "success": 120
+            },
+            "reason": null,
+            "sample_count": 120,
+            "shared_dispatch_stubbed": false,
+            "stages": {
+              "assistant_namespace_resolution": {
+                "event_count": 120,
+                "mean_db_alias_count": 1.0,
+                "mean_db_duration_ms": 18.978735441666668,
+                "mean_db_query_count": 16.0,
+                "mean_duration_ms": 33.89369576666667
+              },
+              "authorization_context_build": {
+                "event_count": 240,
+                "mean_db_alias_count": 1.0,
+                "mean_db_duration_ms": 17.819934787500003,
+                "mean_db_query_count": 15.0,
+                "mean_duration_ms": 31.729553483333333
+              },
+              "deterministic_routing": {
+                "event_count": 120,
+                "mean_db_alias_count": 1.0,
+                "mean_db_duration_ms": 41.72251266666667,
+                "mean_db_query_count": 35.0,
+                "mean_duration_ms": 73.46992949166666
+              }
+            },
+            "status": "measured",
+            "warmups": 5
+          },
+          {
+            "authorization_context_build_count_per_operation": 1.0,
+            "category": "routing",
+            "error_count": 0,
+            "execution_boundary": "pre_dispatch_registry_execution_only",
+            "iterations": 120,
+            "kind": "isolated_database",
+            "latency": {
+              "max_ms": 57.495041,
+              "mean_ms": 35.137830925,
+              "min_ms": 17.763708,
+              "p50_ms": 34.573833,
+              "p95_ms": 45.943084,
+              "p99_ms": 55.581458,
+              "sample_count": 120,
+              "stddev_ms": 6.316610604278298,
+              "tail_percentiles_unstable": false
+            },
+            "name": "routing.adapter_revoked_before_bif",
+            "outcomes": {
+              "rejected": 120
+            },
+            "reason": null,
+            "sample_count": 120,
+            "shared_dispatch_stubbed": false,
+            "stages": {
+              "authorization_context_build": {
+                "event_count": 120,
+                "mean_db_alias_count": 1.0,
+                "mean_db_duration_ms": 17.180261525,
+                "mean_db_query_count": 16.0,
+                "mean_duration_ms": 30.653052433333336
+              },
+              "deterministic_routing": {
+                "event_count": 120,
+                "mean_db_alias_count": 1.0,
+                "mean_db_duration_ms": 19.987617358333335,
+                "mean_db_query_count": 19.0,
+                "mean_duration_ms": 35.05423548333333
+              }
+            },
+            "status": "measured",
+            "warmups": 5
+          }
+        ],
+        "trial": 3
+      }
+    ],
+    "concurrency_levels": [
+      1,
+      10,
+      25
+    ],
+    "cpu_architecture": "arm64",
+    "database_engine": "postgresql",
+    "dirty": true,
+    "django_version": "6.0.7",
+    "git_revision": "b890981f2",
+    "iterations": 120,
+    "main_instrumentation": {
+      "enabled": true,
+      "payload_enabled": true,
+      "sample_rate": 1.0,
+      "sink": "registry_local_capture",
+      "sql_enabled": true
+    },
+    "operating_system": "Darwin",
+    "python_version": "3.12.8",
+    "warmups": 5
+  },
+  "results": [
+    {
+      "authorization_context_build_count_per_operation": null,
+      "category": "routing",
+      "error_count": 0,
+      "iterations": 120,
+      "kind": "synthetic",
+      "latency": {
+        "max_ms": 0.010167,
+        "mean_ms": 0.009047233333333333,
+        "min_ms": 0.008375,
+        "p50_ms": 0.008833,
+        "p95_ms": 0.00975,
+        "p99_ms": 0.009875,
+        "sample_count": 120,
+        "stddev_ms": 0.0004973338451195539,
+        "tail_percentiles_unstable": false
+      },
+      "name": "routing.listing",
+      "outcomes": {
+        "routed": 120
+      },
+      "reason": null,
+      "sample_count": 120,
+      "stages": {},
+      "status": "measured",
+      "warmups": 5
+    },
+    {
+      "authorization_context_build_count_per_operation": null,
+      "category": "routing",
+      "error_count": 0,
+      "iterations": 120,
+      "kind": "synthetic",
+      "latency": {
+        "max_ms": 0.01575,
+        "mean_ms": 0.014846191666666668,
+        "min_ms": 0.013583,
+        "p50_ms": 0.015292,
+        "p95_ms": 0.015583,
+        "p99_ms": 0.015667,
+        "sample_count": 120,
+        "stddev_ms": 0.0007475780760307947,
+        "tail_percentiles_unstable": false
+      },
+      "name": "routing.schema",
+      "outcomes": {
+        "routed": 120
+      },
+      "reason": null,
+      "sample_count": 120,
+      "stages": {},
+      "status": "measured",
+      "warmups": 5
+    },
+    {
+      "authorization_context_build_count_per_operation": null,
+      "category": "routing",
+      "error_count": 0,
+      "iterations": 120,
+      "kind": "synthetic",
+      "latency": {
+        "max_ms": 0.075875,
+        "mean_ms": 0.0232375,
+        "min_ms": 0.019833,
+        "p50_ms": 0.022666,
+        "p95_ms": 0.026666,
+        "p99_ms": 0.03975,
+        "sample_count": 120,
+        "stddev_ms": 0.005388146066469751,
+        "tail_percentiles_unstable": false
+      },
+      "name": "routing.explore",
+      "outcomes": {
+        "routed": 120
+      },
+      "reason": null,
+      "sample_count": 120,
+      "stages": {},
+      "status": "measured",
+      "warmups": 5
+    },
+    {
+      "authorization_context_build_count_per_operation": null,
+      "category": "routing",
+      "error_count": 0,
+      "iterations": 120,
+      "kind": "synthetic",
+      "latency": {
+        "max_ms": 0.001708,
+        "mean_ms": 0.001288225,
+        "min_ms": 0.001083,
+        "p50_ms": 0.00125,
+        "p95_ms": 0.001625,
+        "p99_ms": 0.001667,
+        "sample_count": 120,
+        "stddev_ms": 0.000148105484921611,
+        "tail_percentiles_unstable": false
+      },
+      "name": "routing.fallback",
+      "outcomes": {
+        "fallback": 120
+      },
+      "reason": null,
+      "sample_count": 120,
+      "stages": {},
+      "status": "measured",
+      "warmups": 5
+    },
+    {
+      "authorization_context_build_count_per_operation": null,
+      "category": "routing",
+      "error_count": 0,
+      "iterations": 120,
+      "kind": "synthetic",
+      "latency": {
+        "max_ms": 0.025875,
+        "mean_ms": 0.020796516666666667,
+        "min_ms": 0.018167,
+        "p50_ms": 0.020625,
+        "p95_ms": 0.02425,
+        "p99_ms": 0.02575,
+        "sample_count": 120,
+        "stddev_ms": 0.0013379523485964834,
+        "tail_percentiles_unstable": false
+      },
+      "name": "routing.rejected",
+      "outcomes": {
+        "rejected": 120
+      },
+      "reason": null,
+      "sample_count": 120,
+      "stages": {},
+      "status": "measured",
+      "warmups": 5
+    },
+    {
+      "authorization_context_build_count_per_operation": null,
+      "category": "publication",
+      "error_count": 0,
+      "iterations": 120,
+      "kind": "synthetic",
+      "latency": {
+        "max_ms": 0.027125,
+        "mean_ms": 0.02010905,
+        "min_ms": 0.017667,
+        "p50_ms": 0.019708,
+        "p95_ms": 0.022917,
+        "p99_ms": 0.02425,
+        "sample_count": 120,
+        "stddev_ms": 0.001412215500314216,
+        "tail_percentiles_unstable": false
+      },
+      "name": "publication.none",
+      "outcomes": {
+        "success": 120
+      },
+      "reason": null,
+      "sample_count": 120,
+      "stages": {
+        "registry_tool_publication": {
+          "action_count": 0,
+          "description_char_count": 0,
+          "event_count": 120,
+          "mean_db_alias_count": 0.0,
+          "mean_db_duration_ms": 0.0,
+          "mean_db_query_count": 0.0,
+          "mean_duration_ms": 0.003158308333333333,
+          "payload_bytes": 2,
+          "schema_property_count": 0,
+          "tool_count": 0
+        }
+      },
+      "status": "measured",
+      "warmups": 5
+    },
+    {
+      "authorization_context_build_count_per_operation": null,
+      "category": "publication",
+      "error_count": 0,
+      "iterations": 120,
+      "kind": "synthetic",
+      "latency": {
+        "max_ms": 0.241375,
+        "mean_ms": 0.07373924166666666,
+        "min_ms": 0.064333,
+        "p50_ms": 0.07075,
+        "p95_ms": 0.08525,
+        "p99_ms": 0.121542,
+        "sample_count": 120,
+        "stddev_ms": 0.01728706465452356,
+        "tail_percentiles_unstable": false
+      },
+      "name": "publication.one",
+      "outcomes": {
+        "success": 120
+      },
+      "reason": null,
+      "sample_count": 120,
+      "stages": {
+        "grouped_schema_build": {
+          "event_count": 120,
+          "mean_db_alias_count": 0.0,
+          "mean_db_duration_ms": 0.0,
+          "mean_db_query_count": 0.0,
+          "mean_duration_ms": 0.012612883333333333
+        },
+        "registry_tool_publication": {
+          "action_count": 1,
+          "description_char_count": 358,
+          "event_count": 120,
+          "mean_db_alias_count": 0.0,
+          "mean_db_duration_ms": 0.0,
+          "mean_db_query_count": 0.0,
+          "mean_duration_ms": 0.04236560833333333,
+          "payload_bytes": 837,
+          "schema_property_count": 5,
+          "tool_count": 1
+        }
+      },
+      "status": "measured",
+      "warmups": 5
+    },
+    {
+      "authorization_context_build_count_per_operation": null,
+      "category": "publication",
+      "error_count": 0,
+      "iterations": 120,
+      "kind": "synthetic",
+      "latency": {
+        "max_ms": 0.262833,
+        "mean_ms": 0.11449685000000001,
+        "min_ms": 0.101333,
+        "p50_ms": 0.113792,
+        "p95_ms": 0.122959,
+        "p99_ms": 0.161417,
+        "sample_count": 120,
+        "stddev_ms": 0.015355602521035558,
+        "tail_percentiles_unstable": false
+      },
+      "name": "publication.partial",
+      "outcomes": {
+        "success": 120
+      },
+      "reason": null,
+      "sample_count": 120,
+      "stages": {
+        "grouped_schema_build": {
+          "event_count": 120,
+          "mean_db_alias_count": 0.0,
+          "mean_db_duration_ms": 0.0,
+          "mean_db_query_count": 0.0,
+          "mean_duration_ms": 0.02848365833333333
+        },
+        "registry_tool_publication": {
+          "action_count": 4,
+          "description_char_count": 957,
+          "event_count": 120,
+          "mean_db_alias_count": 0.0,
+          "mean_db_duration_ms": 0.0,
+          "mean_db_query_count": 0.0,
+          "mean_duration_ms": 0.06962919166666667,
+          "payload_bytes": 1951,
+          "schema_property_count": 10,
+          "tool_count": 2
+        }
+      },
+      "status": "measured",
+      "warmups": 5
+    },
+    {
+      "authorization_context_build_count_per_operation": null,
+      "category": "publication",
+      "error_count": 0,
+      "iterations": 120,
+      "kind": "synthetic",
+      "latency": {
+        "max_ms": 0.459458,
+        "mean_ms": 0.36475864999999996,
+        "min_ms": 0.330166,
+        "p50_ms": 0.36425,
+        "p95_ms": 0.38075,
+        "p99_ms": 0.443084,
+        "sample_count": 120,
+        "stddev_ms": 0.014991484253687869,
+        "tail_percentiles_unstable": false
+      },
+      "name": "publication.full",
+      "outcomes": {
+        "success": 120
+      },
+      "reason": null,
+      "sample_count": 120,
+      "stages": {
+        "grouped_schema_build": {
+          "event_count": 120,
+          "mean_db_alias_count": 0.0,
+          "mean_db_duration_ms": 0.0,
+          "mean_db_query_count": 0.0,
+          "mean_duration_ms": 0.17513955833333333
+        },
+        "registry_tool_publication": {
+          "action_count": 31,
+          "description_char_count": 4681,
+          "event_count": 120,
+          "mean_db_alias_count": 0.0,
+          "mean_db_duration_ms": 0.0,
+          "mean_db_query_count": 0.0,
+          "mean_duration_ms": 0.27084339166666666,
+          "payload_bytes": 8195,
+          "schema_property_count": 34,
+          "tool_count": 4
+        }
+      },
+      "status": "measured",
+      "warmups": 5
+    },
+    {
+      "authorization_context_build_count_per_operation": null,
+      "category": "schema",
+      "error_count": 0,
+      "iterations": 120,
+      "kind": "synthetic",
+      "latency": {
+        "max_ms": 0.21325,
+        "mean_ms": 0.18507603333333333,
+        "min_ms": 0.166167,
+        "p50_ms": 0.185667,
+        "p95_ms": 0.195709,
+        "p99_ms": 0.210542,
+        "sample_count": 120,
+        "stddev_ms": 0.006942973863274038,
+        "tail_percentiles_unstable": false
+      },
+      "name": "schema.build_full",
+      "outcomes": {
+        "success": 120
+      },
+      "reason": null,
+      "sample_count": 120,
+      "stages": {
+        "grouped_schema_build": {
+          "event_count": 120,
+          "mean_db_alias_count": 0.0,
+          "mean_db_duration_ms": 0.0,
+          "mean_db_query_count": 0.0,
+          "mean_duration_ms": 0.16884785833333332
+        }
+      },
+      "status": "measured",
+      "warmups": 5
+    },
+    {
+      "authorization_context_build_count_per_operation": null,
+      "category": "validation",
+      "error_count": 0,
+      "iterations": 120,
+      "kind": "synthetic",
+      "latency": {
+        "max_ms": 0.045666,
+        "mean_ms": 0.034703475000000004,
+        "min_ms": 0.030458,
+        "p50_ms": 0.034709,
+        "p95_ms": 0.036875,
+        "p99_ms": 0.039792,
+        "sample_count": 120,
+        "stddev_ms": 0.0018296001352295344,
+        "tail_percentiles_unstable": false
+      },
+      "name": "validation.valid",
+      "outcomes": {
+        "success": 120
+      },
+      "reason": null,
+      "sample_count": 120,
+      "stages": {
+        "grouped_schema_validation": {
+          "event_count": 120,
+          "mean_db_alias_count": 0.0,
+          "mean_db_duration_ms": 0.0,
+          "mean_db_query_count": 0.0,
+          "mean_duration_ms": 0.01755905
+        }
+      },
+      "status": "measured",
+      "warmups": 5
+    },
+    {
+      "authorization_context_build_count_per_operation": null,
+      "category": "validation",
+      "error_count": 0,
+      "iterations": 120,
+      "kind": "synthetic",
+      "latency": {
+        "max_ms": 0.076833,
+        "mean_ms": 0.03744030833333333,
+        "min_ms": 0.033125,
+        "p50_ms": 0.035583,
+        "p95_ms": 0.042458,
+        "p99_ms": 0.074584,
+        "sample_count": 120,
+        "stddev_ms": 0.0059977908339091755,
+        "tail_percentiles_unstable": false
+      },
+      "name": "validation.invalid",
+      "outcomes": {
+        "rejected": 120
+      },
+      "reason": null,
+      "sample_count": 120,
+      "stages": {
+        "grouped_schema_validation": {
+          "event_count": 120,
+          "mean_db_alias_count": 0.0,
+          "mean_db_duration_ms": 0.0,
+          "mean_db_query_count": 0.0,
+          "mean_duration_ms": 0.020043025
+        }
+      },
+      "status": "measured",
+      "warmups": 5
+    },
+    {
+      "authorization_context_build_count_per_operation": null,
+      "category": "validation",
+      "error_count": 0,
+      "iterations": 120,
+      "kind": "synthetic",
+      "latency": {
+        "max_ms": 0.067209,
+        "mean_ms": 0.05329096666666667,
+        "min_ms": 0.047083,
+        "p50_ms": 0.053542,
+        "p95_ms": 0.056958,
+        "p99_ms": 0.067,
+        "sample_count": 120,
+        "stddev_ms": 0.0034467150892469453,
+        "tail_percentiles_unstable": false
+      },
+      "name": "validation.nested",
+      "outcomes": {
+        "success": 120
+      },
+      "reason": null,
+      "sample_count": 120,
+      "stages": {
+        "grouped_schema_validation": {
+          "event_count": 120,
+          "mean_db_alias_count": 0.0,
+          "mean_db_duration_ms": 0.0,
+          "mean_db_query_count": 0.0,
+          "mean_duration_ms": 0.034557641666666666
+        }
+      },
+      "status": "measured",
+      "warmups": 5
+    },
+    {
+      "authorization_context_build_count_per_operation": null,
+      "category": "validation",
+      "error_count": 0,
+      "iterations": 120,
+      "kind": "synthetic",
+      "latency": {
+        "max_ms": 0.557667,
+        "mean_ms": 0.06220938333333333,
+        "min_ms": 0.049125,
+        "p50_ms": 0.056833,
+        "p95_ms": 0.063541,
+        "p99_ms": 0.115875,
+        "sample_count": 120,
+        "stddev_ms": 0.04651858952520859,
+        "tail_percentiles_unstable": false
+      },
+      "name": "validation.complex_invalid",
+      "outcomes": {
+        "rejected": 120
+      },
+      "reason": null,
+      "sample_count": 120,
+      "stages": {
+        "grouped_schema_validation": {
+          "event_count": 120,
+          "mean_db_alias_count": 0.0,
+          "mean_db_duration_ms": 0.0,
+          "mean_db_query_count": 0.0,
+          "mean_duration_ms": 0.0426406
+        }
+      },
+      "status": "measured",
+      "warmups": 5
+    },
+    {
+      "authorization_context_build_count_per_operation": null,
+      "category": "execution",
+      "error_count": 0,
+      "iterations": 120,
+      "kind": "synthetic",
+      "latency": {
+        "max_ms": 0.08925,
+        "mean_ms": 0.07136526666666666,
+        "min_ms": 0.064375,
+        "p50_ms": 0.071833,
+        "p95_ms": 0.073708,
+        "p99_ms": 0.079084,
+        "sample_count": 120,
+        "stddev_ms": 0.0029201901651365464,
+        "tail_percentiles_unstable": false
+      },
+      "name": "execution.invalid_envelope",
+      "outcomes": {
+        "rejected": 120
+      },
+      "reason": null,
+      "sample_count": 120,
+      "stages": {
+        "grouped_call_total": {
+          "event_count": 120,
+          "mean_db_alias_count": 0.0,
+          "mean_db_duration_ms": 0.0,
+          "mean_db_query_count": 0.0,
+          "mean_duration_ms": 0.05670727500000001
+        },
+        "grouped_result_projection": {
+          "event_count": 120,
+          "mean_db_alias_count": 0.0,
+          "mean_db_duration_ms": 0.0,
+          "mean_db_query_count": 0.0,
+          "mean_duration_ms": 0.035615266666666666
+        }
+      },
+      "status": "measured",
+      "warmups": 5
+    },
+    {
+      "authorization_context_build_count_per_operation": null,
+      "category": "execution",
+      "error_count": 0,
+      "iterations": 120,
+      "kind": "synthetic",
+      "latency": {
+        "max_ms": 0.01675,
+        "mean_ms": 0.015377091666666667,
+        "min_ms": 0.013709,
+        "p50_ms": 0.015458,
+        "p95_ms": 0.015833,
+        "p99_ms": 0.016458,
+        "sample_count": 120,
+        "stddev_ms": 0.0005121688599538657,
+        "tail_percentiles_unstable": false
+      },
+      "name": "execution.result_projection",
+      "outcomes": {
+        "success": 120
+      },
+      "reason": null,
+      "sample_count": 120,
+      "stages": {
+        "grouped_result_projection": {
+          "event_count": 120,
+          "mean_db_alias_count": 0.0,
+          "mean_db_duration_ms": 0.0,
+          "mean_db_query_count": 0.0,
+          "mean_duration_ms": 0.0036107500000000002
+        }
+      },
+      "status": "measured",
+      "warmups": 5
+    },
+    {
+      "category": "concurrency",
+      "completed_count": 120,
+      "concurrency": 1,
+      "error_count": 0,
+      "iterations": 120,
+      "kind": "synthetic_threaded",
+      "latency": {
+        "max_ms": 0.05325,
+        "mean_ms": 0.026517708333333334,
+        "min_ms": 0.023833,
+        "p50_ms": 0.025333,
+        "p95_ms": 0.031375,
+        "p99_ms": 0.042417,
+        "sample_count": 120,
+        "stddev_ms": 0.003806982115821149,
+        "tail_percentiles_unstable": false
+      },
+      "name": "concurrency.routing_1",
+      "outcomes": {
+        "failed": 0,
+        "routed": 120
+      },
+      "reason": null,
+      "sample_count": 120,
+      "stages": {},
+      "status": "measured",
+      "throughput_ops_per_second": 26167.307220541337,
+      "warmups": 0
+    },
+    {
+      "category": "concurrency",
+      "completed_count": 120,
+      "concurrency": 10,
+      "error_count": 0,
+      "iterations": 120,
+      "kind": "synthetic_threaded",
+      "latency": {
+        "max_ms": 0.047708,
+        "mean_ms": 0.027223249999999997,
+        "min_ms": 0.021583,
+        "p50_ms": 0.02625,
+        "p95_ms": 0.032417,
+        "p99_ms": 0.042583,
+        "sample_count": 120,
+        "stddev_ms": 0.0035089429858792607,
+        "tail_percentiles_unstable": false
+      },
+      "name": "concurrency.routing_10",
+      "outcomes": {
+        "failed": 0,
+        "routed": 120
+      },
+      "reason": null,
+      "sample_count": 120,
+      "stages": {},
+      "status": "measured",
+      "throughput_ops_per_second": 22013.29970190323,
+      "warmups": 0
+    },
+    {
+      "category": "concurrency",
+      "completed_count": 125,
+      "concurrency": 25,
+      "error_count": 0,
+      "iterations": 125,
+      "kind": "synthetic_threaded",
+      "latency": {
+        "max_ms": 0.033833,
+        "mean_ms": 0.026214056,
+        "min_ms": 0.021166,
+        "p50_ms": 0.025875,
+        "p95_ms": 0.030125,
+        "p99_ms": 0.033125,
+        "sample_count": 125,
+        "stddev_ms": 0.001981451725474809,
+        "tail_percentiles_unstable": false
+      },
+      "name": "concurrency.routing_25",
+      "outcomes": {
+        "failed": 0,
+        "routed": 125
+      },
+      "reason": null,
+      "sample_count": 125,
+      "stages": {},
+      "status": "measured",
+      "throughput_ops_per_second": 21491.662352573643,
+      "warmups": 0
+    },
+    {
+      "authorization_context_build_count_per_operation": null,
+      "category": "overhead",
+      "error_count": 0,
+      "instrumentation": {
+        "enabled": false,
+        "payload_enabled": false,
+        "sample_rate": 1.0,
+        "sink": "registry_local_capture",
+        "sql_enabled": false
+      },
+      "iterations": 120,
+      "kind": "synthetic",
+      "latency": {
+        "max_ms": 0.058375,
+        "mean_ms": 0.04075661666666666,
+        "min_ms": 0.036417,
+        "p50_ms": 0.040833,
+        "p95_ms": 0.046584,
+        "p99_ms": 0.054791,
+        "sample_count": 120,
+        "stddev_ms": 0.003594974347294162,
+        "tail_percentiles_unstable": false
+      },
+      "name": "overhead.disabled",
+      "outcomes": {
+        "success": 120
+      },
+      "p50_delta_ms": 0.0,
+      "p50_delta_percent": 0.0,
+      "reason": null,
+      "sample_count": 120,
+      "stages": {},
+      "status": "measured",
+      "warmups": 5
+    },
+    {
+      "authorization_context_build_count_per_operation": null,
+      "category": "overhead",
+      "error_count": 0,
+      "instrumentation": {
+        "enabled": true,
+        "payload_enabled": false,
+        "sample_rate": 1.0,
+        "sink": "registry_local_capture",
+        "sql_enabled": false
+      },
+      "iterations": 120,
+      "kind": "synthetic",
+      "latency": {
+        "max_ms": 0.07875,
+        "mean_ms": 0.06355101666666667,
+        "min_ms": 0.058166,
+        "p50_ms": 0.063542,
+        "p95_ms": 0.067792,
+        "p99_ms": 0.074041,
+        "sample_count": 120,
+        "stddev_ms": 0.00276303258977466,
+        "tail_percentiles_unstable": false
+      },
+      "name": "overhead.e11",
+      "outcomes": {
+        "success": 120
+      },
+      "p50_delta_ms": 0.022709,
+      "p50_delta_percent": 55.61433154556363,
+      "reason": null,
+      "sample_count": 120,
+      "stages": {
+        "grouped_schema_build": {
+          "event_count": 120,
+          "mean_duration_ms": 0.023390566666666668
+        },
+        "registry_tool_publication": {
+          "event_count": 120,
+          "mean_duration_ms": 0.052928474999999996
+        }
+      },
+      "status": "measured",
+      "warmups": 5
+    },
+    {
+      "authorization_context_build_count_per_operation": null,
+      "category": "overhead",
+      "error_count": 0,
+      "instrumentation": {
+        "enabled": true,
+        "payload_enabled": false,
+        "sample_rate": 1.0,
+        "sink": "registry_local_capture",
+        "sql_enabled": true
+      },
+      "iterations": 120,
+      "kind": "synthetic",
+      "latency": {
+        "max_ms": 0.091625,
+        "mean_ms": 0.08066349166666667,
+        "min_ms": 0.073875,
+        "p50_ms": 0.080667,
+        "p95_ms": 0.083583,
+        "p99_ms": 0.091208,
+        "sample_count": 120,
+        "stddev_ms": 0.0027570919736545746,
+        "tail_percentiles_unstable": false
+      },
+      "name": "overhead.e11_sql",
+      "outcomes": {
+        "success": 120
+      },
+      "p50_delta_ms": 0.039834,
+      "p50_delta_percent": 97.55344941591359,
+      "reason": null,
+      "sample_count": 120,
+      "stages": {
+        "grouped_schema_build": {
+          "event_count": 120,
+          "mean_db_alias_count": 0.0,
+          "mean_db_duration_ms": 0.0,
+          "mean_db_query_count": 0.0,
+          "mean_duration_ms": 0.027678825
+        },
+        "registry_tool_publication": {
+          "event_count": 120,
+          "mean_db_alias_count": 0.0,
+          "mean_db_duration_ms": 0.0,
+          "mean_db_query_count": 0.0,
+          "mean_duration_ms": 0.066334425
+        }
+      },
+      "status": "measured",
+      "warmups": 5
+    },
+    {
+      "authorization_context_build_count_per_operation": null,
+      "category": "overhead",
+      "error_count": 0,
+      "instrumentation": {
+        "enabled": true,
+        "payload_enabled": true,
+        "sample_rate": 1.0,
+        "sink": "registry_local_capture",
+        "sql_enabled": false
+      },
+      "iterations": 120,
+      "kind": "synthetic",
+      "latency": {
+        "max_ms": 0.107875,
+        "mean_ms": 0.09697634166666667,
+        "min_ms": 0.08925,
+        "p50_ms": 0.096459,
+        "p95_ms": 0.10325,
+        "p99_ms": 0.106625,
+        "sample_count": 120,
+        "stddev_ms": 0.002880826114289147,
+        "tail_percentiles_unstable": false
+      },
+      "name": "overhead.e11_payload",
+      "outcomes": {
+        "success": 120
+      },
+      "p50_delta_ms": 0.055626,
+      "p50_delta_percent": 136.22805084123138,
+      "reason": null,
+      "sample_count": 120,
+      "stages": {
+        "grouped_schema_build": {
+          "event_count": 120,
+          "mean_duration_ms": 0.025170183333333332
+        },
+        "registry_tool_publication": {
+          "action_count": 4,
+          "description_char_count": 957,
+          "event_count": 120,
+          "mean_duration_ms": 0.05740065833333333,
+          "payload_bytes": 1951,
+          "schema_property_count": 10,
+          "tool_count": 2
+        }
+      },
+      "status": "measured",
+      "warmups": 5
+    },
+    {
+      "authorization_context_build_count_per_operation": null,
+      "category": "overhead",
+      "error_count": 0,
+      "instrumentation": {
+        "enabled": true,
+        "payload_enabled": true,
+        "sample_rate": 1.0,
+        "sink": "registry_local_capture",
+        "sql_enabled": true
+      },
+      "iterations": 120,
+      "kind": "synthetic",
+      "latency": {
+        "max_ms": 0.155542,
+        "mean_ms": 0.11053749166666667,
+        "min_ms": 0.100708,
+        "p50_ms": 0.112083,
+        "p95_ms": 0.120167,
+        "p99_ms": 0.127208,
+        "sample_count": 120,
+        "stddev_ms": 0.006994063048951097,
+        "tail_percentiles_unstable": false
+      },
+      "name": "overhead.e11_sql_payload",
+      "outcomes": {
+        "success": 120
+      },
+      "p50_delta_ms": 0.07125000000000001,
+      "p50_delta_percent": 174.49122033649255,
+      "reason": null,
+      "sample_count": 120,
+      "stages": {
+        "grouped_schema_build": {
+          "event_count": 120,
+          "mean_db_alias_count": 0.0,
+          "mean_db_duration_ms": 0.0,
+          "mean_db_query_count": 0.0,
+          "mean_duration_ms": 0.027993341666666668
+        },
+        "registry_tool_publication": {
+          "action_count": 4,
+          "description_char_count": 957,
+          "event_count": 120,
+          "mean_db_alias_count": 0.0,
+          "mean_db_duration_ms": 0.0,
+          "mean_db_query_count": 0.0,
+          "mean_duration_ms": 0.06803469999999999,
+          "payload_bytes": 1951,
+          "schema_property_count": 10,
+          "tool_count": 2
+        }
+      },
+      "status": "measured",
+      "warmups": 5
+    },
+    {
+      "authorization_context_build_count_per_operation": null,
+      "category": "execution",
+      "error_count": 0,
+      "iterations": 0,
+      "kind": "integration",
+      "latency": null,
+      "name": "execution.canonical_dispatch_bridge",
+      "outcomes": {},
+      "reason": "Shared dispatcher and provider integration are outside Registry-only benchmarking.",
+      "sample_count": 0,
+      "stages": {},
+      "status": "not_measured",
+      "warmups": 0
+    },
+    {
+      "authorization_context_build_count_per_operation": null,
+      "category": "routing",
+      "error_count": 0,
+      "iterations": 0,
+      "kind": "integration",
+      "latency": null,
+      "name": "routing.bridge_failure",
+      "outcomes": {},
+      "reason": "No safe provider-free bridge failure scenario is available in this synthetic run.",
+      "sample_count": 0,
+      "stages": {},
+      "status": "not_measured",
+      "warmups": 0
+    },
+    {
+      "authorization_context_build_count_per_operation": null,
+      "category": "selection",
+      "error_count": 0,
+      "iterations": 120,
+      "kind": "isolated_database",
+      "latency": {
+        "max_ms": 0.051375,
+        "mean_ms": 0.035627041666666664,
+        "min_ms": 0.032791,
+        "p50_ms": 0.03475,
+        "p95_ms": 0.039959,
+        "p99_ms": 0.04375,
+        "sample_count": 120,
+        "stddev_ms": 0.0026834950319470667,
+        "tail_percentiles_unstable": false
+      },
+      "name": "selection.0",
+      "outcomes": {
+        "success": 120
+      },
+      "reason": null,
+      "sample_count": 120,
+      "stages": {
+        "selection_prompt_context": {
+          "event_count": 120,
+          "mean_db_alias_count": 0.0,
+          "mean_db_duration_ms": 0.0,
+          "mean_db_query_count": 0.0,
+          "mean_duration_ms": 0.018632575
+        }
+      },
+      "status": "measured",
+      "warmups": 5
+    },
+    {
+      "authorization_context_build_count_per_operation": 1.0,
+      "category": "selection",
+      "error_count": 0,
+      "iterations": 120,
+      "kind": "isolated_database",
+      "latency": {
+        "max_ms": 60.864708,
+        "mean_ms": 37.59257569166667,
+        "min_ms": 15.753917,
+        "p50_ms": 40.722042,
+        "p95_ms": 54.498208,
+        "p99_ms": 59.323625,
+        "sample_count": 120,
+        "stddev_ms": 11.604626233402419,
+        "tail_percentiles_unstable": false
+      },
+      "name": "selection.1",
+      "outcomes": {
+        "success": 120
+      },
+      "reason": null,
+      "sample_count": 120,
+      "stages": {
+        "authorization_context_build": {
+          "event_count": 120,
+          "mean_db_alias_count": 1.0,
+          "mean_db_duration_ms": 12.057570349999999,
+          "mean_db_query_count": 15.0,
+          "mean_duration_ms": 20.943492391666666
+        },
+        "namespace_admission": {
+          "event_count": 120,
+          "mean_db_alias_count": 1.0,
+          "mean_db_duration_ms": 15.417355216666667,
+          "mean_db_query_count": 18.0,
+          "mean_duration_ms": 27.685970183333332
+        },
+        "selection_prompt_context": {
+          "event_count": 120,
+          "mean_db_alias_count": 1.0,
+          "mean_db_duration_ms": 21.403113225000002,
+          "mean_db_query_count": 26.0,
+          "mean_duration_ms": 37.521950358333335
+        }
+      },
+      "status": "measured",
+      "warmups": 5
+    },
+    {
+      "authorization_context_build_count_per_operation": 1.0,
+      "category": "selection",
+      "error_count": 0,
+      "iterations": 120,
+      "kind": "isolated_database",
+      "latency": {
+        "max_ms": 93.657042,
+        "mean_ms": 71.18598055833333,
+        "min_ms": 44.999167,
+        "p50_ms": 71.047708,
+        "p95_ms": 83.5685,
+        "p99_ms": 90.557416,
+        "sample_count": 120,
+        "stddev_ms": 7.707662199769343,
+        "tail_percentiles_unstable": false
+      },
+      "name": "selection.10",
+      "outcomes": {
+        "success": 120
+      },
+      "reason": null,
+      "sample_count": 120,
+      "stages": {
+        "authorization_context_build": {
+          "event_count": 120,
+          "mean_db_alias_count": 1.0,
+          "mean_db_duration_ms": 14.412860041666667,
+          "mean_db_query_count": 15.0,
+          "mean_duration_ms": 25.5085434
+        },
+        "namespace_admission": {
+          "event_count": 120,
+          "mean_db_alias_count": 1.0,
+          "mean_db_duration_ms": 18.248358208333332,
+          "mean_db_query_count": 18.0,
+          "mean_duration_ms": 33.561145825000004
+        },
+        "selection_prompt_context": {
+          "event_count": 120,
+          "mean_db_alias_count": 1.0,
+          "mean_db_duration_ms": 37.29311178333333,
+          "mean_db_query_count": 35.0,
+          "mean_duration_ms": 71.08978203333332
+        }
+      },
+      "status": "measured",
+      "warmups": 5
+    },
+    {
+      "authorization_context_build_count_per_operation": 1.0,
+      "category": "selection",
+      "error_count": 0,
+      "iterations": 120,
+      "kind": "isolated_database",
+      "latency": {
+        "max_ms": 215.694792,
+        "mean_ms": 176.53073158333333,
+        "min_ms": 105.628166,
+        "p50_ms": 180.872333,
+        "p95_ms": 201.013583,
+        "p99_ms": 214.945667,
+        "sample_count": 120,
+        "stddev_ms": 20.68895080641339,
+        "tail_percentiles_unstable": false
+      },
+      "name": "selection.50",
+      "outcomes": {
+        "success": 120
+      },
+      "reason": null,
+      "sample_count": 120,
+      "stages": {
+        "authorization_context_build": {
+          "event_count": 120,
+          "mean_db_alias_count": 1.0,
+          "mean_db_duration_ms": 14.62233725,
+          "mean_db_query_count": 15.0,
+          "mean_duration_ms": 25.456136800000003
+        },
+        "namespace_admission": {
+          "event_count": 120,
+          "mean_db_alias_count": 1.0,
+          "mean_db_duration_ms": 18.487929899999997,
+          "mean_db_query_count": 18.0,
+          "mean_duration_ms": 33.39253610833334
+        },
+        "selection_prompt_context": {
+          "event_count": 120,
+          "mean_db_alias_count": 1.0,
+          "mean_db_duration_ms": 85.71627861666666,
+          "mean_db_query_count": 75.0,
+          "mean_duration_ms": 176.40707155833334
+        }
+      },
+      "status": "measured",
+      "warmups": 5
+    },
+    {
+      "authorization_context_build_count_per_operation": 1.0,
+      "category": "selection",
+      "error_count": 0,
+      "iterations": 120,
+      "kind": "isolated_database",
+      "latency": {
+        "max_ms": 58.700666,
+        "mean_ms": 41.330076999999996,
+        "min_ms": 21.485666,
+        "p50_ms": 40.720208,
+        "p95_ms": 54.143375,
+        "p99_ms": 57.412166,
+        "sample_count": 120,
+        "stddev_ms": 6.538220590013417,
+        "tail_percentiles_unstable": false
+      },
+      "name": "selection.revoked",
+      "outcomes": {
+        "success": 120
+      },
+      "reason": null,
+      "sample_count": 120,
+      "stages": {
+        "authorization_context_build": {
+          "event_count": 120,
+          "mean_db_alias_count": 1.0,
+          "mean_db_duration_ms": 13.784679508333333,
+          "mean_db_query_count": 15.0,
+          "mean_duration_ms": 24.6311246
+        },
+        "namespace_admission": {
+          "event_count": 120,
+          "mean_db_alias_count": 1.0,
+          "mean_db_duration_ms": 17.95935155833333,
+          "mean_db_query_count": 18.0,
+          "mean_duration_ms": 32.92083578333333
+        },
+        "selection_prompt_context": {
+          "event_count": 120,
+          "mean_db_alias_count": 1.0,
+          "mean_db_duration_ms": 23.429295333333336,
+          "mean_db_query_count": 25.0,
+          "mean_duration_ms": 41.23997330833333
+        }
+      },
+      "status": "measured",
+      "warmups": 5
+    },
+    {
+      "authorization_context_build_count_per_operation": null,
+      "category": "execution",
+      "error_count": 0,
+      "iterations": 120,
+      "kind": "isolated_database",
+      "latency": {
+        "max_ms": 14.247583,
+        "mean_ms": 4.315771183333334,
+        "min_ms": 1.864625,
+        "p50_ms": 4.6035,
+        "p95_ms": 7.182209,
+        "p99_ms": 11.179417,
+        "sample_count": 120,
+        "stddev_ms": 2.197514667828219,
+        "tail_percentiles_unstable": false
+      },
+      "name": "execution.admission_rejection",
+      "outcomes": {
+        "rejected": 120
+      },
+      "reason": null,
+      "sample_count": 120,
+      "stages": {
+        "grouped_call_total": {
+          "event_count": 120,
+          "mean_db_alias_count": 1.0,
+          "mean_db_duration_ms": 2.274946425,
+          "mean_db_query_count": 3.0,
+          "mean_duration_ms": 4.239859050000001
+        },
+        "grouped_dispatch_bridge": {
+          "event_count": 120,
+          "mean_db_alias_count": 1.0,
+          "mean_db_duration_ms": 2.2580294666666663,
+          "mean_db_query_count": 3.0,
+          "mean_duration_ms": 3.8223139083333333
+        },
+        "grouped_result_projection": {
+          "event_count": 120,
+          "mean_db_alias_count": 0.0,
+          "mean_db_duration_ms": 0.0,
+          "mean_db_query_count": 0.0,
+          "mean_duration_ms": 0.15676185833333334
+        }
+      },
+      "status": "measured",
+      "warmups": 5
+    },
+    {
+      "authorization_context_build_count_per_operation": null,
+      "category": "execution",
+      "error_count": 0,
+      "iterations": 120,
+      "kind": "isolated_database",
+      "latency": {
+        "max_ms": 3.013333,
+        "mean_ms": 1.9175423583333333,
+        "min_ms": 1.558292,
+        "p50_ms": 1.767959,
+        "p95_ms": 2.512125,
+        "p99_ms": 2.957709,
+        "sample_count": 120,
+        "stddev_ms": 0.33244141773917635,
+        "tail_percentiles_unstable": false
+      },
+      "name": "execution.validation_rejection",
+      "outcomes": {
+        "rejected": 120
+      },
+      "reason": null,
+      "sample_count": 120,
+      "stages": {
+        "grouped_call_total": {
+          "event_count": 120,
+          "mean_db_alias_count": 1.0,
+          "mean_db_duration_ms": 1.0978334416666666,
+          "mean_db_query_count": 3.0,
+          "mean_duration_ms": 1.8907468250000001
+        },
+        "grouped_dispatch_bridge": {
+          "event_count": 120,
+          "mean_db_alias_count": 1.0,
+          "mean_db_duration_ms": 1.0940198499999998,
+          "mean_db_query_count": 3.0,
+          "mean_duration_ms": 1.7717142083333333
+        },
+        "grouped_result_projection": {
+          "event_count": 120,
+          "mean_db_alias_count": 0.0,
+          "mean_db_duration_ms": 0.0,
+          "mean_db_query_count": 0.0,
+          "mean_duration_ms": 0.05632604166666667
+        },
+        "grouped_schema_validation": {
+          "event_count": 120,
+          "mean_db_alias_count": 0.0,
+          "mean_db_duration_ms": 0.0,
+          "mean_db_query_count": 0.0,
+          "mean_duration_ms": 0.04479794166666667
+        },
+        "selection_argument_resolution": {
+          "event_count": 120,
+          "mean_db_alias_count": 0.0,
+          "mean_db_duration_ms": 0.0,
+          "mean_db_query_count": 0.0,
+          "mean_duration_ms": 0.0096219
+        }
+      },
+      "status": "measured",
+      "warmups": 5
+    },
+    {
+      "authorization_context_build_count_per_operation": 1.0,
+      "category": "selection",
+      "error_count": 0,
+      "iterations": 120,
+      "kind": "isolated_database",
+      "latency": {
+        "max_ms": 85.875167,
+        "mean_ms": 53.23760830833333,
+        "min_ms": 34.650417,
+        "p50_ms": 51.760583,
+        "p95_ms": 73.312833,
+        "p99_ms": 83.07975,
+        "sample_count": 120,
+        "stddev_ms": 10.340598269732368,
+        "tail_percentiles_unstable": false
+      },
+      "name": "selection.stale",
+      "outcomes": {
+        "success": 120
+      },
+      "reason": null,
+      "sample_count": 120,
+      "stages": {
+        "authorization_context_build": {
+          "event_count": 120,
+          "mean_db_alias_count": 1.0,
+          "mean_db_duration_ms": 15.230312683333333,
+          "mean_db_query_count": 15.0,
+          "mean_duration_ms": 26.166770825
+        },
+        "namespace_admission": {
+          "event_count": 120,
+          "mean_db_alias_count": 1.0,
+          "mean_db_duration_ms": 19.365560916666666,
+          "mean_db_query_count": 18.0,
+          "mean_duration_ms": 34.32336455833333
+        },
+        "selection_prompt_context": {
+          "event_count": 120,
+          "mean_db_alias_count": 1.0,
+          "mean_db_duration_ms": 30.353029483333334,
+          "mean_db_query_count": 30.0,
+          "mean_duration_ms": 53.12432293333334
+        }
+      },
+      "status": "measured",
+      "warmups": 5
+    },
+    {
+      "authorization_context_build_count_per_operation": null,
+      "category": "publication",
+      "error_count": 0,
+      "iterations": 120,
+      "kind": "isolated_database",
+      "latency": {
+        "max_ms": 9.652709,
+        "mean_ms": 3.9736604583333333,
+        "min_ms": 2.554792,
+        "p50_ms": 3.6315,
+        "p95_ms": 5.821209,
+        "p99_ms": 7.988375,
+        "sample_count": 120,
+        "stddev_ms": 1.144425138508368,
+        "tail_percentiles_unstable": false
+      },
+      "name": "publication.persona_queryset",
+      "outcomes": {
+        "success": 120
+      },
+      "reason": null,
+      "sample_count": 120,
+      "stages": {
+        "grouped_schema_build": {
+          "event_count": 120,
+          "mean_db_alias_count": 0.0,
+          "mean_db_duration_ms": 0.0,
+          "mean_db_query_count": 0.0,
+          "mean_duration_ms": 0.10073582499999999
+        },
+        "registry_tool_publication": {
+          "action_count": 4,
+          "description_char_count": 851,
+          "event_count": 120,
+          "mean_db_alias_count": 1.0,
+          "mean_db_duration_ms": 2.0818916916666668,
+          "mean_db_query_count": 2.0,
+          "mean_duration_ms": 3.7975833583333336,
+          "payload_bytes": 1703,
+          "schema_property_count": 7,
+          "tool_count": 2
+        }
+      },
+      "status": "measured",
+      "warmups": 5
+    },
+    {
+      "authorization_context_build_count_per_operation": 2.0,
+      "category": "routing",
+      "error_count": 0,
+      "execution_boundary": "shared_dispatch_stubbed_before_bif",
+      "iterations": 120,
+      "kind": "isolated_database",
+      "latency": {
+        "max_ms": 132.186583,
+        "mean_ms": 60.6443851,
+        "min_ms": 30.928334,
+        "p50_ms": 59.140291,
+        "p95_ms": 86.138791,
+        "p99_ms": 107.784166,
+        "sample_count": 120,
+        "stddev_ms": 16.295336934654582,
+        "tail_percentiles_unstable": false
+      },
+      "name": "routing.adapter_listing_authorized",
+      "outcomes": {
+        "success": 120
+      },
+      "reason": null,
+      "sample_count": 120,
+      "shared_dispatch_stubbed": true,
+      "stages": {
+        "assistant_namespace_resolution": {
+          "event_count": 120,
+          "mean_db_alias_count": 1.0,
+          "mean_db_duration_ms": 16.618765483333334,
+          "mean_db_query_count": 16.0,
+          "mean_duration_ms": 28.4886639
+        },
+        "authorization_context_build": {
+          "event_count": 240,
+          "mean_db_alias_count": 1.0,
+          "mean_db_duration_ms": 15.361680945833333,
+          "mean_db_query_count": 15.0,
+          "mean_duration_ms": 26.084385558333334
+        },
+        "canonical_bif_dispatch_bridge": {
+          "event_count": 120,
+          "mean_db_alias_count": 0.0,
+          "mean_db_duration_ms": 0.0,
+          "mean_db_query_count": 0.0,
+          "mean_duration_ms": 0.048687466666666665
+        },
+        "deterministic_decision_execution": {
+          "event_count": 120,
+          "mean_db_alias_count": 0.0,
+          "mean_db_duration_ms": 0.0,
+          "mean_db_query_count": 0.0,
+          "mean_duration_ms": 0.15904585000000002
+        },
+        "deterministic_routing": {
+          "event_count": 120,
+          "mean_db_alias_count": 1.0,
+          "mean_db_duration_ms": 35.65988453333333,
+          "mean_db_query_count": 35.0,
+          "mean_duration_ms": 60.601002724999994
+        }
+      },
+      "status": "measured",
+      "warmups": 5
+    },
+    {
+      "authorization_context_build_count_per_operation": 2.0,
+      "category": "routing",
+      "error_count": 0,
+      "execution_boundary": "shared_dispatch_stubbed_before_bif",
+      "iterations": 120,
+      "kind": "isolated_database",
+      "latency": {
+        "max_ms": 120.554708,
+        "mean_ms": 63.37410795833333,
+        "min_ms": 25.747292,
+        "p50_ms": 60.885583,
+        "p95_ms": 89.932209,
+        "p99_ms": 99.170125,
+        "sample_count": 120,
+        "stddev_ms": 14.122439531432484,
+        "tail_percentiles_unstable": false
+      },
+      "name": "routing.adapter_schema_authorized",
+      "outcomes": {
+        "success": 120
+      },
+      "reason": null,
+      "sample_count": 120,
+      "shared_dispatch_stubbed": true,
+      "stages": {
+        "assistant_namespace_resolution": {
+          "event_count": 120,
+          "mean_db_alias_count": 1.0,
+          "mean_db_duration_ms": 16.35759435,
+          "mean_db_query_count": 16.0,
+          "mean_duration_ms": 28.933530566666665
+        },
+        "authorization_context_build": {
+          "event_count": 240,
+          "mean_db_alias_count": 1.0,
+          "mean_db_duration_ms": 15.672355191666666,
+          "mean_db_query_count": 15.0,
+          "mean_duration_ms": 27.046344270833334
+        },
+        "canonical_bif_dispatch_bridge": {
+          "event_count": 240,
+          "mean_db_alias_count": 0.0,
+          "mean_db_duration_ms": 0.0,
+          "mean_db_query_count": 0.0,
+          "mean_duration_ms": 0.05725882916666667
+        },
+        "deterministic_decision_execution": {
+          "event_count": 120,
+          "mean_db_alias_count": 0.0,
+          "mean_db_duration_ms": 0.0,
+          "mean_db_query_count": 0.0,
+          "mean_duration_ms": 0.5112367833333333
+        },
+        "deterministic_retry_flow": {
+          "event_count": 120,
+          "mean_db_alias_count": 0.0,
+          "mean_db_duration_ms": 0.0,
+          "mean_db_query_count": 0.0,
+          "mean_duration_ms": 0.13037638333333332
+        },
+        "deterministic_routing": {
+          "event_count": 120,
+          "mean_db_alias_count": 1.0,
+          "mean_db_duration_ms": 36.68281555,
+          "mean_db_query_count": 35.0,
+          "mean_duration_ms": 63.32596665833333
+        }
+      },
+      "status": "measured",
+      "warmups": 5
+    },
+    {
+      "authorization_context_build_count_per_operation": 2.0,
+      "category": "routing",
+      "error_count": 0,
+      "execution_boundary": "pre_dispatch_registry_execution_only",
+      "iterations": 120,
+      "kind": "isolated_database",
+      "latency": {
+        "max_ms": 90.848333,
+        "mean_ms": 58.211056641666666,
+        "min_ms": 29.634,
+        "p50_ms": 57.621584,
+        "p95_ms": 74.532209,
+        "p99_ms": 89.841334,
+        "sample_count": 120,
+        "stddev_ms": 10.904464825613866,
+        "tail_percentiles_unstable": false
+      },
+      "name": "routing.adapter_workspace_ambiguous",
+      "outcomes": {
+        "success": 120
+      },
+      "reason": null,
+      "sample_count": 120,
+      "shared_dispatch_stubbed": false,
+      "stages": {
+        "assistant_namespace_resolution": {
+          "event_count": 120,
+          "mean_db_alias_count": 1.0,
+          "mean_db_duration_ms": 14.666779625,
+          "mean_db_query_count": 16.0,
+          "mean_duration_ms": 26.970832266666665
+        },
+        "authorization_context_build": {
+          "event_count": 240,
+          "mean_db_alias_count": 1.0,
+          "mean_db_duration_ms": 13.815975429166667,
+          "mean_db_query_count": 15.0,
+          "mean_duration_ms": 25.180376929166666
+        },
+        "deterministic_routing": {
+          "event_count": 120,
+          "mean_db_alias_count": 1.0,
+          "mean_db_duration_ms": 32.187329016666666,
+          "mean_db_query_count": 35.0,
+          "mean_duration_ms": 58.145319433333334
+        }
+      },
+      "status": "measured",
+      "warmups": 5
+    },
+    {
+      "authorization_context_build_count_per_operation": 1.0,
+      "category": "routing",
+      "error_count": 0,
+      "execution_boundary": "pre_dispatch_registry_execution_only",
+      "iterations": 120,
+      "kind": "isolated_database",
+      "latency": {
+        "max_ms": 53.913416,
+        "mean_ms": 35.91868196666667,
+        "min_ms": 22.234208,
+        "p50_ms": 36.437417,
+        "p95_ms": 42.708375,
+        "p99_ms": 50.855667,
+        "sample_count": 120,
+        "stddev_ms": 4.978935591599647,
+        "tail_percentiles_unstable": false
+      },
+      "name": "routing.adapter_revoked_before_bif",
+      "outcomes": {
+        "rejected": 120
+      },
+      "reason": null,
+      "sample_count": 120,
+      "shared_dispatch_stubbed": false,
+      "stages": {
+        "authorization_context_build": {
+          "event_count": 120,
+          "mean_db_alias_count": 1.0,
+          "mean_db_duration_ms": 17.508287133333333,
+          "mean_db_query_count": 16.0,
+          "mean_duration_ms": 31.2682024
+        },
+        "deterministic_routing": {
+          "event_count": 120,
+          "mean_db_alias_count": 1.0,
+          "mean_db_duration_ms": 20.462755291666667,
+          "mean_db_query_count": 19.0,
+          "mean_duration_ms": 35.836469075
+        }
+      },
+      "status": "measured",
+      "warmups": 5
+    }
+  ],
+  "schema_version": 1
+}

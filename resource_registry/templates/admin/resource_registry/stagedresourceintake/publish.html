@@ -1,12 +1,22 @@
-{% extends "admin/base_site.html" %}
+{% extends "admin/resource_registry/stagedresourceintake/destination_action_base.html" %}
 
-{% block content %}
-
-  <p><strong>{{ intake.normalized_filename }}</strong> — {{ intake.status }}</p>
-  <form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <input type="submit" value="Publish selected destinations" class="default">
-    <a href="{% url 'admin:resource_registry_stagedresourceintake_change' intake.pk %}">Cancel</a>
-  </form>
+{% block destination_form %}
+  <section class="destination-section" aria-labelledby="destinations-heading">
+    <header class="destination-section-header">
+      <h2 id="destinations-heading">{{ form.namespace_ids.label }}</h2>
+      <p id="{{ form.namespace_ids.auto_id }}_helptext">{{ form.namespace_ids.help_text }}</p>
+    </header>
+    <div class="destination-section-body">
+      {% if form.namespace_ids.field.choices %}
+        <div role="group" aria-labelledby="destinations-heading">{{ form.namespace_ids }}</div>
+      {% else %}
+        <p class="destination-empty">No eligible destinations are available for this intake.</p>
+      {% endif %}
+      {{ form.namespace_ids.errors }}
+    </div>
+    <footer class="destination-actions">
+      <button type="submit"{% if not form.namespace_ids.field.choices %} disabled{% endif %}>Publish selected destinations</button>
+      <a href="{% url 'admin:resource_registry_stagedresourceintake_change' intake.pk %}">Cancel</a>
+    </footer>
+  </section>
 {% endblock %}

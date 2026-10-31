@@ -17,6 +17,7 @@ from django.conf import settings
 from sqlglot import exp, parse
 from sqlglot.errors import ParseError
 
+from resource_registry.cleanup.reservations import lease_dataset
 from resource_registry.read.artifact_read_service import DatasetArtifactReadService
 from resource_registry.read.dataset_read_service import DatasetReadService
 from resource_registry.read.dtos import DatasetArtifactSummary
@@ -61,8 +62,7 @@ _UNSAFE_SQL_ERROR = {
     "status": 400,
     "code": "unsafe_sql",
     "error": (
-        "Only safe SELECT statements against the registered dataset table with LIMIT "
-        "are allowed."
+        "Only safe SELECT statements against the registered dataset table with LIMIT are allowed."
     ),
 }
 _QUERY_TIMEOUT_ERROR = {
@@ -273,9 +273,7 @@ class _SafeSqlValidator:
             ),
         )
 
-    def _validate_sql_with_legacy(  # noqa: PLR0911
-        self, normalized_no_semicolon: str
-    ) -> dict[str, Any] | None:
+    def _validate_sql_with_legacy(self, normalized_no_semicolon: str) -> dict[str, Any] | None:
         if not normalized_no_semicolon.lower().startswith("select "):
             return dict(_UNSAFE_SQL_ERROR)
         if _KEYWORD_PATTERN.search(self._strip_string_literals(normalized_no_semicolon)):
@@ -304,9 +302,7 @@ class _SafeSqlValidator:
             return dict(_UNSAFE_SQL_ERROR)
         return None
 
-    def _validate_sql_with_sqlglot(  # noqa: PLR0911, PLR0912
-        self, normalized_no_semicolon: str
-    ) -> dict[str, Any] | None:
+    def _validate_sql_with_sqlglot(self, normalized_no_semicolon: str) -> dict[str, Any] | None:
         try:
             parsed_statements = parse(normalized_no_semicolon, read="duckdb")
         except ParseError:
@@ -660,10 +656,11 @@ class _DuckDbDatasetRunner:
             "truncated": False,
         }
 
+
 class DatasetQueryExecutor:
     """Executes safe, read-only SQL over registered dataset artifacts."""
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         *,
         dataset_read_service: DatasetReadService | None = None,
@@ -691,7 +688,9 @@ class DatasetQueryExecutor:
         configured_timeout = execution_timeout_seconds
         if configured_timeout is None:
             configured_timeout = float(
-                getattr(settings, "RESOURCE_REGISTRY_QUERY_TIMEOUT_SECONDS", _DEFAULT_TIMEOUT_SECONDS),
+                getattr(
+                    settings, "RESOURCE_REGISTRY_QUERY_TIMEOUT_SECONDS", _DEFAULT_TIMEOUT_SECONDS
+                ),
             )
         self._execution_timeout_seconds = max(float(configured_timeout), 0.1)
         configured_max_artifact_bytes = (
@@ -775,7 +774,7 @@ class DatasetQueryExecutor:
             duckdb_connection_provider=duckdb_connection_provider,
         )
 
-    def execute_query(  # noqa: PLR0912, PLR0915
+    def execute_query(
         self,
         *,
         context: ReadAuthorizationContext,
@@ -884,9 +883,13 @@ class DatasetQueryExecutor:
 
         adapter = self._resolve_adapter(artifact=artifact)
         try:
-            with self._resource_guard.acquire(
-                tenant_id=context.tenant_id,
-                user_id=context.actor,
+
+            with (
+                lease_dataset(dataset_id),
+                self._resource_guard.acquire(
+                    tenant_id=context.tenant_id,
+                    user_id=context.actor,
+                ),
             ):
                 try:
                     materialized_artifact = self._dataset_cache.get_or_materialize(
@@ -1003,7 +1006,7 @@ class DatasetQueryExecutor:
         disk_usage = shutil.disk_usage(self._temp_root_directory)
         return disk_usage.free >= self._temp_min_free_bytes
 
-    def _log_query_observability(  # noqa: PLR0913
+    def _log_query_observability(
         self,
         *,
         context: ReadAuthorizationContext,

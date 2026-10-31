@@ -1,5 +1,24 @@
 # Publishing Datasets to Resource Registry
 
+## Current publication contract
+
+Dataset Management uses **Datasets → Create from file / Update data** in Admin, or
+`POST dataset-changes/` followed by proposal review and `publish/`. A successful proposal
+publication selects the current version and records its intake publication atomically;
+it does not enqueue a legacy registration job. `NO_CHANGES` is a successful terminal
+proposal result and needs no publication call. Selected XLSX sheets are atomic: one
+invalid selected sheet blocks the whole proposal. See [maintenance](DATASET_MAINTENANCE.md)
+and [API examples](DATASET_MANAGEMENT_API.md).
+
+External sources use [the synchronization contract](EXTERNAL_SOURCE_SYNC.md), including
+source deactivation for disappearance. Do not additionally publish the same intake through
+the legacy endpoint.
+
+The sections below document the retained **Publish to destinations** flow for initial
+registrations and independent assignment removal. Its registration jobs and
+`completed_with_skips` result are specific to that flow. Reusing a filename is no longer
+a supported update procedure in enabled organizations.
+
 ## Start here
 
 Begin in Django Admin with **Resource Registry → Staged resource intakes → Upload resource**.
@@ -114,7 +133,9 @@ Removal may wait for an in-progress registration or workbook job to stop. Once d
 assignment no longer grants Dataset visibility; Datasets with no remaining active assignment are
 archived. The intake record, publication history, Registry Namespace, Azure objects, and other
 destination assignments remain. The action does not replace or edit the published file. For a
-corrected file, create and publish a new intake. The Admin redirects scoped admins to the intake
+corrected file, upload a new intake and use an explicit dataset-change proposal against
+the existing dataset ID and revision. An independently detached assignment is not
+reactivated by replaying an old proposal. The Admin redirects scoped admins to the intake
 list after removal because the last removable assignment may have disappeared from their view.
 
 ## Resolve common failures

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -27,7 +28,9 @@ from resource_registry.application.storage_strategy import (
 )
 from resource_registry.application.validators import RegisterDatasetCommandValidator
 from resource_registry.events.audit_service import AuditService
+from resource_registry.management_domain.source_writes import require_source_write
 from resource_registry.models import (
+    Dataset,
     DatasetStatus,
     WorkbookIngestionGroup,
     WorkbookIngestionJobStatus,
@@ -309,6 +312,14 @@ class DatasetRegistrationFacade:
             command=command,
             workbook_group=workbook_group,
         )
+        proposed_slugs: set[str] = set()
+        for sheet_name in sheet_names:
+            proposed_slug = self._derive_sheet_slug(
+                base_slug=command.slug, sheet_name=sheet_name, used_slugs=proposed_slugs
+            )
+            RegisterDatasetCommandValidator.require_explicit_update_if_enabled(
+                command.tenant_id, proposed_slug
+            )
         created: list[RegisterDatasetResult] = []
         deduplicated: list[RegisterDatasetResult] = []
         skipped: list[SkippedWorksheet] = []
@@ -339,6 +350,9 @@ class DatasetRegistrationFacade:
                 base_name=command.name,
                 sheet_name=sheet_name,
                 sheet_count=sheet_count,
+            )
+            RegisterDatasetCommandValidator.require_explicit_update_if_enabled(
+                command.tenant_id, sheet_slug
             )
             idempotency_resolution = self._idempotency_service.resolve(
                 tenant_id=command.tenant_id,
@@ -498,6 +512,10 @@ class DatasetRegistrationFacade:
             )
             materialization_policy = resolved_materialization_policy.policy
             provenance = resolved_materialization_policy.provenance
+            if provenance is None:
+                raise InvalidPolicyConfigurationError(
+                    "Materialization policy resolution did not include provenance.",
+                )
             self._safe_audit(
                 lambda: self._audit_service.record_artifact_materialization_policy_resolved(
                     tenant_id=str(command.tenant_id),
@@ -582,28 +600,12 @@ class DatasetRegistrationFacade:
                     status=400,
                     code="low_confidence_schema",
                 )
-            resolution_kwargs: dict[str, Any] = {}
-            if command.replacement_dataset_id is not None:
-                resolution_kwargs["only_latest_version"] = True
             idempotency = self._idempotency_service.resolve(
                 tenant_id=command.tenant_id,
                 slug=command.slug,
                 path=command.path,
                 precomputed_content_hash=precomputed_content_hash,
-                **resolution_kwargs,
             )
-            if command.replacement_dataset_id is not None and (
-                idempotency.dataset is None
-                or str(idempotency.dataset.id) != command.replacement_dataset_id
-                or idempotency.dataset.organization_id != command.organization_id
-                or idempotency.dataset.workspace_id != command.workspace_id
-                or idempotency.dataset.visibility_scope != command.visibility_scope
-            ):
-                raise ValidationError(
-                    "Replacement target changed or is not in the admitted Workspace.",
-                    status=403,
-                    code="replacement_target_denied",
-                )
         except WorksheetNotFoundError as error:
             raise ValidationError(
                 "The requested Excel worksheet was not found.",
@@ -680,7 +682,7 @@ class DatasetRegistrationFacade:
                     context=context,
                     resolution=idempotency,
                 )
-                self._activate_registered_dataset(idempotency.dataset)
+                self._activate_registered_dataset(idempotency.dataset, advance_version=False)
                 self._safe_audit(
                     lambda: self._audit_service.record_dataset_deduplicated(
                         tenant_id=command.tenant_id,
@@ -929,7 +931,11 @@ class DatasetRegistrationFacade:
     ) -> RegisterDatasetResult:
         if resolution.dataset is None:
             raise DatasetRegistrationError("Dataset missing for idempotent registration.")
-        if resolution.existing_schema is None or resolution.existing_profile is None:
+        if (
+            resolution.existing_version is None
+            or resolution.existing_schema is None
+            or resolution.existing_profile is None
+        ):
             raise DatasetRegistrationError("Incomplete existing registration metadata.")
 
         return self._build_new_result(
@@ -1020,9 +1026,30 @@ class DatasetRegistrationFacade:
         if dataset_was_created and not has_versions and callable(dataset_delete):
             dataset_delete()
 
-    def _activate_registered_dataset(self, dataset: Any | None) -> None:
+    def _activate_registered_dataset(
+        self, dataset: Any | None, *, advance_version: bool = True
+    ) -> None:
+        """Activate a registration while preserving manual archives and replayed restorations.
+
+        Args:
+            dataset: Persisted dataset returned by registration.
+            advance_version: Select the new version only for a fresh publication.
+        """
         if dataset is None:
             return
+        if isinstance(dataset, Dataset):
+            require_source_write(dataset.external_source_id)
+            dataset.refresh_from_db(fields=["archive_reason", "status", "archived_at"])
+            if dataset.archive_reason == "MANUAL":
+                return
+            if advance_version or not dataset.current_version_id:
+                current = (
+                    dataset.versions.filter(status="READY").order_by("-version_number").first()
+                )
+                if current is not None:
+                    dataset.current_version = current
+                    dataset.revision += 1
+                    dataset.save(update_fields=["current_version", "revision"])
         if (
             getattr(dataset, "status", None) == DatasetStatus.ACTIVE
             and getattr(
@@ -1039,7 +1066,7 @@ class DatasetRegistrationFacade:
         if callable(save):
             save(update_fields=["status", "archived_at", "updated_at"])
 
-    def _safe_audit(self, audit_call) -> None:
+    def _safe_audit(self, audit_call: Callable[..., object]) -> None:
         try:
             audit_call()
         except Exception:
@@ -1053,7 +1080,7 @@ class DatasetRegistrationFacade:
         dataset_version: Any,
         storage_metadata: StorageObjectMetadata | None,
         workbook_group: WorkbookIngestionGroup | None = None,
-    ):
+    ) -> Any:
         if storage_metadata is not None:
             source_format = str(source.get("format", "other")).upper()
             artifact_fields = to_dataset_artifact_fields(
@@ -1117,7 +1144,7 @@ class DatasetRegistrationFacade:
         source_artifact: Any,
         storage_plan: Any,
         workbook_group: WorkbookIngestionGroup | None = None,
-    ):
+    ) -> Any:
         normalized_at = datetime.now(UTC).isoformat()
         normalization_version = "v1"
         source_format = str(source.get("format", ""))

@@ -285,8 +285,6 @@ def build_persona(
     return SimpleNamespace(
         name=name,
         ai_engine=ai_engine,
-        use_fine_tuned_model=False,
-        fine_tuned_model=None,
         stop_sequences=None,
         builtinfunctionpersonarelationship_set=FakePersonaBifRelationshipManager(
             (

@@ -1,14 +1,46 @@
-{% extends "admin/base_site.html" %}
+{% extends "admin/resource_registry/stagedresourceintake/destination_action_base.html" %}
 
-{% block content %}
+{% block destination_form %}
+  <section class="destination-section" aria-labelledby="assignments-heading">
+    <header class="destination-section-header">
+      <h2 id="assignments-heading">{{ form.publication_ids.label }}</h2>
+      <p>Each destination shows its current job state and the number of active datasets affected.</p>
+    </header>
+    <div class="destination-section-body">
+      {% if form.publication_ids.field.choices %}
+        <div role="group" aria-labelledby="assignments-heading">{{ form.publication_ids }}</div>
+      {% else %}
+        <p class="destination-empty">No eligible destination assignments are available to remove.</p>
+      {% endif %}
+      {{ form.publication_ids.errors }}
+      <p class="destination-notice">Removing an assignment may archive datasets that have no other active assignment. Azure objects, the intake record, Registry Namespaces, and other destinations are retained.</p>
+    </div>
+  </section>
 
-  <p><strong>{{ intake.normalized_filename }}</strong> — this archives only the selected destination output.</p>
-  <p>Each destination shows its current job state and the number of active Datasets affected.</p>
-  <p>Azure objects, the intake record, Registry Namespaces, and other destinations are retained.</p>
-  <form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <input type="submit" value="Remove selected assignments" class="deletelink">
-    <a href="{% url 'admin:resource_registry_stagedresourceintake_change' intake.pk %}">Cancel</a>
-  </form>
+  <section class="destination-section destination-removal-section" aria-labelledby="removal-heading">
+    <header class="destination-section-header">
+      <h2 id="removal-heading">Reason and confirmation</h2>
+      <p>Review the selected assignments before confirming removal.</p>
+    </header>
+    <div class="destination-section-body">
+      <div class="destination-field">
+        {{ form.reason.label_tag }}
+        {{ form.reason }}
+        <p class="help" id="{{ form.reason.auto_id }}_helptext">{{ form.reason.help_text }}</p>
+        {{ form.reason.errors }}
+      </div>
+      <div class="destination-confirmation">
+        <label for="{{ form.confirmation.id_for_label }}">
+          {{ form.confirmation }}
+          <span>{{ form.confirmation.label }}</span>
+        </label>
+        <p class="help" id="{{ form.confirmation.auto_id }}_helptext">{{ form.confirmation.help_text }}</p>
+        {{ form.confirmation.errors }}
+      </div>
+    </div>
+    <footer class="destination-actions">
+      <button type="submit" class="destination-remove-button"{% if not form.publication_ids.field.choices %} disabled{% endif %}>Remove selected assignments</button>
+      <a href="{% url 'admin:resource_registry_stagedresourceintake_change' intake.pk %}">Cancel</a>
+    </footer>
+  </section>
 {% endblock %}

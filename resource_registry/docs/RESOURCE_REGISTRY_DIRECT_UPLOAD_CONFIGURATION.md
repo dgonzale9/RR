@@ -44,7 +44,7 @@ an approved application CORS/access policy; no wildcard Blob CORS rule solves a 
 
 | Setting or protocol field | Default/value | Applies to |
 | --- | --- | --- |
-| `RESOURCE_REGISTRY_UPLOAD_PROVIDER` | `azure_blob` | Intake storage adapter. Azure and Azurite support backend blocks; `local` does not. |
+| `RESOURCE_REGISTRY_UPLOAD_PROVIDER` | `azure_blob` | Intake storage adapter. Azure/Azurite and the development-only `local` adapter support backend blocks. |
 | `RESOURCE_REGISTRY_UPLOAD_MAX_FILE_SIZE_BYTES` | 10 GiB | File admission; stricter downstream format limits still apply. |
 | `RESOURCE_REGISTRY_UPLOAD_MAX_PENDING_PER_USER` | 5 | Per-user active staging quota. |
 | `RESOURCE_REGISTRY_INTAKE_TTL_SECONDS` | 86400; minimum 300 | Unpublished intake retention. |

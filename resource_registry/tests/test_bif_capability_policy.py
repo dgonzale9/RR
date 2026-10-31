@@ -33,8 +33,8 @@ def _context(
     )
 
 
-def test_manifest_covers_grouped_and_replacement_operations_with_correct_effects() -> None:
-    """Cover all Registry operations and preserve replacement mutation and permission metadata."""
+def test_manifest_covers_only_supported_registry_operations() -> None:
+    """Exclude retired agent dataset replacement operations from the Registry manifest."""
     expected_functions = {
         "resource_registry_list_datasets",
         "resource_registry_get_dataset",
@@ -67,8 +67,6 @@ def test_manifest_covers_grouped_and_replacement_operations_with_correct_effects
         "resource_registry_list_transformation_steps",
         "resource_registry_list_transformation_outputs",
         "resource_registry_get_transformation_diagnostics",
-        "resource_registry_replace_dataset",
-        "resource_registry_get_replacement_status",
     }
     assert set(RESOURCE_REGISTRY_BIF_MANIFEST) == expected_functions
     assert RESOURCE_REGISTRY_BIF_MANIFEST["resource_registry_start_query_job"].is_read_only is False
@@ -91,13 +89,6 @@ def test_manifest_covers_grouped_and_replacement_operations_with_correct_effects
         RESOURCE_REGISTRY_BIF_MANIFEST["resource_registry_start_transformation_run"].is_read_only
         is False
     )
-    assert RESOURCE_REGISTRY_BIF_MANIFEST["resource_registry_replace_dataset"].is_read_only is False
-    assert (
-        RESOURCE_REGISTRY_BIF_MANIFEST["resource_registry_get_replacement_status"].is_read_only
-        is True
-    )
-    for name in ("resource_registry_replace_dataset", "resource_registry_get_replacement_status"):
-        assert RESOURCE_REGISTRY_BIF_MANIFEST[name].required_permissions == ("dataset:write",)
     assert all(
         entry.is_read_only
         for name, entry in RESOURCE_REGISTRY_BIF_MANIFEST.items()
@@ -112,7 +103,6 @@ def test_manifest_covers_grouped_and_replacement_operations_with_correct_effects
             "resource_registry_plan_export",
             "resource_registry_generate_artifact",
             "resource_registry_start_transformation_run",
-            "resource_registry_replace_dataset",
         }
     )
 
@@ -137,6 +127,23 @@ def test_disabled_capability_denies_even_admin() -> None:
     with pytest.raises(CapabilityDeniedError):
         policy.assert_can_call(
             "resource_registry_get_dataset",
+            _context(
+                roles=("admin",),
+                disabled=frozenset({"resource_registry.dataset.read"}),
+            ),
+        )
+
+
+def test_capability_policy_rechecks_a_changed_context_for_each_tool_call() -> None:
+    """Reject the next call when a previously allowed capability becomes disabled."""
+    policy = DataRegistryBifCapabilityPolicy()
+    function_name = "resource_registry_get_dataset"
+
+    policy.assert_can_call(function_name, _context(roles=("admin",)))
+
+    with pytest.raises(CapabilityDeniedError):
+        policy.assert_can_call(
+            function_name,
             _context(
                 roles=("admin",),
                 disabled=frozenset({"resource_registry.dataset.read"}),

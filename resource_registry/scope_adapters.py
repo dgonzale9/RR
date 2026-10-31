@@ -25,17 +25,17 @@ REGISTRY_SCOPE_HEADER = "X-Registry-Scope"
 
 
 def get_request_scope_policy(request: object, *, assistant: bool = False) -> RegistryScopePolicy:
-    """Build the rollout decision from configuration and a REST caller's explicit opt-in.
+    """Enforce request Workspace scope for assistants and apply the rollout policy to REST.
 
     Args:
         request: Request with optional headers.
-        assistant: Ignore REST opt-ins for assistant and BIF operations.
+        assistant: Always enforce request Workspace scope for assistant and BIF operations.
 
     Returns:
         A policy snapshot for the current boundary operation.
     """
     return RegistryScopePolicy(
-        mode=get_registry_scope_policy(),
+        mode="strict" if assistant else get_registry_scope_policy(),
         explicit_opt_in=not assistant and REGISTRY_SCOPE_HEADER in _get_headers(request),
     )
 

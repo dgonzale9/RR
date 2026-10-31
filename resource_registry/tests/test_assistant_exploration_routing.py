@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+import resource_registry.assistant.exploration_routing as routing_module
 from resource_registry.assistant.exploration_routing import (
     DEFAULT_EXPLORATION_LIMIT,
     EXPLORATION_TOOL_NAME,
@@ -31,7 +32,7 @@ def routing_policy() -> ExplorationRoutingPolicy:
     return ExplorationRoutingPolicy()
 
 
-def _request(  # noqa: PLR0913
+def _request(
     question: str,
     *,
     schema_columns: tuple[SchemaColumnRoutingEvidence, ...] = (
@@ -123,61 +124,6 @@ def test_schema_is_requested_before_exploration(routing_policy: ExplorationRouti
     assert decision.status == "needs_schema"
     assert [tool_call.name for tool_call in decision.tool_calls] == [SCHEMA_TOOL_NAME]
     assert all(tool_call.name != EXPLORATION_TOOL_NAME for tool_call in decision.tool_calls)
-
-
-@pytest.mark.parametrize(
-    "question",
-    [
-        "Register or update the attached file in the Resource Registry for my current "
-        "Workspace. If it matches an existing dataset, replace its contents with a new "
-        "version. Then check the result and tell me whether it was created, updated, "
-        "or had no changes.",
-        "Replace the dataset with the uploaded sales.csv file and show sample values "
-        "after it finishes.",
-    ],
-)
-def test_dataset_import_requests_bypass_exploration(
-    routing_policy: ExplorationRoutingPolicy,
-    question: str,
-) -> None:
-    """Leave dataset writes to the import BIF even when search words occur in the prompt."""
-    decision = routing_policy.route(_request(question, schema_columns=()))
-
-    assert decision.status == "bypass_normal_flow"
-    assert decision.tool_calls == ()
-
-
-@pytest.mark.parametrize(
-    ("question", "expected_command"),
-    [
-        ("Register or update the attached file in my current Workspace.", True),
-        ("Register the attached file.", True),
-        ("Registra este archivo.", True),
-        ("Please replace this dataset with the attached file.", True),
-        ("Upload this file to the Resource Registry.", True),
-        ("Sube este archivo al Resource Registry.", True),
-        ("Upload this CSV to the current Workspace.", True),
-        ("Update this dataset using the attached file.", True),
-        ("Use resource_registry_replace_dataset with upload_id and dataset_id.", True),
-        ("Upload this file.", False),
-        ("Sube este archivo.", False),
-        ("Import the attached file.", False),
-        ("Upload it.\nUploaded file(s): sales.csv", False),
-        ("Upload this CSV to chat.", False),
-        ("Sube este archivo al chat.", False),
-        ("Register this file as a chat source document.", False),
-        ("Summarize the attached CSV.", False),
-        ("Analyze the attached XLSX.", False),
-        ("What would happen if I upload this file?", False),
-        ("Do not register the attached file; explain the process.", False),
-        ("Update the chart for this dataset.\nUploaded file(s): sales.json", False),
-    ],
-)
-def test_only_explicit_file_import_commands_trigger_automatic_write(
-    routing_policy: ExplorationRoutingPolicy, question: str, expected_command: bool
-) -> None:
-    """Distinguish an import command from a hypothetical or another task."""
-    assert routing_policy.is_explicit_dataset_import_command(question) is expected_command
 
 
 def test_exact_schema_column_is_accepted(routing_policy: ExplorationRoutingPolicy) -> None:
@@ -766,8 +712,6 @@ def test_generated_arguments_conform_to_exploration_bif_contract(
 
 def test_router_does_not_reference_direct_exploration_backend() -> None:
     """Protect assistant routing from direct service or executor dependencies."""
-    import resource_registry.assistant.exploration_routing as routing_module
-
     source = routing_module.__loader__.get_source(routing_module.__name__)
     assert source is not None
     assert "DatasetExplorationService" not in source

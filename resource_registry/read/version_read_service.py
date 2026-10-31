@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+from django.db.models import Prefetch
+
 from resource_registry.dataset_visibility import build_dataset_visibility_filter
-from resource_registry.models import DatasetStatus, DatasetVersion
+from resource_registry.models import DatasetProfile, DatasetSchema, DatasetStatus, DatasetVersion
+from resource_registry.read.current_version import current_version_filter
 from resource_registry.read.dtos import DatasetVersionSummary, sanitize_uri, to_iso
 from resource_registry.read.exceptions import DatasetVersionNotFoundError
 
@@ -22,18 +25,37 @@ class DatasetVersionReadService:
         queryset = DatasetVersion.objects.filter(
             build_dataset_visibility_filter(tenant_id=tenant_id, field_prefix="dataset__"),
             dataset_id=dataset_id,
+            status="READY",
             dataset__archived_at__isnull=True,
             dataset__status__in=[DatasetStatus.DRAFT, DatasetStatus.ACTIVE],
         )
-        ordered = queryset.order_by("-version_number", "-created_at", "-id")
-        versions = self._paginate(list(ordered), limit=limit, offset=offset)
+        ordered = (
+            queryset.select_related("dataset")
+            .prefetch_related(
+                Prefetch(
+                    "profiles",
+                    queryset=DatasetProfile.objects.order_by("-computed_at"),
+                    to_attr="ordered_profiles",
+                ),
+                Prefetch(
+                    "schemas",
+                    queryset=DatasetSchema.objects.order_by("-created_at"),
+                    to_attr="ordered_schemas",
+                ),
+            )
+            .order_by("-version_number", "-created_at", "-id")
+        )
+        safe_offset = max(offset, 0)
+        versions = ordered[safe_offset : safe_offset + min(max(limit, 1), self.MAX_LIMIT)]
         return [self._to_summary(version) for version in versions]
 
     def get_latest_version(self, *, tenant_id: str, dataset_id: str) -> DatasetVersionSummary:
         version = (
             DatasetVersion.objects.filter(
+                current_version_filter(),
                 build_dataset_visibility_filter(tenant_id=tenant_id, field_prefix="dataset__"),
                 dataset_id=dataset_id,
+                status="READY",
                 dataset__archived_at__isnull=True,
                 dataset__status__in=[DatasetStatus.DRAFT, DatasetStatus.ACTIVE],
             )
@@ -55,6 +77,7 @@ class DatasetVersionReadService:
             build_dataset_visibility_filter(tenant_id=tenant_id, field_prefix="dataset__"),
             dataset_id=dataset_id,
             id=version_id,
+            status="READY",
             dataset__archived_at__isnull=True,
             dataset__status__in=[DatasetStatus.DRAFT, DatasetStatus.ACTIVE],
         ).first()
@@ -74,8 +97,18 @@ class DatasetVersionReadService:
         return items[safe_offset : safe_offset + safe_limit]
 
     def _to_summary(self, version: DatasetVersion) -> DatasetVersionSummary:
-        latest_profile = version.profiles.order_by("-computed_at").first()
-        latest_schema = version.schemas.order_by("-created_at").first()
+        profiles = getattr(version, "ordered_profiles", None)
+        schemas = getattr(version, "ordered_schemas", None)
+        latest_profile = (
+            (profiles[0] if profiles else None)
+            if profiles is not None
+            else version.profiles.order_by("-computed_at").first()
+        )
+        latest_schema = (
+            (schemas[0] if schemas else None)
+            if schemas is not None
+            else version.schemas.order_by("-created_at").first()
+        )
         row_count = None
         column_count = None
         if latest_profile is not None:
@@ -94,4 +127,5 @@ class DatasetVersionReadService:
             column_count=column_count if isinstance(column_count, int) else None,
             created_at=str(to_iso(version.created_at)),
             content_hash=str(version.content_hash),
+            is_current=version.id == version.dataset.current_version_id,
         )

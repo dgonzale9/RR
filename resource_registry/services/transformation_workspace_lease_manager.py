@@ -14,8 +14,11 @@ from resource_registry.models import (
     TransformationWorkspaceLease,
     TransformationWorkspaceLeaseState,
 )
+from resource_registry.storage.exceptions import StorageObjectNotFoundError
 from resource_registry.storage.factory import DataRegistryStorageFactory
-from resource_registry.transformations.operational.metrics import TransformationOperationalMetricsPort
+from resource_registry.transformations.operational.metrics import (
+    TransformationOperationalMetricsPort,
+)
 
 
 @dataclass(frozen=True)
@@ -70,10 +73,14 @@ class TransformationWorkspaceLeaseManager:
                     attempt_idempotency_token=attempt_idempotency_token,
                 )
             )
-            existing = TransformationWorkspaceLease.objects.select_for_update().filter(
-                step_attempt=step_attempt,
-                output_logical_name=output_logical_name,
-            ).first()
+            existing = (
+                TransformationWorkspaceLease.objects.select_for_update()
+                .filter(
+                    step_attempt=step_attempt,
+                    output_logical_name=output_logical_name,
+                )
+                .first()
+            )
             if (
                 existing is not None
                 and existing.state != TransformationWorkspaceLeaseState.RELEASED
@@ -227,8 +234,9 @@ class TransformationWorkspaceLeaseManager:
             if tenant_id is not None:
                 queryset = queryset.filter(tenant_id=tenant_id)
             leases = tuple(
-                queryset.order_by("cleanup_requested_at", "id")
-                .select_for_update(skip_locked=True)[: max(int(batch_size), 1)],
+                queryset.order_by("cleanup_requested_at", "id").select_for_update(skip_locked=True)[
+                    : max(int(batch_size), 1)
+                ],
             )
             identities = tuple(
                 (lease.id, lease.lease_generation, lease.storage_provider, lease.workspace_key)
@@ -241,7 +249,12 @@ class TransformationWorkspaceLeaseManager:
         for lease_id, generation, provider_name, workspace_key in identities:
             try:
                 provider = self._storage_factory.create_provider(provider_name)
-                provider.delete(provider.get_uri(workspace_key))
+                try:
+                    provider.head(provider.get_uri(workspace_key))
+                except StorageObjectNotFoundError:
+                    pass
+                else:
+                    provider.delete(provider.get_uri(workspace_key))
                 self._release(lease_id=lease_id, lease_generation=generation, worker_id=worker_id)
                 self._record_metric(leased_bytes=None, outcome="cleaned")
                 cleaned += 1

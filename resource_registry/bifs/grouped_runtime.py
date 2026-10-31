@@ -28,6 +28,33 @@ from resource_registry.bifs.grouped_tools import (
     resolve_grouped_registry_call,
 )
 from resource_registry.bifs.manifest import RESOURCE_REGISTRY_BIF_MANIFEST
+from resource_registry.performance.instrumentation import (
+    RegistryPerformanceOutcome,
+    RegistryPerformanceStage,
+    instrument_registry_function,
+)
+
+
+def _classify_grouped_performance_outcome(result: object) -> RegistryPerformanceOutcome:
+    """Classify a grouped result without emitting its payload.
+
+    Args:
+        result: Canonical BIF output after Registry result projection.
+
+    Returns:
+        A bounded successful, rejected, or failed outcome.
+    """
+    try:
+        payload = json.loads(result) if isinstance(result, str) else result
+    except (TypeError, ValueError):
+        return RegistryPerformanceOutcome.SUCCESS
+    if not isinstance(payload, dict) or payload.get("success") is not False:
+        return RegistryPerformanceOutcome.SUCCESS
+    return (
+        RegistryPerformanceOutcome.REJECTED
+        if payload.get("status") in {400, 401, 403, 404}
+        else RegistryPerformanceOutcome.FAILED
+    )
 
 
 class _RegistryDispatchClient(Protocol):
@@ -75,6 +102,10 @@ def is_registry_tool_name(function_name: object) -> bool:
     )
 
 
+@instrument_registry_function(
+    RegistryPerformanceStage.GROUPED_DISPATCH_BRIDGE,
+    operation_parameter="resolved",
+)
 def _dispatch_admitted_operation(
     client: _RegistryDispatchClient,
     request: object,
@@ -121,6 +152,11 @@ def _dispatch_admitted_operation(
     )
 
 
+@instrument_registry_function(
+    RegistryPerformanceStage.GROUPED_CALL_TOTAL,
+    outcome_classifier=_classify_grouped_performance_outcome,
+    operation_parameter="function_name",
+)
 def execute_grouped_registry_call(
     client: object,
     request: object,

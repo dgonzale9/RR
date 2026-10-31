@@ -1,6 +1,11 @@
 # Resource Registry for Data Analysis
 
-**Status:** description of the repository implementation, reviewed October 16, 2026.  
+For file-level external synchronization, the backend now provides a
+[generic source contract](EXTERNAL_SOURCE_SYNC.md). It is separate from the existing
+SharePoint manifest producer described below; Graph and folder synchronization remain
+the connector's responsibility.
+
+**Status:** description of the repository implementation, reviewed October 23, 2026.  
 **Audience:** data analysis team, Workspace owners, and platform team.  
 **Scope:** published tabular datasets and Resource Registry tools available to Personas.
 
@@ -27,8 +32,8 @@ flow. [SQL validator](../services/dataset_query_executor.py),
 flowchart LR
     A[CSV / XLSX / JSON / JSONL / Parquet] --> B[Staged intake]
     B --> C[Inspection and validation]
-    C --> D[Publication to Workspace or Organization]
-    D --> E[Registration worker]
+    C --> D[Proposal for Workspace or Organization]
+    D --> E[Preparation and reviewed publication]
     E --> F[Dataset + READY version + schema + profile + artifact]
     F --> G[Authorized Persona: discover, explore, query, analyze]
 ```
@@ -38,10 +43,10 @@ flowchart LR
    limits. `.xls`, PDF, archives, and password-protected workbooks are outside this intake flow.
    [File preparation](RESOURCE_REGISTRY_FILE_PREPARATION.md),
    [intakes API](RESOURCE_REGISTRY_INTAKES_API.md).
-2. Inspection moves the intake to `READY_FOR_PUBLICATION`; the operator explicitly chooses a
-   destination. Publication starts asynchronous work: **published** does not yet mean **queryable
-   Dataset**. A worker registers CSV, JSON, JSONL, and Parquet files; XLSX is processed by sheet
-   and may complete with skipped sheets. [Publication](RESOURCE_REGISTRY_DATASET_PUBLICATION.md),
+2. Inspection moves the intake to `READY_FOR_PUBLICATION`. Dataset Management prepares a
+   proposal asynchronously for an explicit destination; publishing applies the reviewed result
+   atomically. An invalid selected Excel sheet blocks that proposal. The retained legacy
+   intake publication path instead queues registration and can complete with skipped sheets. [Publication](RESOURCE_REGISTRY_DATASET_PUBLICATION.md),
    [worker operations](RESOURCE_REGISTRY_WORKER_OPERATIONS.md).
 3. Registration materializes queryable content as Parquet, except that a valid uploaded Parquet
    preserves its native bytes and types. A tabular file produces one Dataset; an XLSX workbook can
@@ -49,10 +54,10 @@ flowchart LR
    hash. [Formats](DATASET_FORMATS.md), [versions](RESOURCE_REGISTRY_DATASET_VERSIONING.md),
    [persistence](../services/registry/dataset_registry_service.py).
 
-An upload is a **snapshot**. To update data, publish a corrected file to the same destination
-under the same full filename; changed content creates the next version. An identical upload reuses
-the existing version. Changing the filename or extension normally creates another Dataset. A
-`READY` version should not be edited directly. [Versioning](RESOURCE_REGISTRY_DATASET_VERSIONING.md).
+An upload is a **complete snapshot**. To update data, prepare a proposal with the existing
+Dataset ID and revision, then publish after review. Filenames do not select the target.
+Identical content returns `NO_CHANGES`; historical content needs manager approval. Readers
+use `current_version`, which can point to an older immutable version after restoration. [Versioning](RESOURCE_REGISTRY_DATASET_VERSIONING.md).
 
 The SharePoint `RESOURCE_REGISTRY` integration produces a **CSV file manifest** by recursively
 crawling a folder. That manifest describes assets; this mode does not automatically ingest the
@@ -62,7 +67,7 @@ to analyze the tabular contents of all synchronized files.
 
 ## 2. What an analyst can do
 
-| Need | Current capability | Persona tools |
+| Need | Current capability | Canonical Persona actions |
 | --- | --- | --- |
 | Find sources | List visible Datasets and read descriptions, context, and versions | `list_datasets`, `get_dataset`, `get_dataset_context`, `list_dataset_versions` |
 | Understand structure and initial quality | Read columns and types; a persisted profile with row/column counts and schema quality signals | `get_dataset_schema`, `get_dataset_profile` |
@@ -74,10 +79,15 @@ to analyze the tabular contents of all synchronized files.
 | Create reusable output | Dataset filtered by a numeric threshold; bounded CSV/XLSX export planning and generation | `create_filtered_dataset`, `plan_export`, `generate_artifact` |
 | Run an approved transformation | Start and observe a transformation definition/version under permissions and operational limits | `start_transformation_run`, run/step/output reads |
 
-Tool names in the table omit the `resource_registry_` prefix. The full list and per-function
-constraints are in the [BIF catalog](RESOURCE_REGISTRY_BIF_CATALOG.md). The profile persisted at
-registration contains **basic aggregate metadata**, not a complete report on nulls, outliers, or
-per-column distributions. Those questions need exploration or an explicit query.
+The names in the table are canonical actions and omit the `resource_registry_` prefix. They are
+assigned individually to Personas but published to the model through four grouped tools:
+`resource_registry_inspect`, `resource_registry_query`,
+`resource_registry_manage_outputs`, and `resource_registry_manage_transformations`. A model call
+always selects one assigned action inside its group; it never receives the canonical actions as
+independent tools. The full mapping and per-action constraints are in the
+[BIF catalog](RESOURCE_REGISTRY_BIF_CATALOG.md). The profile persisted at registration contains
+**basic aggregate metadata**, not a complete report on nulls, outliers, or per-column
+distributions. Those questions need exploration or an explicit query.
 [Profile persistence](../services/registry/dataset_registry_service.py),
 [analysis service](../services/dataset_analysis_service.py).
 
@@ -108,9 +118,9 @@ English. Inspect its generated SQL before interpreting a request in another lang
 - **Traceability:** logical Dataset, hashed versions, schema, profile, provenance, and lineage for
   derived output. Pinning a `version_id` prevents mixing revisions in one answer.
   [Models](../models.py), [versioning](RESOURCE_REGISTRY_DATASET_VERSIONING.md).
-- **Access governance:** a Persona can use only assigned BIFs. Organization, Workspace, role,
-  policy, Dataset visibility, and permitted columns are also checked. Knowing an ID does not
-  expand access. [BIFs](RESOURCE_REGISTRY_BIFS_OVERVIEW.md),
+- **Access governance:** a Persona can use only assigned canonical actions. Organization,
+  Workspace, role, policy, Dataset visibility, and permitted columns are also checked. Knowing an
+  ID does not expand access. [BIFs](RESOURCE_REGISTRY_BIFS_OVERVIEW.md),
   [roles](RESOURCE_REGISTRY_ROLES_AND_ACCESS.md).
 - **Bounded queries:** validated SQL, small results, and asynchronous options with durable
   status. Analysts can answer aggregate questions without loading the whole file into the
@@ -151,7 +161,7 @@ or availability in the meeting's environment.
 
 Roles do not grant universal access. The Organization and Workspace must be active with Registry
 enabled; the Namespace must be provisioned; the user must be admitted to the Workspace; the
-Persona must be associated with that Workspace and assigned the BIF. A `WORKSPACE` Dataset is
+Persona must be associated with that Workspace and assigned the canonical action. A `WORKSPACE` Dataset is
 visible only in its Workspace; an `ORGANIZATION` Dataset can appear in authorized Workspaces of
 the same Organization. Publishing intakes requires additional permissions separate from query
 roles. [Roles](RESOURCE_REGISTRY_ROLES_AND_ACCESS.md),
@@ -161,7 +171,7 @@ roles. [Roles](RESOURCE_REGISTRY_ROLES_AND_ACCESS.md),
 **Suggested meeting sequence:** publish a sample CSV beforehand; confirm that its version is
 `READY`; list Datasets; review schema and profile; run a query with `LIMIT 10`; compare its result
 with a built-in chart; show the version ID and explain filters and limits. For a private Workspace,
-check user membership and Persona BIF assignments before the meeting.
+check user membership and Persona action assignments before the meeting.
 [Getting started](RESOURCE_REGISTRY_GETTING_STARTED.md),
 [catalog](RESOURCE_REGISTRY_BIF_CATALOG.md).
 

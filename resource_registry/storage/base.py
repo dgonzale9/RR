@@ -33,6 +33,9 @@ class StorageProvider(Protocol):
     def delete(self, uri_or_path: str) -> None:
         """Delete object if present."""
 
+    def delete_checked(self, uri_or_path: str, *, etag: str | None, checksum: str | None) -> None:
+        """Delete the reviewed object only if its provider identity still matches."""
+
     def download_to_file(self, uri_or_path: str, local_path: str) -> StorageObjectMetadata:
         """Download/copy a provider object to local_path using streaming I/O."""
 

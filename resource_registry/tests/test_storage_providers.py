@@ -9,6 +9,8 @@ import pytest
 from azure.core.exceptions import ResourceNotFoundError
 from django.conf import settings
 
+from resource_registry.cleanup.inventory import object_identity
+from resource_registry.models import ResourceStorageObject
 from resource_registry.storage.azure_blob import AzureBlobStorageProvider
 from resource_registry.storage.exceptions import (
     StorageConfigurationError,
@@ -20,6 +22,7 @@ from resource_registry.storage.local import LocalStorageProvider
 
 CHUNK_SIZE = 64 * 1024
 BLOB_SIZE_BYTES = 123
+pytestmark = pytest.mark.django_db
 
 
 def test_local_put_exists_head_get_uri_delete(tmp_path: Path) -> None:
@@ -190,6 +193,14 @@ def test_azure_exists_found_not_found() -> None:
 
 
 def test_azure_delete_calls_client() -> None:
+    """Delete an inventoried, unreferenced temporary object through the provider."""
+
+    ResourceStorageObject.objects.create(
+        identity=object_identity("azure_blob", "azure://media/datasets/sample.csv"),
+        provider="azure_blob",
+        uri="azure://media/datasets/sample.csv",
+        ownership_verified=True,
+    )
     blob_client = MagicMock()
     container_client = MagicMock()
     container_client.get_blob_client.return_value = blob_client
@@ -287,7 +298,9 @@ def test_azure_reuses_connection_string_when_configured(monkeypatch: pytest.Monk
         "resource_registry.storage.azure_blob.BlobServiceClient.from_connection_string"
     ) as mock_from_conn_str:
         AzureBlobStorageProvider(account_name="acct", account_key="key", container_name="media")
-    mock_from_conn_str.assert_called_once_with("UseDevelopmentStorage=true")
+        mock_from_conn_str.assert_called_once_with(
+            "UseDevelopmentStorage=true", connection_timeout=10, read_timeout=60, retry_total=2
+        )
 
 
 def test_azure_raises_when_no_connection_string(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -295,3 +308,24 @@ def test_azure_raises_when_no_connection_string(monkeypatch: pytest.MonkeyPatch)
     monkeypatch.setattr(settings, "AZURE_CONNECTION_STRING", None, raising=False)
     with pytest.raises(StorageConfigurationError):
         AzureBlobStorageProvider(account_name="acct", account_key="key", container_name="media")
+
+
+def test_local_storage_rejects_symlink_to_sibling_root(tmp_path: Path) -> None:
+    """Reject a managed-root name prefix that actually resolves outside the root."""
+    root = tmp_path / "managed"
+    sibling = tmp_path / "managed-external"
+    sibling.mkdir()
+    (sibling / "private.txt").write_text("external")
+    provider = LocalStorageProvider(root)
+    (root / "escape").symlink_to(sibling, target_is_directory=True)
+    with pytest.raises(UnsafeStorageUriError):
+        provider.head("escape/private.txt")
+
+
+def test_local_storage_rejects_alias_to_another_managed_object(tmp_path: Path) -> None:
+    """Avoid representing one shared physical file as two independently deletable URI identities."""
+    provider = LocalStorageProvider(tmp_path)
+    (tmp_path / "retained.parquet").write_bytes(b"shared content")
+    (tmp_path / "alias.parquet").symlink_to(tmp_path / "retained.parquet")
+    with pytest.raises(UnsafeStorageUriError):
+        provider.head("alias.parquet")

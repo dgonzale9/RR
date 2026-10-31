@@ -15,7 +15,7 @@ from resource_registry.security.policies import ArtifactMaterializationPolicyRes
 class DatasetContextReadService:
     """Composes safe dataset context from persisted registry metadata."""
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         *,
         dataset_read_service: DatasetReadService | None = None,
@@ -42,14 +42,14 @@ class DatasetContextReadService:
         latest_artifact = None
         policy_provenance = None
 
-        versions = self._version_read_service.list_versions(
-            tenant_id=tenant_id,
-            dataset_id=dataset_id,
-            limit=1,
-            offset=0,
-        )
-        if versions:
-            latest_version = versions[0]
+        try:
+            latest_version = self._version_read_service.get_latest_version(
+                tenant_id=tenant_id,
+                dataset_id=dataset_id,
+            )
+        except DatasetVersionNotFoundError:
+            latest_version = None
+        if latest_version is not None:
             try:
                 latest_schema = self._schema_read_service.get_schema_for_version(
                     tenant_id=tenant_id,

@@ -1,0 +1,33 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'resource_registry/admin/destination_actions.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="destination-action-page">
+  <nav class="destination-navigation" aria-label="Intake navigation">
+    <a href="{% url 'admin:resource_registry_stagedresourceintake_change' intake.pk %}">Back to intake</a>
+  </nav>
+
+  <section class="destination-section" aria-labelledby="source-file-heading">
+    <header class="destination-section-header"><h2 id="source-file-heading">Source file</h2></header>
+    <div class="destination-section-body">
+      <dl class="destination-source-summary">
+        <div class="destination-summary-wide"><dt>File</dt><dd>{{ intake.normalized_filename }}</dd></div>
+        <div><dt>Status</dt><dd>{{ intake.get_status_display }}</dd></div>
+        <div><dt>Format</dt><dd>{{ intake.resolved_file_format }}</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <form method="post">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {% for hidden in form.hidden_fields %}{{ hidden }}{{ hidden.errors }}{% endfor %}
+    {% block destination_form %}{% endblock %}
+  </form>
+</div>
+{% endblock %}

@@ -5,7 +5,9 @@
 Use this guide to confirm that dataset analysis accepts safe, authorized queries and
 rejects unsafe or unauthorized requests. Run only against synthetic non-production data.
 
-The Persona must include `resource_registry_query_dataset` or the relevant query-job BIFs.
+The Persona must include the canonical `resource_registry_query_dataset` assignment or the relevant
+query-job assignments. The model invokes them through `resource_registry_query` with the matching
+`action` value.
 A normal `restricted_reader` test user can run bounded read-only queries under the current
 default policy. Keep analysis/chart/export BIFs as separate higher-privilege cases.
 

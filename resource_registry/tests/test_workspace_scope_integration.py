@@ -27,8 +27,8 @@ from resource_registry.bifs.read_only_namespace_admission import (
 )
 from resource_registry.models import LargeFileUploadSession
 from resource_registry.namespace_selection import RegistryScopeSelectionError
-from resource_registry.scope_adapters import select_request_registry_namespace
 from resource_registry.read_auth.exceptions import DataRegistryAuthorizationError
+from resource_registry.scope_adapters import select_request_registry_namespace
 from resource_registry.scope_policy import get_registry_scope_policy
 from resource_registry.tests.test_assistant_namespace_context import (
     _RuntimeClient,
@@ -265,17 +265,108 @@ def test_invalid_policy_fails_closed(monkeypatch: pytest.MonkeyPatch) -> None:
     assert get_registry_scope_policy() == "strict"
 
 
+@pytest.mark.parametrize("policy", ("legacy", "observe", "strict"))
+def test_chat_lists_datasets_in_request_workspace_without_selection_prompt(
+    environment: ScopeEnvironment,
+    monkeypatch: pytest.MonkeyPatch,
+    policy: str,
+) -> None:
+    """Use the request Workspace even with multiple choices and stale conversation state.
+
+    Args:
+        environment: Persisted scope fixtures.
+        monkeypatch: Policy override fixture.
+        policy: REST rollout mode that must not affect assistant selection.
+    """
+    monkeypatch.setenv("RESOURCE_REGISTRY_SCOPE_POLICY", policy)
+    request = environment.build_request()
+    old_namespace = str(environment.second.resource_registry_namespace.pk)
+    request.resource_registry_tenant_id = old_namespace
+    request.session = {
+        "resource_registry_tenant_id": old_namespace,
+        "resource_registry_persona_workspace_namespace_id": old_namespace,
+        "resource_registry_selected_dataset_ids": ["old-dataset"],
+        "chat_history": ["preserve"],
+    }
+    client = _RuntimeClient()
+    client.persona.workspaces = _WorkspaceManager((environment.first.pk, environment.second.pk))
+    client.results = [{"success": True, "data": {"datasets": []}}]
+
+    result = DataRegistryExplorationRoutingAdapter().try_route(
+        client=client, request=request, statement="List available datasets."
+    )
+
+    assert result is not None
+    current_namespace = str(environment.first.resource_registry_namespace.pk)
+    assert client.calls == [("resource_registry_list_datasets", {"tenant_id": current_namespace})]
+    assert "Which Workspace" not in result.response_text
+    assert request.session["resource_registry_tenant_id"] == current_namespace
+    assert "resource_registry_selected_dataset_ids" not in request.session
+    assert request.session["chat_history"] == ["preserve"]
+
+
+@pytest.mark.parametrize("policy", ("legacy", "observe", "strict"))
+@pytest.mark.parametrize("invalid_workspace", ("missing", "unauthorized", "foreign", "unsupported"))
+def test_chat_rejects_invalid_request_workspace_without_falling_back(
+    environment: ScopeEnvironment,
+    monkeypatch: pytest.MonkeyPatch,
+    policy: str,
+    invalid_workspace: str,
+) -> None:
+    """Reject invalid request scope despite authorized conversation and Persona alternatives.
+
+    Args:
+        environment: Persisted scope fixtures.
+        monkeypatch: Policy override fixture.
+        policy: REST rollout mode that must not affect assistant selection.
+        invalid_workspace: Invalid request context to exercise.
+    """
+    monkeypatch.setenv("RESOURCE_REGISTRY_SCOPE_POLICY", policy)
+    request = environment.build_request()
+    request.session["resource_registry_tenant_id"] = str(
+        environment.second.resource_registry_namespace.pk
+    )
+    client = _RuntimeClient()
+    client.persona.workspaces = _WorkspaceManager((environment.second.pk,))
+    if invalid_workspace == "missing":
+        request.workspace = None
+    elif invalid_workspace == "unauthorized":
+        WorkspaceMembership.objects.filter(
+            user=environment.user, workspace=environment.first
+        ).delete()
+    elif invalid_workspace == "foreign":
+        request.workspace = SimpleNamespace(
+            pk=environment.first.pk, organization_id=environment.organization.pk + 1, is_active=True
+        )
+
+    result = DataRegistryExplorationRoutingAdapter().try_route(
+        client=client, request=request, statement="List available datasets."
+    )
+
+    assert result is not None
+    assert result.request_payload["error_code"] == "resource_registry_persona_workspace_unavailable"
+    assert client.calls == []
+    assert "Which Workspace" not in result.response_text
+    assert "resource_registry_tenant_id" not in request.session
+
+
+@pytest.mark.parametrize("policy", ("legacy", "observe", "strict"))
 @pytest.mark.parametrize("persona_workspace_count", (1, 2))
 def test_chat_requires_interface_switch_without_executing_a_bif(
     environment: ScopeEnvironment,
     persona_workspace_count: int,
+    monkeypatch: pytest.MonkeyPatch,
+    policy: str,
 ) -> None:
     """Stop a cross-Workspace chat instruction before executing any tool.
 
     Args:
         environment: Persisted scope fixtures.
         persona_workspace_count: Number of Workspaces configured on the Persona.
+        monkeypatch: Policy override fixture.
+        policy: REST rollout mode that must not affect assistant selection.
     """
+    monkeypatch.setenv("RESOURCE_REGISTRY_SCOPE_POLICY", policy)
     request = environment.build_request()
     client = _RuntimeClient()
     configured = (environment.first.pk, environment.second.pk)[:persona_workspace_count]
@@ -293,14 +384,23 @@ def test_chat_requires_interface_switch_without_executing_a_bif(
     )
 
 
+@pytest.mark.parametrize("policy", ("legacy", "observe", "strict"))
+@pytest.mark.parametrize("omitted_namespace", (None, "", " "))
 def test_bif_arguments_and_headers_cannot_override_active_workspace(
     environment: ScopeEnvironment,
+    monkeypatch: pytest.MonkeyPatch,
+    policy: str,
+    omitted_namespace: str | None,
 ) -> None:
     """Reject a BIF's different destination even with an explicit HTTP scope header.
 
     Args:
         environment: Persisted scope fixtures.
+        monkeypatch: Policy override fixture.
+        policy: REST rollout mode that must not affect assistant selection.
+        omitted_namespace: Supported representations of an omitted BIF namespace argument.
     """
+    monkeypatch.setenv("RESOURCE_REGISTRY_SCOPE_POLICY", policy)
     request = environment.build_request()
     request.headers = {"X-Registry-Scope": "explicit"}
     service = ReadOnlyBifNamespaceAdmissionService()
@@ -309,9 +409,9 @@ def test_bif_arguments_and_headers_cannot_override_active_workspace(
             request=request,
             requested_namespace_id=str(environment.second.resource_registry_namespace.pk),
         )
-    assert service.admit_namespace(request=request, requested_namespace_id=None) == str(
-        environment.first.resource_registry_namespace.pk
-    )
+    assert service.admit_namespace(
+        request=request, requested_namespace_id=omitted_namespace
+    ) == str(environment.first.resource_registry_namespace.pk)
 
 
 def test_old_namespace_state_is_cleared_for_identical_slugs_across_organizations(

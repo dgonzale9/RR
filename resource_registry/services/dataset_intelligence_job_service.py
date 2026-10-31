@@ -21,6 +21,7 @@ from resource_registry.services.async_job_idempotency import (
     build_async_job_idempotency_key,
     build_async_job_request_fingerprint,
 )
+from resource_registry.services.dataset_version_pinning import pin_job_dataset_version
 from resource_registry.services.payload_sanitizer import sanitize_payload
 
 
@@ -47,7 +48,7 @@ class DatasetIntelligenceJobService:
             0,
         )
 
-    def create_job(  # noqa: PLR0913
+    def create_job(
         self,
         *,
         tenant_id: str,
@@ -63,6 +64,13 @@ class DatasetIntelligenceJobService:
     ) -> DatasetIntelligenceJob:
         normalized_operation = str(operation or "").strip().lower()
         self._validate_operation(normalized_operation)
+        if dataset_id:
+            version_id, submission_authority = pin_job_dataset_version(
+                tenant_id=tenant_id,
+                dataset_id=dataset_id,
+                version_id=version_id,
+                submission_authority=submission_authority,
+            )
         sanitized_request_payload = self._sanitize_payload(request_payload)
         sanitized_job_spec = self._sanitize_payload(job_spec or {})
         sanitized_metadata = self._sanitize_payload(metadata or {})
@@ -257,8 +265,7 @@ class DatasetIntelligenceJobService:
                 DatasetIntelligenceJob.objects.filter(
                     id__in=candidate_ids,
                     status=DatasetIntelligenceJobStatus.QUEUED,
-                )
-                .update(
+                ).update(
                     status=DatasetIntelligenceJobStatus.RUNNING,
                     started_at=claimed_started_at,
                 )
@@ -521,7 +528,7 @@ class DatasetIntelligenceJobService:
         if operation not in allowed:
             raise ValueError("Unsupported intelligence job operation.")
 
-    def _build_request_fingerprint(  # noqa: PLR0913
+    def _build_request_fingerprint(
         self,
         *,
         tenant_id: str,

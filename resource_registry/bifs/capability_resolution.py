@@ -14,6 +14,10 @@ from resource_registry.bifs.manifest import RESOURCE_REGISTRY_BIF_MANIFEST
 from resource_registry.dataset_visibility import build_dataset_visibility_filter
 from resource_registry.events.audit_service import AuditService
 from resource_registry.models import Dataset
+from resource_registry.performance.instrumentation import (
+    RegistryPerformanceStage,
+    instrument_registry_function,
+)
 from resource_registry.policies.defaults import get_system_default_policy
 from resource_registry.policies.resolution import PolicyResolutionService
 
@@ -50,7 +54,8 @@ class DataRegistryBifCapabilityResolver:
             entry.capability_key for entry in RESOURCE_REGISTRY_BIF_MANIFEST.values()
         )
 
-    def resolve(  # noqa: PLR0913
+    @instrument_registry_function(RegistryPerformanceStage.CAPABILITY_RESOLUTION)
+    def resolve(
         self,
         *,
         tenant_id: str,

@@ -1,5 +1,13 @@
 # Resource Registry Intake Service API
 
+For current dataset creation/replacement, reuse the upload/verification endpoints in
+this guide, then call [`dataset-changes/`](DATASET_MANAGEMENT_API.md). External connectors
+add [source identity](EXTERNAL_SOURCE_ENDPOINTS_ES.md). The `intakes/{id}/publish/` route
+below is the retained legacy registration path, with its own permissions; do not call
+both publication flows for one operation. Dataset-change publication uses destination
+`create_datasets` / dataset `change_dataset` grants or destination management authority.
+It does not inherit the legacy upload-registration permission requirements.
+
 The staged-intake API receives CSV, XLSX, JSON, JSONL/NDJSON, and Parquet through the Unicorn AI
 backend. Creation returns an authenticated application upload descriptor, not an Azure SAS URL.
 The backend transfers the file to private Azure storage, verifies completion, and queues inspection.
@@ -113,7 +121,9 @@ While pending, the sanitized response includes this descriptor (other snapshot f
 4. After all blocks succeed, POST `{}` to `complete/`. Do not issue an Azure block-list request:
    the backend determines block IDs, order, content type, and destination, then commits them.
 5. Poll the intake state. `COMPLETED` queues inspection; wait for `READY_FOR_PUBLICATION` before
-   publishing. `PUBLISHED` still requires the registration/ingestion worker to finish.
+   creating a dataset-change proposal. Consult the proposal for preparation/publication
+results. Only a legacy intake publication requires the registration/ingestion worker
+after intake `PUBLISHED`.
 
 The binary HTTP request always uses `application/octet-stream`, even for a JSON or XLSX file.
 The backend uses the original validated `content_type` when committing the blob.
@@ -167,17 +177,21 @@ safe intake IDs, timestamps, codes, and approved diagnostic request IDs; omit cr
 Keep `allowBlobPublicAccess=false` and `publicNetworkAccess=Disabled`, as confirmed for this
 remediation. The browser contacts Unicorn AI; application replicas and workers need routes and DNS
 to the Blob private endpoint. Azure Blob browser CORS is not part of this intake transfer path.
-Localhost works only if its backend has that private connectivity, or uses local Azurite.
+For Azure, localhost requires that private connectivity or local Azurite. An isolated
+development environment may instead use the `local` upload/storage providers, which now
+support backend blocks without Azure.
 These changes address the two confirmed Storage controls; they do not certify all GSO requirements.
 
 Deploy the backend and Admin JavaScript together. Old direct-upload clients must adopt
 `backend_blocks_v1`; old browser upload checkpoints must restart. The separate `/uploads/` API
 retains its own contract.
 
-SharePoint Registry Sync calls the service in-process and still requests a SAS, then sends its
+The existing SharePoint manifest integration calls the service in-process and still requests a SAS, then sends its
 manifest with a backend `requests.put`. It does not use these HTTP block endpoints. Publication
 copy operations also retain an internal read SAS. These are server-side credentials, not browser
-upload authorizations, and neither bypasses private network restrictions.
+upload authorizations, and neither bypasses private network restrictions. This manifest producer is separate
+from the new [per-file synchronization contract](EXTERNAL_SOURCE_SYNC.md); implementing
+Graph/folder detection in its consumer is not part of Resource Registry.
 
 ## Related documentation
 

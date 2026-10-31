@@ -5,7 +5,7 @@ Assigned Registry operations are always advertised as at most four grouped tools
 There is no publication switch. A Persona with all 31 operations receives all
 four; empty groups and unassigned actions are omitted. Canonical BIF database records, assignments,
 capabilities and internal names remain unchanged. Grouping itself does not migrate assignments.
-Data migration `BotServer.0111_seed_resource_registry_transformation_bifs` registers the six
+Data migration `BotServer.0114_seed_resource_registry_transformation_bifs` registers the six
 transformation operations if an environment lacks them. The same migration then
 removes the six obsolete transformation records without the `resource_registry_` prefix, after
 moving their existing assignments and permissions to their corresponding canonical operations.
@@ -45,9 +45,8 @@ original assignment twice (before validation and again through the original disp
 but executes the handler once.
 
 `BotServer.builtin_functions.__all__` and its lazy function map expose the four
-Registry group names plus ATLAS-666's independent `resource_registry_replace_dataset` and
-`resource_registry_get_replacement_status` tools. Grouping selects the explicit 31 operation names,
-not the full capability manifest, which also includes the replacement tools on this branch.
+Registry group names. Grouping selects the explicit 31 operation names, matching the
+full Registry capability manifest.
 Each grouped entry point receives the active dispatch client, the original
 request and the action/arguments envelope; it forwards the trusted execution channel unchanged.
 The host's Registry guard uses these entry points before canonical operation admission.
@@ -80,11 +79,9 @@ names. Grouped responses translate recommendation metadata to the grouped name p
 canonical records **before pagination**. `resource_registry_manage_outputs` and
 `resource_registry_manage_transformations` are temporarily hidden from this administrative
 discovery catalog. Their individual operations do not appear as fallback entries. Only operations
-in the caller's existing secure queryset contribute actions; empty groups remain hidden. The independent
-`resource_registry_replace_dataset` and `resource_registry_get_replacement_status` records pass
-through with their original IDs and metadata. A caller with access to all these operations sees
-four Registry entries: Inspect, Query and the two replacement tools. Other BIFs retain their
-metadata and relative order. This presentation rule lives in `admin_catalog.py`; it introduces
+in the caller's existing secure queryset contribute actions; empty groups remain hidden. A caller
+with access to the visible operations sees two Registry entries: Inspect and Query. Other BIFs
+retain their metadata and relative order. This presentation rule lives in `admin_catalog.py`; it introduces
 no configuration flag or migration. All four groups remain available to models according to
 existing assignments. Assigned output/transformation groups remain visible in Persona relationship
 lists so administrators can inspect and remove them. No records or assignments are deleted.
@@ -116,31 +113,27 @@ The backend serving the frontend proxy must run this code for the grouped catalo
 
 ### Migration between environments
 
-The Registry catalog migrations extend dev's `0108_proxy_litellm_catalog_sync` in order:
-`0109_register_agent_dataset_replacement_bifs`, `0110_enable_chat_dataset_import_bif`,
-and `0111_seed_resource_registry_transformation_bifs`.
-The existing `0107_shared_context_workspaces` and `0108_proxy_litellm_catalog_sync` remain unchanged.
+The Registry catalog migrations extend dev's `0112_add_persona_primary_category_assignment` in order:
+`0113_register_agent_dataset_replacement_bifs` (a retained no-op slot) and
+`0114_seed_resource_registry_transformation_bifs`. The former chat-import migration and
+`resource_registry.0004_agent_dataset_replacement` are not part of this graph.
 
-Renaming files does not update `django_migrations`. For databases that already applied the
-former branch migration names, reconcile their migration history as a separate deployment step
-before applying the renumbered chain. Verify the corresponding data changes and dev prerequisites
-before marking any renamed migration as applied; do not blanket-fake migrations in environments
-that have not run them. The consolidated `0111` includes both registration and cleanup;
-confirm both phases completed before marking it as applied. A prior registration-only `0111`
-record does not prove cleanup occurred. This code change does not modify existing database history.
+Renaming files does not update `django_migrations`. A database that already records either
+removed BotServer migration name is not on this repository's graph and requires a separate,
+approved deployment reconciliation. Do not blanket-fake a migration: verify the transformation
+registration and cleanup data before recording `0114`. This code change does not modify existing
+database history.
 
-| Former branch migration | Renumbered migration |
+| Prior branch migration | Current graph |
 | --- | --- |
-| `0107_register_agent_dataset_replacement_bifs` | `0109_register_agent_dataset_replacement_bifs` |
-| `0108_enable_chat_dataset_import_bif` | `0110_enable_chat_dataset_import_bif` |
-| `0109_seed_resource_registry_transformation_bifs` | `0111_seed_resource_registry_transformation_bifs` |
-| `0110_remove_legacy_transformation_bifs` | `0111_seed_resource_registry_transformation_bifs` (cleanup phase) |
+| `0113_register_agent_dataset_replacement_bifs` | retained as a no-op compatibility slot |
+| `0114_enable_chat_dataset_import_bif` | removed |
+| `0115_seed_resource_registry_transformation_bifs` | `0114_seed_resource_registry_transformation_bifs` |
 
-Apply `BotServer.0111_seed_resource_registry_transformation_bifs` through the normal deployment
-migration step. It follows `0110_enable_chat_dataset_import_bif`, preserving the
-import/replacement registrations. It adds only missing canonical transformation BIFs and their 24 parameters using
-frozen metadata and historical models. It preserves existing IDs, descriptions, parameter
-customizations, permissions and Persona assignments, and does not touch the two replacement BIFs.
+Apply `BotServer.0114_seed_resource_registry_transformation_bifs` through the normal deployment
+migration step. It follows the retained `0113` slot. It adds only missing canonical transformation
+BIFs and their 24 parameters using frozen metadata and historical models. It preserves existing
+IDs, descriptions, parameter customizations, permissions and Persona assignments.
 It uses the existing `uniadmin` catalog owner, falling back to `AnonymousUser`, consistently with
 earlier catalog migrations. It grants no new object permissions or runtime capabilities; manage
 visibility and Persona assignments through the existing administration flow.
@@ -150,7 +143,7 @@ application code back does not delete operations or assignments needed by saved 
 `FunctionParameter` storage has no array type; the `input_bindings` JSON parameter is stored as
 `object`, while the authoritative Registry schema continues to publish and validate an array.
 
-The second operation in `BotServer.0111_seed_resource_registry_transformation_bifs` deletes exactly these obsolete
+The second operation in `BotServer.0114_seed_resource_registry_transformation_bifs` deletes exactly these obsolete
 names if present: `start_transformation_run`, `get_transformation_run`, `list_transformation_runs`,
 `list_transformation_steps`, `list_transformation_outputs`, and `get_transformation_diagnostics`.
 It does not add compatibility aliases. Their prefixed canonical operations remain inside
@@ -160,7 +153,7 @@ Before deletion, it transfers existing Persona assignments and user/group object
 to the matching canonical operation. An assignment keeps its relationship ID unless the Persona
 already has both versions; in that case the canonical relationship survives with their combined
 permissions. Transfers run in batches in one transaction. Missing canonical replacements abort
-the migration before any deletion. Other BIFs, including the two replacement tools, remain intact.
+the migration before any deletion. Other BIFs remain intact.
 Registration and cleanup share one migration transaction, so a cleanup failure rolls back both
 phases. Repeated execution is safe. Both reverse operations are intentionally no-ops: they do not recreate deleted
 records or their obsolete parameters, and old unprefixed IDs stop being valid.
@@ -171,7 +164,7 @@ hidden from administrative discovery under the temporary presentation rule above
 consolidated migration through the normal deployment migration step, or target it manually:
 
 ```bash
-uv run --env-file .env python manage.py migrate BotServer 0111_seed_resource_registry_transformation_bifs
+uv run --env-file .env python manage.py migrate BotServer 0114_seed_resource_registry_transformation_bifs
 ```
 
 Tests run on isolated PostgreSQL databases. Staging and production application remain part of
